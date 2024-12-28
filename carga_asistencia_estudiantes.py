@@ -213,9 +213,8 @@ class AnalizadorPDF(ctk.CTkFrame):
                     "CARRERA": r"CARRERA:\s*([\w\s]+?)\s*SEMESTRE",
                     "CURSO": r"\b\d{7}\s+([\w\s]+)(?<!\bSECCIÓN\b)(?<!\b\d{7})\b",
                     "SECCION": r"SECCIÓN:\s*(\d+)",
-                    "DOCENTE": r"DOCENTE:\s*[A-Za-z]\d{0,8}\s((?:\w+\s){0,3}\w+)",
-                    "DOS_PALABRAS_COMA_DOS_PALABRAS": r"(\w+\s\w+),\s(\w+\s\w+)"
-                    
+                    "DOCENTE": r"DOCENTE:\s*[A-Za-zV]\d{0,8}\s+(.*)",
+                    "APELLIDOS_COMA_NOMBRES": r"\d\s*V\d{7,8}\s+([\w\s'´~ç^`¨.-]+),\s+([\w\s'´~ç^`¨.-]+)\s+[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]"
                 }
                 for i, texto in enumerate(resultados['texto_paginas']):
                     texto_filtrado = self.filtrar_texto(texto, filtros)
@@ -246,7 +245,7 @@ class AnalizadorPDF(ctk.CTkFrame):
                             self.entry_docente.configure(state="normal")
                             self.entry_docente.insert(0, coincidencias[0])
                             self.entry_docente.configure(state="readonly")
-                        elif nombre == "DOS_PALABRAS_COMA_DOS_PALABRAS":
+                        elif nombre == "APELLIDOS_COMA_NOMBRES":
                             self.table_frame.grid()  # Show the table frame
                             for coincidencia in coincidencias:
                                 self.table.insert("", "end", values=(self.counter, coincidencia[0], coincidencia[1], "", "NO"))  # Add empty "Numero de Bien" and "¿Asistencia?" columns

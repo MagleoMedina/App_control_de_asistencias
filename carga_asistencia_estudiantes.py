@@ -214,7 +214,7 @@ class AnalizadorPDF(ctk.CTkFrame):
                     "CURSO": r"\b\d{7}\s+([\w\s]+)(?<!\bSECCIÓN\b)(?<!\b\d{7})\b",
                     "SECCION": r"SECCIÓN:\s*(\d+)",
                     "DOCENTE": r"DOCENTE:\s*[A-Za-zV]\d{0,8}\s+(.*)",
-                    "APELLIDOS_COMA_NOMBRES": r"\d\s*V\d{7,8}\s+([\w\s'´~ç^`¨.-]+),\s+([\w\s'´~ç^`¨.-]+)\s+[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]"
+                    "APELLIDOS_COMA_NOMBRES": r"\d\s*V\d{7,8}\s+([\w\s'´~ç^`¨.-]+),\s+([\w\s'´~ç^`¨.-]+)\s+[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]" #franmari lo hizo
                 }
                 for i, texto in enumerate(resultados['texto_paginas']):
                     texto_filtrado = self.filtrar_texto(texto, filtros)

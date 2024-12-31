@@ -11,8 +11,8 @@ class AnalizadorPDF(ctk.CTkFrame):
         self.parent = parent
         self.setup_ui()
         self.counter = 1  # Initialize counter
-        self.entry_usuario.insert(0, "Magleo")  # Set default value
-        self.entry_usuario.configure(state="readonly")  # Make read-only
+        
+         # Make read-only
        # print("Magleo")  # Print the string
 
     def setup_ui(self):
@@ -30,18 +30,21 @@ class AnalizadorPDF(ctk.CTkFrame):
 
         # New labels and entries
         self.label_usuario = ctk.CTkLabel(self, text="Nombre de usuario")
-        self.entry_usuario = ctk.CTkEntry(self, state="readonly")
+        self.entry_usuario = ctk.CTkEntry(self)
+        username = "Magleo"  # Get username from logged in user
+        self.entry_usuario.insert(0, username)  # Set default value
+        self.entry_usuario.configure(state="readonly")
         
         self.label_laboratorio = ctk.CTkLabel(self, text="Nombre de laboratorio")
         self.entry_laboratorio = ctk.CTkEntry(self)
         self.label_fecha = ctk.CTkLabel(self, text="Fecha")
         self.entry_fecha = DateEntry(self)
         self.label_hora_inicio = ctk.CTkLabel(self, text="Hora de inicio")
-        self.entry_hora_inicio_horas = ctk.CTkEntry(self, width=2)
-        self.entry_hora_inicio_minutos = ctk.CTkEntry(self, width=2)
+        self.entry_hora_inicio_horas = ctk.CTkComboBox(self, values=[str(i) for i in range(24)], width=50)
+        self.entry_hora_inicio_minutos = ctk.CTkComboBox(self, values=[str(i) for i in range(60)], width=50)
         self.label_hora_fin = ctk.CTkLabel(self, text="Hora de finalizacion")
-        self.entry_hora_fin_horas = ctk.CTkEntry(self, width=2)
-        self.entry_hora_fin_minutos = ctk.CTkEntry(self, width=2)
+        self.entry_hora_fin_horas = ctk.CTkComboBox(self, values=[str(i) for i in range(24)], width=50)
+        self.entry_hora_fin_minutos = ctk.CTkComboBox(self, values=[str(i) for i in range(60)], width=50)
 
         # Initially hide new labels and entries
         self.label_usuario.grid_remove()
@@ -64,7 +67,7 @@ class AnalizadorPDF(ctk.CTkFrame):
         self.table.heading("Apellidos", text="Apellidos")
         self.table.heading("Nombres", text="Nombres")
         self.table.heading("Numero de Bien", text="Numero de Bien")
-        self.table.heading("¿Asistencia?", text="¿Asistencia?")
+        self.table.heading("¿Asistencia?", text="¿Asistió?")
         self.table.column("No", width=50)
         self.table.column("Numero de Bien", width=150)
         self.table.column("¿Asistencia?", width=100)

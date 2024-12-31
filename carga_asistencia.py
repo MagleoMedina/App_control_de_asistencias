@@ -16,6 +16,9 @@ class CargaAsistencia(ctk.CTkFrame):
         # ...existing code...
         
         self.entry_usuario = ctk.CTkEntry(self)
+        username = "Magleo"  # Get username from logged in user
+        self.entry_usuario.insert(0, username)  # Set default value
+        self.entry_usuario.configure(state="readonly")
         self.entry_usuario.grid(row=1, column=1, padx=10, pady=10)
         
         self.label_usuario = ctk.CTkLabel(self, text="Nombre de usuario")
@@ -29,31 +32,31 @@ class CargaAsistencia(ctk.CTkFrame):
         self.label_laboratorio.grid(row=1, column=2, padx=10, pady=10)
         
         # DateEntry y Label para "Fecha"
-        self.entry_fecha = DateEntry(self)
+        self.entry_fecha = DateEntry(self, date_pattern="dd/mm/yyyy")
         self.entry_fecha.grid(row=1, column=5, padx=10, pady=10)
         
         self.label_fecha = ctk.CTkLabel(self, text="Fecha")
         self.label_fecha.grid(row=1, column=4, padx=10, pady=10)
         
-        # Entries y Label para "Hora de inicio"
-        self.entry_hora_inicio_horas = ctk.CTkEntry(self, width=5)
-        self.entry_hora_inicio_horas.grid(row=3, column=1, padx=5, pady=10)
-        
-        self.entry_hora_inicio_minutos = ctk.CTkEntry(self, width=5)
-        self.entry_hora_inicio_minutos.grid(row=3, column=1, padx=5, pady=10, sticky="w")
-        
+        # Dropdown lists for "Hora de inicio"
         self.label_hora_inicio = ctk.CTkLabel(self, text="Hora de inicio")
         self.label_hora_inicio.grid(row=3, column=0, padx=10, pady=10)
-        
-        # Entries y Label para "Hora de finalizacion"
-        self.entry_hora_finalizacion_horas = ctk.CTkEntry(self, width=5)
-        self.entry_hora_finalizacion_horas.grid(row=3, column=3, padx=5, pady=10)
-        
-        self.entry_hora_finalizacion_minutos = ctk.CTkEntry(self, width=5)
-        self.entry_hora_finalizacion_minutos.grid(row=3, column=4, padx=10, pady=10)
-        
+
+        self.entry_hora_inicio_horas = ctk.CTkComboBox(self, values=[str(i) for i in range(24)], width=50)
+        self.entry_hora_inicio_horas.grid(row=3, column=1, padx=5, pady=10)
+
+        self.entry_hora_inicio_minutos = ctk.CTkComboBox(self, values=[str(i) for i in range(60)], width=50)
+        self.entry_hora_inicio_minutos.grid(row=3, column=2, padx=5, pady=10)
+
+        # Dropdown lists for "Hora de finalización"
         self.label_hora_finalizacion = ctk.CTkLabel(self, text="Hora de finalización")
-        self.label_hora_finalizacion.grid(row=3, column=2, padx=10, pady=10)
+        self.label_hora_finalizacion.grid(row=3, column=3, padx=10, pady=10)
+
+        self.entry_hora_finalizacion_horas = ctk.CTkComboBox(self, values=[str(i) for i in range(24)], width=50)
+        self.entry_hora_finalizacion_horas.grid(row=3, column=4, padx=5, pady=10)
+
+        self.entry_hora_finalizacion_minutos = ctk.CTkComboBox(self, values=[str(i) for i in range(60)], width=50)
+        self.entry_hora_finalizacion_minutos.grid(row=3, column=5, padx=5, pady=10)
 
         # Add title
         self.label_titulo = ctk.CTkLabel(self, text="Datos de persona", font=("Arial", 24))

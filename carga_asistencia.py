@@ -15,11 +15,11 @@ class CargaAsistencia(ctk.CTkFrame):
         
         # ...existing code...
         
-        self.entry_usuario = ctk.CTkEntry(self)
-        username = "Magleo"  # Get username from logged in user
-        self.entry_usuario.insert(0, username)  # Set default value
-        self.entry_usuario.configure(state="readonly")
-        self.entry_usuario.grid(row=1, column=1, padx=10, pady=10)
+        #self.entry_usuario = ctk.CTkEntry(self)
+        #username = "Magleo"  # Get username from logged in user
+        #self.entry_usuario.insert(0, username)  # Set default value
+        #self.entry_usuario.configure(state="readonly")
+        #self.entry_usuario.grid(row=1, column=1, padx=10, pady=10)
         
         self.label_usuario = ctk.CTkLabel(self, text="Nombre de usuario")
         self.label_usuario.grid(row=1, column=0, padx=10, pady=10)

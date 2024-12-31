@@ -9,15 +9,10 @@ class AnalizadorPDF(ctk.CTkFrame):
     def __init__(self, parent):
         super().__init__(parent)
         self.parent = parent
-        self.setup_ui()
         self.counter = 1  # Initialize counter
-        
-         # Make read-only
-       # print("Magleo")  # Print the string
-
-    def setup_ui(self):
         btn_seleccionar = ctk.CTkButton(self, text="Seleccionar archivo PDF", command=self.seleccionar_archivo)
         btn_seleccionar.grid(row=0, column=5, columnspan=2, pady=20)
+
         # Initialize labels and entry fields but don't grid them yet
         self.label_sede = ctk.CTkLabel(self, text="Sede")
         self.entry_sede = ctk.CTkEntry(self, state="readonly")
@@ -27,8 +22,10 @@ class AnalizadorPDF(ctk.CTkFrame):
         self.entry_curso = ctk.CTkEntry(self, state="readonly")
         self.label_docente = ctk.CTkLabel(self, text="Docente")
         self.entry_docente = ctk.CTkEntry(self, state="readonly")
+        self.label_seccion = ctk.CTkLabel(self, text="Seccion")
+        self.entry_seccion = ctk.CTkEntry(self, state="readonly",width=50)
 
-        # New labels and entries
+        #logica para mostrar el nombre de usuario
         self.label_usuario = ctk.CTkLabel(self, text="Nombre de usuario")
         self.entry_usuario = ctk.CTkEntry(self)
         username = "Magleo"  # Get username from logged in user
@@ -38,14 +35,14 @@ class AnalizadorPDF(ctk.CTkFrame):
         self.label_laboratorio = ctk.CTkLabel(self, text="Nombre de laboratorio")
         self.entry_laboratorio = ctk.CTkEntry(self)
         self.label_fecha = ctk.CTkLabel(self, text="Fecha")
-        self.entry_fecha = DateEntry(self)
+        self.entry_fecha = DateEntry(self,date_pattern='dd/mm/y')
         self.label_hora_inicio = ctk.CTkLabel(self, text="Hora de inicio")
         self.entry_hora_inicio_horas = ctk.CTkComboBox(self, values=[str(i) for i in range(24)], width=50)
         self.entry_hora_inicio_minutos = ctk.CTkComboBox(self, values=[str(i) for i in range(60)], width=50)
         self.label_hora_fin = ctk.CTkLabel(self, text="Hora de finalizacion")
         self.entry_hora_fin_horas = ctk.CTkComboBox(self, values=[str(i) for i in range(24)], width=50)
         self.entry_hora_fin_minutos = ctk.CTkComboBox(self, values=[str(i) for i in range(60)], width=50)
-
+        
         # Initially hide new labels and entries
         self.label_usuario.grid_remove()
         self.entry_usuario.grid_remove()
@@ -59,8 +56,10 @@ class AnalizadorPDF(ctk.CTkFrame):
         self.label_hora_fin.grid_remove()
         self.entry_hora_fin_horas.grid_remove()
         self.entry_hora_fin_minutos.grid_remove()
+        self.label_seccion.grid_remove()
+        self.entry_seccion.grid_remove()
 
-        # Initialize table for "DOS_PALABRAS_COMA_DOS_PALABRAS" pattern matches using CustomTkinter
+        # Initialize table r
         self.table_frame = ctk.CTkFrame(self)
         self.table = ttk.Treeview(self.table_frame, columns=("No", "Apellidos", "Nombres", "Numero de Bien", "¿Asistencia?"), show="headings")
         self.table.heading("No", text="No")
@@ -188,8 +187,8 @@ class AnalizadorPDF(ctk.CTkFrame):
             resultados = self.analizar_pdf(ruta_pdf)
             if resultados:
                 # Show the labels and entries
-                self.label_usuario.grid(row=2, column=0, padx=5, pady=5)
-                self.entry_usuario.grid(row=2, column=1, padx=5, pady=5)
+                #self.label_usuario.grid(row=5, column=0, padx=5, pady=5)
+                #self.entry_usuario.grid(row=5, column=1, padx=5, pady=5)
                 self.label_laboratorio.grid(row=2, column=2, padx=5, pady=5)
                 self.entry_laboratorio.grid(row=2, column=3, padx=5, pady=5)
                 self.label_fecha.grid(row=2, column=4, padx=5, pady=5)
@@ -244,10 +243,16 @@ class AnalizadorPDF(ctk.CTkFrame):
                             self.entry_curso.configure(state="readonly")
                         elif nombre == "DOCENTE" and not self.entry_docente.get():
                             self.label_docente.grid(row=1, column=6, padx=5, pady=5)
-                            self.entry_docente.grid(row=1, column=7, padx=5, pady=5, columnspan=3)
+                            self.entry_docente.grid(row=1, column=7, padx=5, pady=5)
                             self.entry_docente.configure(state="normal")
                             self.entry_docente.insert(0, coincidencias[0])
                             self.entry_docente.configure(state="readonly")
+                        elif nombre == "SECCION" and not self.entry_seccion.get():
+                            self.label_seccion.grid(row=2, column=0, padx=5, pady=5)
+                            self.entry_seccion.grid(row=2, column=1, padx=5, pady=5)
+                            self.entry_seccion.configure(state="normal")
+                            self.entry_seccion.insert(0, coincidencias[0])
+                            self.entry_seccion.configure(state="readonly")
                         elif nombre == "APELLIDOS_COMA_NOMBRES":
                             self.table_frame.grid()  # Show the table frame
                             for coincidencia in coincidencias:

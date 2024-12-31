@@ -1,7 +1,7 @@
 import customtkinter as ctk
 from tkinter import messagebox
-from carga_asistencia import CargaAsistencia  
-from carga_asistencia_estudiantes import AnalizadorPDF  # Import the new class
+from carga_asistencia import CargaAsistencia
+from carga_asistencia_estudiantes import AnalizadorPDF
 
 class VentanaMain:
     def __init__(self):
@@ -10,56 +10,53 @@ class VentanaMain:
         self.ventana.geometry("1280x720")
         self.ventana.title("SASE")
 
-        # Crear un frame principal que ocupa toda la ventana
-        self.main_frame = ctk.CTkFrame(self.ventana, fg_color="gray20")  # Fondo gris oscuro
-        self.main_frame.pack(fill="both", expand=True)  # Usa todo el espacio disponible
+        # Configuración del grid principal
+        self.ventana.grid_columnconfigure(1, weight=1)
+        self.ventana.grid_rowconfigure(0, weight=1)
 
-        # Label con el nombre de usuario
-        username = "Magleo"  # Aquí se debe recuperar la info del usuario que se logueó
-        label = ctk.CTkLabel(self.main_frame, text="Bienvenido " + username, font=("Arial", 18))
-        label.pack(pady=20)
+        # Panel de Navegación
+        self.nav_frame = ctk.CTkFrame(self.ventana, width=200, fg_color="gray20")
+        self.nav_frame.grid(row=0, column=0, rowspan=2, sticky="nsw", padx=10, pady=10)
 
-        # Crear un frame para los botones en una fila horizontal
-        frame_botones = ctk.CTkFrame(self.main_frame, fg_color="transparent")  # Fondo transparente
-        frame_botones.pack(pady=20)
+        self.nav_label = ctk.CTkLabel(self.nav_frame, text="SASE", font=("Arial", 20, "bold"), text_color="white")
+        self.nav_label.pack(pady=10)
 
-        # Botones de opciones en fila horizontal
-        boton_carga_asistencia = ctk.CTkButton(frame_botones, text="Carga de Asistencia", width=25, command=self.carga_asistencia)
-        boton_carga_asistencia.pack(side=ctk.LEFT, padx=10)
+        # Botones del Panel de Navegación
+        botones_nav = [
+            ("Carga de Asistencia", "📝", self.carga_asistencia),
+            ("Carga de Asistencia Estudiantes", "👨‍🎓", self.carga_asistencia_estudiantes),
+            ("Consultar Asistencia", "🔍", self.consultar_asistencia),
+            ("Consultar Falla de Computador", "💻", self.consultar_falla),
+            ("Módulo Estadístico", "📊", self.modulo_estadistico),
+            ("Cerrar Sesión", "🚪", self.cerrar)
+        ]
+
+        for texto, icono, command in botones_nav:
+            boton = ctk.CTkButton(self.nav_frame, text=f"{icono} {texto}", width=180, command=command)
+            boton.pack(pady=5)
         
-        boton_carga_asistencia_estudiantes = ctk.CTkButton(frame_botones, text="Carga de Asistencia estudiantes", width=25, command=self.carga_asistencia_estudiantes)
-        boton_carga_asistencia_estudiantes.pack(side=ctk.LEFT, padx=10)
+        username = "Magleo"  # Aquí se debe recuperar la info del usuario que se logueó
+        self.nav_label_user = ctk.CTkLabel(self.nav_frame, text="Bienvenido "+ username, font=("Arial", 20, "bold"), text_color="white")
+        self.nav_label_user.pack(pady=10)
 
-        boton_consultar_asistencia = ctk.CTkButton(frame_botones, text="Consultar Asistencia", width=25, command=self.consultar_asistencia)
-        boton_consultar_asistencia.pack(side=ctk.LEFT, padx=10)
 
-        boton_consultar_falla = ctk.CTkButton(frame_botones, text="Consultar Falla de Computador", width=25, command=self.consultar_falla)
-        boton_consultar_falla.pack(side=ctk.LEFT, padx=10)
-
-        boton_modulo_estadistico = ctk.CTkButton(frame_botones, text="Módulo Estadístico", width=25, command=self.modulo_estadistico)
-        boton_modulo_estadistico.pack(side=ctk.LEFT, padx=10)
-
-        # Botón para cerrar la sesión
-        boton_cerrar = ctk.CTkButton(self.main_frame, text="Cerrar sesion", command=self.cerrar)
-        boton_cerrar.pack(pady=10)
-
-        # Frame para mostrar el formulario de asistencia
-        self.frame_formulario = ctk.CTkFrame(self.main_frame, fg_color="transparent")
-        self.frame_formulario.pack(fill="both", expand=True, pady=20)
-
+        # Frame principal para mostrar las vistas
+        self.main_frame = ctk.CTkFrame(self.ventana, fg_color="gray20")
+        self.main_frame.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)
+       
     def limpiar_frame(self):
         # Limpiar el frame antes de mostrar el formulario de asistencia
-        for widget in self.frame_formulario.winfo_children():
+        for widget in self.main_frame.winfo_children():
             widget.destroy()
 
     def carga_asistencia(self):
         self.limpiar_frame()
-        app = CargaAsistencia(self.frame_formulario)
+        app = CargaAsistencia(self.main_frame)
         app.pack(fill="both", expand=True)
 
     def carga_asistencia_estudiantes(self):
         self.limpiar_frame()
-        app = AnalizadorPDF(self.frame_formulario)
+        app = AnalizadorPDF(self.main_frame)
         app.pack(fill="both", expand=True)
 
     def consultar_asistencia(self):
@@ -83,4 +80,4 @@ class VentanaMain:
         self.ventana.quit()
         from ventana_login import VentanaLogin
         ventana_login = VentanaLogin()
-        ventana_login.iniciar()
+        ventana_login

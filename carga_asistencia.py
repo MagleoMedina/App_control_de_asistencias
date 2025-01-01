@@ -25,17 +25,17 @@ class CargaAsistencia(ctk.CTkFrame):
         
         # Entry y Label para "Nombre de laboratorio"
         self.entry_laboratorio = ctk.CTkEntry(self)
-        self.entry_laboratorio.grid(row=1, column=3, padx=10, pady=10)
+        self.entry_laboratorio.grid(row=1, column=2, padx=10, pady=10)
         
         self.label_laboratorio = ctk.CTkLabel(self, text="Nombre de laboratorio")
-        self.label_laboratorio.grid(row=1, column=2, padx=10, pady=10)
+        self.label_laboratorio.grid(row=1, column=1, padx=10, pady=10)
         
         # DateEntry y Label para "Fecha"
-        self.entry_fecha = DateEntry(self, date_pattern="dd/mm/yyyy")
-        self.entry_fecha.grid(row=1, column=5, padx=10, pady=10)
+        self.entry_fecha = DateEntry(self,date_pattern="dd/mm/yyyy")
+        self.entry_fecha.grid(row=1, column=4, padx=10, pady=10)
         
         self.label_fecha = ctk.CTkLabel(self, text="Fecha")
-        self.label_fecha.grid(row=1, column=4, padx=10, pady=10)
+        self.label_fecha.grid(row=1, column=3, padx=10, pady=10)
         
         # Dropdown lists for "Hora de inicio"
         self.label_hora_inicio = ctk.CTkLabel(self, text="Hora de inicio")

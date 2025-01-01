@@ -188,6 +188,7 @@ class AnalizadorPDF(ctk.CTkFrame):
         return resultados
 
     def seleccionar_archivo(self):
+        self.limpiar_campos()  # Clear all fields before selecting a new file
         ruta_pdf = filedialog.askopenfilename(
             title="Seleccionar archivo PDF",
             filetypes=(("Archivos PDF", "*.pdf"), ("Todos los archivos", "*.*"))
@@ -270,5 +271,70 @@ class AnalizadorPDF(ctk.CTkFrame):
                             for coincidencia in coincidencias:
                                 self.table.insert("", "end", values=(self.counter, coincidencia[0], coincidencia[1], "", "NO"))  # Add empty "Numero de Bien" and "¿Asistencia?" columns
                                 self.counter += 1
+
+    def limpiar_campos(self):
+        # Clear all entry fields
+        self.entry_sede.configure(state="normal")
+        self.entry_sede.delete(0, 'end')
+        self.entry_sede.configure(state="readonly")
+
+        self.entry_carrera.configure(state="normal")
+        self.entry_carrera.delete(0, 'end')
+        self.entry_carrera.configure(state="readonly")
+
+        self.entry_curso.configure(state="normal")
+        self.entry_curso.delete(0, 'end')
+        self.entry_curso.configure(state="readonly")
+
+        self.entry_docente.configure(state="normal")
+        self.entry_docente.delete(0, 'end')
+        self.entry_docente.configure(state="readonly")
+
+        self.entry_seccion.configure(state="normal")
+        self.entry_seccion.delete(0, 'end')
+        self.entry_seccion.configure(state="readonly")
+
+        self.entry_laboratorio.delete(0, 'end')
+        #self.entry_fecha.set_date('')
+        self.entry_hora_inicio_horas.set('')
+        self.entry_hora_inicio_minutos.set('')
+        self.entry_hora_fin_horas.set('')
+        self.entry_hora_fin_minutos.set('')
+
+        # Clear the table
+        for item in self.table.get_children():
+            self.table.delete(item)
+
+        # Hide all labels and entries
+        self.label_sede.grid_remove()
+        self.entry_sede.grid_remove()
+        self.label_carrera.grid_remove()
+        self.entry_carrera.grid_remove()
+        self.label_curso.grid_remove()
+        self.entry_curso.grid_remove()
+        self.label_docente.grid_remove()
+        self.entry_docente.grid_remove()
+        self.label_seccion.grid_remove()
+        self.entry_seccion.grid_remove()
+        self.label_laboratorio.grid_remove()
+        self.entry_laboratorio.grid_remove()
+        self.label_fecha.grid_remove()
+        self.entry_fecha.grid_remove()
+        self.label_hora_inicio.grid_remove()
+        self.entry_hora_inicio_horas.grid_remove()
+        self.entry_hora_inicio_minutos.grid_remove()
+        self.label_hora_fin.grid_remove()
+        self.entry_hora_fin_horas.grid_remove()
+        self.entry_hora_fin_minutos.grid_remove()
+        self.table_frame.grid_remove()
+        self.label_fallo_computadora.grid_remove()
+        self.radio_si.grid_remove()
+        self.radio_no.grid_remove()
+        self.label_numero_bien.grid_remove()
+        self.entry_numero_bien.grid_remove()
+        self.label_descripcion.grid_remove()
+        self.entry_descripcion.grid_remove()
+        #reset counter
+        self.counter=1
 
 

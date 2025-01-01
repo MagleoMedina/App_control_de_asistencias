@@ -23,7 +23,7 @@ class AnalizadorPDF(ctk.CTkFrame):
         self.label_docente = ctk.CTkLabel(self, text="Docente")
         self.entry_docente = ctk.CTkEntry(self, state="readonly")
         self.label_seccion = ctk.CTkLabel(self, text="Seccion")
-        self.entry_seccion = ctk.CTkEntry(self, state="readonly",width=50)
+        self.entry_seccion = ctk.CTkEntry(self, state="readonly", width=20)
 
         #logica para mostrar el nombre de usuario
         self.label_usuario = ctk.CTkLabel(self, text="Nombre de usuario")
@@ -37,11 +37,11 @@ class AnalizadorPDF(ctk.CTkFrame):
         self.label_fecha = ctk.CTkLabel(self, text="Fecha")
         self.entry_fecha = DateEntry(self,date_pattern='dd/mm/y')
         self.label_hora_inicio = ctk.CTkLabel(self, text="Hora de inicio")
-        self.entry_hora_inicio_horas = ctk.CTkComboBox(self, values=[str(i) for i in range(24)], width=50)
-        self.entry_hora_inicio_minutos = ctk.CTkComboBox(self, values=[str(i) for i in range(60)], width=50)
+        self.entry_hora_inicio_horas = ctk.CTkComboBox(self, values=[str(i) for i in range(24)], width=60)
+        self.entry_hora_inicio_minutos = ctk.CTkComboBox(self, values=[str(i) for i in range(60)], width=60)
         self.label_hora_fin = ctk.CTkLabel(self, text="Hora de finalizacion")
-        self.entry_hora_fin_horas = ctk.CTkComboBox(self, values=[str(i) for i in range(24)], width=50)
-        self.entry_hora_fin_minutos = ctk.CTkComboBox(self, values=[str(i) for i in range(60)], width=50)
+        self.entry_hora_fin_horas = ctk.CTkComboBox(self, values=[str(i) for i in range(24)], width=60)
+        self.entry_hora_fin_minutos = ctk.CTkComboBox(self, values=[str(i) for i in range(60)], width=60)
         
         # Initially hide new labels and entries
         self.label_usuario.grid_remove()
@@ -59,9 +59,18 @@ class AnalizadorPDF(ctk.CTkFrame):
         self.label_seccion.grid_remove()
         self.entry_seccion.grid_remove()
 
+        # Create a style
+        style = ttk.Style()
+        style.configure("Custom.Treeview", 
+                        background="#D3D3D3",  # Background color
+                        foreground="black",   # Text color
+                        rowheight=25,         # Row height
+                        fieldbackground="#D3D3D3")  # Field background color
+        style.map('Custom.Treeview', background=[('selected', '#347083')])  # Selected row color
+
         # Initialize table r
         self.table_frame = ctk.CTkFrame(self)
-        self.table = ttk.Treeview(self.table_frame, columns=("No", "Apellidos", "Nombres", "Numero de Bien", "¿Asistencia?"), show="headings")
+        self.table = ttk.Treeview(self.table_frame, columns=("No", "Apellidos", "Nombres", "Numero de Bien", "¿Asistencia?"), show="headings", style="Custom.Treeview")
         self.table.heading("No", text="No")
         self.table.heading("Apellidos", text="Apellidos")
         self.table.heading("Nombres", text="Nombres")
@@ -71,7 +80,7 @@ class AnalizadorPDF(ctk.CTkFrame):
         self.table.column("Numero de Bien", width=150)
         self.table.column("¿Asistencia?", width=100)
         self.table.pack(fill="both", expand=True)
-        self.table_frame.grid(row=3, column=0, columnspan=8, padx=10, pady=10)
+        self.table_frame.grid(row=5, column=0, columnspan=8, padx=10, pady=10)
         self.table_frame.grid_remove()  # Initially hide the table frame
         
         self.table.bind("<Double-1>", self.on_double_click)
@@ -105,10 +114,10 @@ class AnalizadorPDF(ctk.CTkFrame):
 
     def toggle_fallo_computadora(self):
         if self.radio_var.get() == "Si":
-            self.label_numero_bien.grid(row=5, column=0, padx=5, pady=5)
-            self.entry_numero_bien.grid(row=5, column=1, padx=5, pady=5)
-            self.label_descripcion.grid(row=5, column=2, padx=5, pady=5)
-            self.entry_descripcion.grid(row=5, column=3, padx=5, pady=5)
+            self.label_numero_bien.grid(row=7, column=0, padx=5, pady=5)
+            self.entry_numero_bien.grid(row=7, column=1, padx=5, pady=5)
+            self.label_descripcion.grid(row=7, column=2, padx=5, pady=5)
+            self.entry_descripcion.grid(row=7, column=3, padx=5, pady=5)
         else:
             self.label_numero_bien.grid_remove()
             self.entry_numero_bien.grid_remove()
@@ -193,17 +202,20 @@ class AnalizadorPDF(ctk.CTkFrame):
                 self.entry_laboratorio.grid(row=2, column=3, padx=5, pady=5)
                 self.label_fecha.grid(row=2, column=4, padx=5, pady=5)
                 self.entry_fecha.grid(row=2, column=5, padx=5, pady=5)
-                self.label_hora_inicio.grid(row=2, column=6, padx=5, pady=5)
-                self.entry_hora_inicio_horas.grid(row=2, column=7, padx=5, pady=5)
-                self.entry_hora_inicio_minutos.grid(row=2, column=8, padx=5, pady=5)
-                self.label_hora_fin.grid(row=2, column=9, padx=5, pady=5)
-                self.entry_hora_fin_horas.grid(row=2, column=10, padx=5, pady=5)
-                self.entry_hora_fin_minutos.grid(row=2, column=11, padx=5, pady=5)
+                self.label_seccion.grid(row=2, column=0, padx=5, pady=5)
+                self.entry_seccion.grid(row=2, column=1, padx=5, pady=5)
+                self.label_hora_inicio.grid(row=3, column=0, padx=5, pady=5)
+                self.entry_hora_inicio_horas.grid(row=3, column=1, padx=5, pady=5)
+                self.entry_hora_inicio_minutos.grid(row=3, column=2, padx=5, pady=5)
+                self.label_hora_fin.grid(row=3, column=3, padx=5, pady=5)
+                self.entry_hora_fin_horas.grid(row=3, column=4, padx=5, pady=5)
+                self.entry_hora_fin_minutos.grid(row=3, column=5, padx=5, pady=5)
+                self.table_frame.grid(row=5, column=0, columnspan=8, padx=10, pady=10)
 
                 # Show the label and radio buttons
-                self.label_fallo_computadora.grid(row=4, column=0, padx=5, pady=5)
-                self.radio_si.grid(row=4, column=1, padx=5, pady=5)
-                self.radio_no.grid(row=4, column=2, padx=5, pady=5)
+                self.label_fallo_computadora.grid(row=6, column=0, padx=5, pady=5)
+                self.radio_si.grid(row=6, column=1, padx=5, pady=5)
+                self.radio_no.grid(row=6, column=2, padx=5, pady=5)
 
                 filtros = [
                     "UNIVERSIDAD NACIONAL EXPERIMENTAL DE GUAYANA",

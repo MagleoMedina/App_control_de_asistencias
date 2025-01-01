@@ -105,9 +105,18 @@ class CargaAsistencia(ctk.CTkFrame):
         
         # Initialize counter
         self.counter = 1
-        
+       
+        # Create a style
+        style = ttk.Style()
+        style.configure("Custom.Treeview", 
+                        background="#D3D3D3",  # Background color
+                        foreground="black",   # Text color
+                        rowheight=25,         # Row height
+                        fieldbackground="#D3D3D3")  # Field background color
+        style.map('Custom.Treeview', background=[('selected', '#347083')])  # Selected row color
+
         # Create table to display added persons
-        self.tree = ttk.Treeview(self, columns=("no", "tipo_usuario", "nombre", "apellido", "cedula", "telefono", "numero_bien", "organizacion", "direccion"), show='headings')
+        self.tree = ttk.Treeview(self, columns=("no", "tipo_usuario", "nombre", "apellido", "cedula", "telefono", "numero_bien", "organizacion", "direccion"), show='headings', style="Custom.Treeview")
         self.tree.heading("no", text="No")
         self.tree.heading("tipo_usuario", text="Tipo de usuario")
         self.tree.heading("nombre", text="Nombre")

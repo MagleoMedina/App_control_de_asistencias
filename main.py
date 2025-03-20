@@ -4,7 +4,7 @@ from ventana_registro import VentanaRegistro
 
 
 
-app = VentanaMain()
+app = VentanaLogin()
 app.iniciar()
 
 

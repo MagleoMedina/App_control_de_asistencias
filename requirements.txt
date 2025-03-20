@@ -1,0 +1,4 @@
+customtkinter
+tkcalendar
+pyinstaller
+PyPDF2

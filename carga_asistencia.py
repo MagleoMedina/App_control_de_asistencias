@@ -15,27 +15,26 @@ class CargaAsistencia(ctk.CTkFrame):
         
         # ...existing code...
         
-        #self.entry_usuario = ctk.CTkEntry(self)
-        #username = "Magleo"  # Get username from logged in user
-        #self.entry_usuario.insert(0, username)  # Set default value
-        #self.entry_usuario.configure(state="readonly")
-        #self.entry_usuario.grid(row=1, column=1, padx=10, pady=10)
-        #self.label_usuario = ctk.CTkLabel(self, text="Nombre de usuario")
-        #self.label_usuario.grid(row=1, column=0, padx=10, pady=10)
-        
         # Entry y Label para "Nombre de laboratorio"
         self.entry_laboratorio = ctk.CTkEntry(self)
-        self.entry_laboratorio.grid(row=1, column=2, padx=10, pady=10)
+        self.entry_laboratorio.grid(row=1, column=3, padx=10, pady=10)
         
         self.label_laboratorio = ctk.CTkLabel(self, text="Nombre de laboratorio")
-        self.label_laboratorio.grid(row=1, column=1, padx=10, pady=10)
+        self.label_laboratorio.grid(row=1, column=2, padx=10, pady=10)
+
+        # Entry y Label para "Sede"
+        self.entry_sede = ctk.CTkEntry(self)
+        self.entry_sede.grid(row=1, column=1, padx=10, pady=10)
+        
+        self.label_sede = ctk.CTkLabel(self, text="Sede")
+        self.label_sede.grid(row=1, column=0, padx=10, pady=10)
         
         # DateEntry y Label para "Fecha"
         self.entry_fecha = DateEntry(self,date_pattern="dd/mm/yyyy")
-        self.entry_fecha.grid(row=1, column=4, padx=10, pady=10)
+        self.entry_fecha.grid(row=1, column=5, padx=10, pady=10)
         
         self.label_fecha = ctk.CTkLabel(self, text="Fecha")
-        self.label_fecha.grid(row=1, column=3, padx=10, pady=10)
+        self.label_fecha.grid(row=1, column=4, padx=10, pady=10)
         
         # Dropdown lists for "Hora de inicio"
         self.label_hora_inicio = ctk.CTkLabel(self, text="Hora de inicio")
@@ -62,9 +61,13 @@ class CargaAsistencia(ctk.CTkFrame):
         self.label_titulo.grid(row=5, column=0, columnspan=6, pady=20)
         
         # Add labels and entries for personal data
-        self.label_tipo_usuario = ctk.CTkLabel(self, text="Tipo de usuario")
+        self.label_tipo_usuario = ctk.CTkLabel(self, text="Tipo de uso")
         self.label_tipo_usuario.grid(row=6, column=0, padx=10, pady=10)
-        self.entry_tipo_usuario = ctk.CTkComboBox(self, values=["profesor", "personal administrativo", "foraneo"], command=self.on_tipo_usuario_change)
+        values = ["Servicios de internet", "Atención al usuario", 
+                  "Apoyo al estudiante en asesorías con sus equipos, profesores, preparadores",
+                  "Talleres de capacitacion al personal administrativo y docente", 
+                  "Apoyo en actividades a otras instituciones"] #Recuperar de la BD
+        self.entry_tipo_usuario = ctk.CTkComboBox(self, values=values)
         self.entry_tipo_usuario.grid(row=6, column=1, padx=10, pady=10)
         
         self.label_nombre = ctk.CTkLabel(self, text="Nombre")
@@ -81,24 +84,22 @@ class CargaAsistencia(ctk.CTkFrame):
         self.label_cedula.grid(row=9, column=0, padx=10, pady=10)
         self.entry_cedula = ctk.CTkEntry(self)
         self.entry_cedula.grid(row=9, column=1, padx=10, pady=10)
+
+        # Entry y Label para "Organización"
+        self.label_organizacion = ctk.CTkLabel(self, text="Organización")
+        self.label_organizacion.grid(row=9, column=2, padx=10, pady=10)
+        self.entry_organizacion = ctk.CTkEntry(self)
+        self.entry_organizacion.grid(row=9, column=3, padx=10, pady=10)
         
         self.label_telefono = ctk.CTkLabel(self, text="Telefono")
-        self.label_telefono.grid(row=9, column=2, padx=10, pady=10)
+        self.label_telefono.grid(row=9, column=4, padx=10, pady=10)
         self.entry_telefono = ctk.CTkEntry(self)
-        self.entry_telefono.grid(row=9, column=3, padx=10, pady=10)
+        self.entry_telefono.grid(row=9, column=5, padx=10, pady=10)
         
         self.label_numero_bien = ctk.CTkLabel(self, text="Numero de bien")
-        self.label_numero_bien.grid(row=9, column=4, padx=10, pady=10)
+        self.label_numero_bien.grid(row=10, column=2, padx=10, pady=10)
         self.entry_numero_bien = ctk.CTkEntry(self)
-        self.entry_numero_bien.grid(row=9, column=5, padx=10, pady=10)
-        
-        self.label_organizacion = ctk.CTkLabel(self, text="Nombre de organizacion")
-        self.entry_organizacion = ctk.CTkEntry(self)
-        self.label_direccion = ctk.CTkLabel(self, text="Direccion")
-        self.entry_direccion = ctk.CTkEntry(self)
-        
-        # Hide additional fields initially
-        self.hide_foraneo_fields()
+        self.entry_numero_bien.grid(row=10, column=3, padx=10, pady=10)
         
         self.button_añadir_persona = ctk.CTkButton(self, text="Añadir persona", command=self.añadir_persona)
         self.button_añadir_persona.grid(row=12, column=2, columnspan=2, pady=20)
@@ -116,16 +117,15 @@ class CargaAsistencia(ctk.CTkFrame):
         style.map('Custom.Treeview', background=[('selected', '#347083')])  # Selected row color
 
         # Create table to display added persons
-        self.tree = ttk.Treeview(self, columns=("no", "tipo_usuario", "nombre", "apellido", "cedula", "telefono", "numero_bien", "organizacion", "direccion"), show='headings', style="Custom.Treeview")
+        self.tree = ttk.Treeview(self, columns=("no", "tipo_usuario", "nombre", "apellido", "cedula", "organizacion", "telefono", "numero_bien"), show='headings', style="Custom.Treeview")
         self.tree.heading("no", text="No")
-        self.tree.heading("tipo_usuario", text="Tipo de usuario")
+        self.tree.heading("tipo_usuario", text="Tipo de uso")
         self.tree.heading("nombre", text="Nombre")
         self.tree.heading("apellido", text="Apellido")
         self.tree.heading("cedula", text="Cedula")
+        self.tree.heading("organizacion", text="Organización")
         self.tree.heading("telefono", text="Telefono")
         self.tree.heading("numero_bien", text="Numero de bien")
-        self.tree.heading("organizacion", text="Nombre de organizacion")
-        self.tree.heading("direccion", text="Direccion")
         
         # Set column widths
         self.tree.column("no", width=50)
@@ -133,17 +133,12 @@ class CargaAsistencia(ctk.CTkFrame):
         self.tree.column("nombre", width=100)
         self.tree.column("apellido", width=100)
         self.tree.column("cedula", width=100)
+        self.tree.column("organizacion", width=100)
         self.tree.column("telefono", width=100)
         self.tree.column("numero_bien", width=100)
-        self.tree.column("organizacion", width=150)
-        self.tree.column("direccion", width=150)
         
         self.tree.grid(row=13, column=0, columnspan=6, pady=20)
         
-        # Initially hide the "organizacion" and "direccion" columns
-        self.tree.column("organizacion", width=0, stretch=False)
-        self.tree.column("direccion", width=0, stretch=False)
-
         # Bind double-click event to the table
         self.tree.bind("<Double-1>", self.on_double_click)
 
@@ -191,28 +186,6 @@ class CargaAsistencia(ctk.CTkFrame):
         self.tree.item(item, values=values)
         self.entry_edit.destroy()
 
-    def on_tipo_usuario_change(self, event=None):
-        if self.entry_tipo_usuario.get() == "foraneo":
-            self.show_foraneo_fields()
-            self.tree.column("organizacion", width=100, stretch=True)
-            self.tree.column("direccion", width=100, stretch=True)
-        else:
-            self.hide_foraneo_fields()
-            self.tree.column("organizacion", width=0, stretch=False)
-            self.tree.column("direccion", width=0, stretch=False)
-
-    def show_foraneo_fields(self):
-        self.label_organizacion.grid(row=10, column=0, padx=10, pady=10)
-        self.entry_organizacion.grid(row=10, column=1, padx=10, pady=10)
-        self.label_direccion.grid(row=10, column=2, padx=10, pady=10)
-        self.entry_direccion.grid(row=10, column=3, padx=10, pady=10)
-
-    def hide_foraneo_fields(self):
-        self.label_organizacion.grid_forget()
-        self.entry_organizacion.grid_forget()
-        self.label_direccion.grid_forget()
-        self.entry_direccion.grid_forget()
-
     def on_fallo_computadora_change(self):
         if self.radio_var.get() == "si":
             self.show_fallo_computadora_fields()
@@ -236,13 +209,12 @@ class CargaAsistencia(ctk.CTkFrame):
         nombre = self.entry_nombre.get()
         apellido = self.entry_apellido.get()
         cedula = self.entry_cedula.get()
+        organizacion = self.entry_organizacion.get()
         telefono = self.entry_telefono.get()
         numero_bien = self.entry_numero_bien.get()
-        organizacion = self.entry_organizacion.get() if tipo_usuario == "foraneo" else ""
-        direccion = self.entry_direccion.get() if tipo_usuario == "foraneo" else ""
         
         # Insert the data into the table with the counter
-        self.tree.insert("", "end", values=(self.counter, tipo_usuario, nombre, apellido, cedula, telefono, numero_bien, organizacion, direccion))
+        self.tree.insert("", "end", values=(self.counter, tipo_usuario, nombre, apellido, cedula, organizacion, telefono, numero_bien))
         
         # Increment the counter
         self.counter += 1
@@ -252,13 +224,9 @@ class CargaAsistencia(ctk.CTkFrame):
         self.entry_nombre.delete(0, 'end')
         self.entry_apellido.delete(0, 'end')
         self.entry_cedula.delete(0, 'end')
+        self.entry_organizacion.delete(0, 'end')
         self.entry_telefono.delete(0, 'end')
         self.entry_numero_bien.delete(0, 'end')
-        self.entry_organizacion.delete(0, 'end')
-        self.entry_direccion.delete(0, 'end')
-        self.hide_foraneo_fields()
-        self.tree.column("organizacion", width=0, stretch=False)
-        self.tree.column("direccion", width=0, stretch=False)
 
 # ...existing code...
 

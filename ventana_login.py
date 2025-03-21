@@ -6,14 +6,11 @@ class VentanaLogin:
         # Crear la ventana principal
         self.ventana = ctk.CTk()
         self.ventana.title("Login")
-
         self.ventana.geometry("1280x720")
-
 
         # Configuración del contenedor principal
         self.frame_principal = ctk.CTkFrame(self.ventana)
         self.frame_principal.place(relx=0.5, rely=0.5, anchor='center')  # Centrar el frame
-
 
         # Etiqueta y campo de entrada para el nombre de usuario
         self.label_usuario = ctk.CTkLabel(self.frame_principal, text="Usuario:")

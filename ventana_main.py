@@ -22,6 +22,7 @@ class VentanaMain:
         self.nav_label.pack(pady=10)
 
         # Botones del Panel de Navegación
+        self.botones_nav = []
         botones_nav = [
             ("Carga de Asistencia", "📝", self.carga_asistencia),
             ("Carga de Asistencia Estudiantes", "👨‍🎓", self.carga_asistencia_estudiantes),
@@ -34,6 +35,7 @@ class VentanaMain:
         for texto, icono, command in botones_nav:
             boton = ctk.CTkButton(self.nav_frame, text=f"{icono} {texto}", width=180, command=command)
             boton.pack(pady=5)
+            self.botones_nav.append(boton)
         
         username = "Magleo"  # Aquí se debe recuperar la info del usuario que se logueó
         self.nav_label_user = ctk.CTkLabel(self.nav_frame, text="Bienvenido "+ username, font=("Arial", 20, "bold"), text_color="white")
@@ -75,9 +77,14 @@ class VentanaMain:
         self.ventana.mainloop()
 
     def cerrar(self):
+        # Disable all buttons to prevent further clicks
+        for boton in self.botones_nav:
+            boton.configure(state="disabled")
+        
         # Cerrar la ventana y volver al login 
-        self.ventana.withdraw()
-        self.ventana.quit()
+        self.ventana.update()  # Process all pending events
+        self.ventana.quit()  # Ensure the main loop is stopped
+        self.ventana.destroy()
         from ventana_login import VentanaLogin
-        ventana_login = VentanaLogin()
-        ventana_login
+        app = VentanaLogin()
+        app.iniciar()

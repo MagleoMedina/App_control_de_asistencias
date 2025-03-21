@@ -84,7 +84,6 @@ class VentanaMain:
         # Cerrar la ventana y volver al login 
         self.ventana.update()  # Process all pending events
         self.ventana.quit()  # Ensure the main loop is stopped
-        #self.ventana.withdraw()
         self.ventana.destroy()
         from ventana_login import VentanaLogin
         app = VentanaLogin()

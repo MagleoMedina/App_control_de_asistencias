@@ -80,13 +80,13 @@ class VentanaLogin:
     def registro_usuario(self):
         """Función que se ejecuta al hacer clic en el botón 'Registro de usuario'."""
         self.ventana.withdraw()
-        from ventana_registro import VentanaRegistro
+        from gestion_de_usuarios import VentanaRegistro
         registro = VentanaRegistro()
         registro.iniciar()
 
     def olvidar_datos(self):
         self.ventana.withdraw()  
-        from olvide_mis_datos import RecuperarDatosApp  # Importa la clase desde el archivo creado
+        from gestion_de_usuarios import RecuperarDatosApp  # Importa la clase desde el archivo creado
         recuperar_datos = RecuperarDatosApp()  # Crea una instancia de la clase
         recuperar_datos.iniciar()  # Llama al método iniciar para mostrar la ventana de recuperación
 

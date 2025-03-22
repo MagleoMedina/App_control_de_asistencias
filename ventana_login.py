@@ -42,14 +42,6 @@ class VentanaLogin:
         self.boton_ingresar = ctk.CTkButton(self.frame_botones, text="Ingresar", command=self.ingresar)
         self.boton_ingresar.grid(row=0, column=0, padx=10)
 
-        # Botón para registro de usuario
-        self.boton_registrar = ctk.CTkButton(self.frame_botones, text="Registro de usuario", command=self.registro_usuario)
-        self.boton_registrar.grid(row=0, column=1, padx=10)
-
-        # Botón "Olvidé mis datos" colocado debajo del botón "Ingresar"
-        self.boton_olvide_datos = ctk.CTkButton(self.frame_principal, text="Olvidé mis datos", command=self.olvidar_datos)
-        self.boton_olvide_datos.grid(row=3, column=0, columnspan=2, pady=10)  # Ajustado a dos columnas
-
         # Variable para controlar la visibilidad de la contraseña
         self.password_visible = False
 
@@ -77,19 +69,7 @@ class VentanaLogin:
         else:
             messagebox.showwarning("Error", "Por favor, completa todos los campos.")
 
-    def registro_usuario(self):
-        """Función que se ejecuta al hacer clic en el botón 'Registro de usuario'."""
-        self.ventana.withdraw()
-        from ventana_registro import VentanaRegistro
-        registro = VentanaRegistro()
-        registro.iniciar()
-
-    def olvidar_datos(self):
-        self.ventana.withdraw()  
-        from olvide_mis_datos import RecuperarDatosApp  # Importa la clase desde el archivo creado
-        recuperar_datos = RecuperarDatosApp()  # Crea una instancia de la clase
-        recuperar_datos.iniciar()  # Llama al método iniciar para mostrar la ventana de recuperación
-
+    
     def iniciar(self):
         """Inicia el bucle principal de la ventana."""
         self.ventana.mainloop()

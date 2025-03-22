@@ -1,10 +1,10 @@
-from ventana_main import VentanaMain
+from ventana_main import VentanaMain, VentanaMainAdmin
 from ventana_login import VentanaLogin
 from gestion_de_usuarios import VentanaRegistro
 
 
 
-app = VentanaMain()
+app = VentanaMainAdmin()
 app.iniciar()
 
 

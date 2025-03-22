@@ -5,7 +5,7 @@ from carga_asistencia_estudiantes import AnalizadorPDF
 from consultar_asistencia import ConsultarAsistencia
 from modulo_estadistico import ModuloEstadistico
 from consultar_falla_equipo import ConsultarFallaEquipo
-from gestion_de_usuarios import VentanaRegistro, RecuperarDatosApp
+from gestion_de_usuarios import GestionUsuarios
 
 class VentanaMain:
     def __init__(self):
@@ -173,7 +173,7 @@ class VentanaMainAdmin:
 
     def gestion_usuarios(self):
         self.limpiar_frame()
-        app = VentanaRegistro(self.main_frame)
+        app = GestionUsuarios(self.main_frame)
         app.pack(fill="both", expand=True)
 
     def iniciar(self):

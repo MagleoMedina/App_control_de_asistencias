@@ -2,6 +2,57 @@ import customtkinter as ctk
 from tkinter import messagebox
 
 #Clase encargada de registrar nuevos usuarios
+class GestionUsuarios(ctk.CTkFrame):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.parent = parent
+
+        # Título
+        self.label_titulo = ctk.CTkLabel(self, text="Selecciona una opcion")
+        self.label_titulo.grid(row=0, column=0, columnspan=4, pady=10)
+
+        # Botón Crear
+        self.boton_crear = ctk.CTkButton(self, text="Crear", command=self.crear_usuario)
+        self.boton_crear.grid(row=1, column=0, padx=5, pady=5)
+
+        # Botón Modificar
+        self.boton_modificar = ctk.CTkButton(self, text="Modificar", command=self.modificar_usuario)
+        self.boton_modificar.grid(row=1, column=1, padx=5, pady=5)
+
+        # Botón Recuperar Credenciales
+        self.boton_recuperar = ctk.CTkButton(self, text="Recuperar Credenciales", command=self.recuperar_credenciales)
+        self.boton_recuperar.grid(row=1, column=2, padx=5, pady=5)
+
+        # Botón Eliminar Credenciales
+        self.boton_eliminar = ctk.CTkButton(self, text="Eliminar Credenciales", command=self.eliminar_usuario)
+        self.boton_eliminar.grid(row=1, column=3, padx=5, pady=5)
+
+    def limpiar_pantalla(self):
+        for widget in self.winfo_children():
+            if widget not in [self.label_titulo, self.boton_crear, self.boton_modificar, self.boton_recuperar, self.boton_eliminar]:
+                widget.grid_forget()
+
+    def crear_usuario(self):
+        self.limpiar_pantalla()
+        VentanaRegistro(self).grid(row=2, column=0, columnspan=4, pady=10)
+
+    def modificar_usuario(self):
+        self.limpiar_pantalla()
+        # Aquí se debería agregar la lógica para modificar un usuario
+        # Por ahora, solo mostramos un mensaje
+        messagebox.showinfo("Modificar Usuario", "Funcionalidad de modificar usuario no implementada.")
+
+    def recuperar_credenciales(self):
+        self.limpiar_pantalla()
+        RecuperarDatosApp(self).grid(row=2, column=0, columnspan=4, pady=10)
+
+    def eliminar_usuario(self):
+        self.limpiar_pantalla()
+        # Aquí se debería agregar la lógica para eliminar un usuario
+        # Por ahora, solo mostramos un mensaje
+        messagebox.showinfo("Eliminar Usuario", "Funcionalidad de eliminar usuario no implementada.")
+
+#Clase encargada de registrar nuevos usuarios
 class VentanaRegistro(ctk.CTkFrame):
     def __init__(self, parent=None):
         super().__init__(parent)

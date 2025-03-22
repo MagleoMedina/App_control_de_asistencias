@@ -15,15 +15,17 @@ class CargaAsistencia(ctk.CTkFrame):
         
         # ...existing code...
         
-        # Entry y Label para "Nombre de laboratorio"
-        self.entry_laboratorio = ctk.CTkEntry(self)
+        # Dropdown list and Label for "Nombre de laboratorio"
+        values_lab=["Laboratorio 1", "Laboratorio 2"]#recuperar de la BD
+        self.entry_laboratorio = ctk.CTkComboBox(self, values=values_lab, state="readonly")
         self.entry_laboratorio.grid(row=1, column=3, padx=10, pady=10)
         
-        self.label_laboratorio = ctk.CTkLabel(self, text="Nombre de laboratorio")
+        self.label_laboratorio = ctk.CTkLabel(self, text="Laboratorio")
         self.label_laboratorio.grid(row=1, column=2, padx=10, pady=10)
 
-        # Entry y Label para "Sede"
-        self.entry_sede = ctk.CTkEntry(self)
+        # Dropdown list and Label for "Sede"
+        values_sede=["Villa asia", "Atlantico"]#recuperar de la BD  
+        self.entry_sede = ctk.CTkComboBox(self, values=values_sede, state="readonly")
         self.entry_sede.grid(row=1, column=1, padx=10, pady=10)
         
         self.label_sede = ctk.CTkLabel(self, text="Sede")

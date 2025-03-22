@@ -15,13 +15,15 @@ class AnalizadorPDF(ctk.CTkFrame):
         # Sede
         self.label_sede = ctk.CTkLabel(self, text="Sede")
         self.label_sede.grid(row=1, column=1, padx=10, pady=10)
-        self.entry_sede = ctk.CTkEntry(self)
+        values_sede = ["Villa asia", "Atlantico"]#recuperar de la bd
+        self.entry_sede = ctk.CTkComboBox(self, values=values_sede, state="readonly")
         self.entry_sede.grid(row=1, column=2, padx=10, pady=10)
         
         # Laboratorio
         self.label_laboratorio = ctk.CTkLabel(self, text="Laboratorio")
         self.label_laboratorio.grid(row=1, column=3, padx=10, pady=10)
-        self.entry_laboratorio = ctk.CTkEntry(self)
+        values_lab= ["Villa asia", "Atlantico"]#recuperar de la bd
+        self.entry_laboratorio = ctk.CTkComboBox(self, values=values_lab, state="readonly")
         self.entry_laboratorio.grid(row=1, column=4, padx=10, pady=10)
         
         # Fecha

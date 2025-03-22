@@ -42,20 +42,20 @@ class CargaAsistencia(ctk.CTkFrame):
         self.label_hora_inicio = ctk.CTkLabel(self, text="Hora de inicio")
         self.label_hora_inicio.grid(row=3, column=0, padx=10, pady=10)
 
-        self.entry_hora_inicio_horas = ctk.CTkComboBox(self, values=[str(i) for i in range(24)], width=50)
+        self.entry_hora_inicio_horas = ctk.CTkComboBox(self, values=[str(i) for i in range(24)], width=60)
         self.entry_hora_inicio_horas.grid(row=3, column=1, padx=5, pady=10)
 
-        self.entry_hora_inicio_minutos = ctk.CTkComboBox(self, values=[str(i) for i in range(60)], width=50)
+        self.entry_hora_inicio_minutos = ctk.CTkComboBox(self, values=[str(i) for i in range(60)], width=60)
         self.entry_hora_inicio_minutos.grid(row=3, column=2, padx=5, pady=10)
 
         # Dropdown lists for "Hora de finalización"
         self.label_hora_finalizacion = ctk.CTkLabel(self, text="Hora de finalización")
         self.label_hora_finalizacion.grid(row=3, column=3, padx=10, pady=10)
 
-        self.entry_hora_finalizacion_horas = ctk.CTkComboBox(self, values=[str(i) for i in range(24)], width=50)
+        self.entry_hora_finalizacion_horas = ctk.CTkComboBox(self, values=[str(i) for i in range(24)], width=60)
         self.entry_hora_finalizacion_horas.grid(row=3, column=4, padx=5, pady=10)
 
-        self.entry_hora_finalizacion_minutos = ctk.CTkComboBox(self, values=[str(i) for i in range(60)], width=50)
+        self.entry_hora_finalizacion_minutos = ctk.CTkComboBox(self, values=[str(i) for i in range(60)], width=60)
         self.entry_hora_finalizacion_minutos.grid(row=3, column=5, padx=5, pady=10)
 
         # Add title

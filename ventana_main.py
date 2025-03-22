@@ -1,7 +1,7 @@
 import customtkinter as ctk
 from tkinter import messagebox
 from carga_asistencia import CargaAsistencia
-from carga_asistencia_estudiantes import AnalizadorPDF
+from carga_asistencia_estudiantes import CargaAsistenciaEstudiantes
 from consultar_asistencia import ConsultarAsistencia
 from modulo_estadistico import ModuloEstadistico
 from consultar_falla_equipo import ConsultarFallaEquipo
@@ -61,7 +61,7 @@ class VentanaMain:
 
     def carga_asistencia_estudiantes(self):
         self.limpiar_frame()
-        app = AnalizadorPDF(self.main_frame)
+        app = CargaAsistenciaEstudiantes(self.main_frame)
         app.pack(fill="both", expand=True)
 
     def consultar_asistencia(self):

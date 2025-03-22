@@ -3,7 +3,7 @@ from tkcalendar import DateEntry
 from tkinter import ttk  # Import ttk for Combobox
 from tkinter import messagebox  # Import messagebox for validation alerts
 
-class AnalizadorPDF(ctk.CTkFrame):
+class CargaAsistenciaEstudiantes(ctk.CTkFrame):
     def __init__(self, parent):
         super().__init__(parent)
         self.parent = parent

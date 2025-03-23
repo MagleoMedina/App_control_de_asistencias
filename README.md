@@ -20,4 +20,4 @@ Para instalar las dependencias necesarias, puedes utilizar `pip`. A continuació
 Puedes instalar todas las dependencias ejecutando el siguiente comando:
 
 ```sh
-pip install customtkinter tkcalendar PyPDF2 tkinter 
+pip install requirements.txt

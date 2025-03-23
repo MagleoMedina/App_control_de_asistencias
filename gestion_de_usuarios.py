@@ -46,9 +46,8 @@ class GestionUsuarios(ctk.CTkFrame):
 
     def eliminar_usuario(self):
         self.limpiar_pantalla()
-        # Aquí se debería agregar la lógica para eliminar un usuario
-        # Por ahora, solo mostramos un mensaje
-        messagebox.showinfo("Eliminar Usuario", "Funcionalidad de eliminar usuario no implementada.")
+        EliminarUsuario(self).grid(row=2, column=0, columnspan=4, pady=10)
+        
 
 #Clase encargada de registrar nuevos usuarios
 class VentanaRegistro(ctk.CTkFrame):
@@ -142,41 +141,6 @@ class VentanaRegistro(ctk.CTkFrame):
         """Inicia el bucle principal de la ventana."""
         self.ventana.mainloop()
 
-#Clase encargada de recuperar los datos de un usuario
-class RecuperarDatosApp(ctk.CTkFrame):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.parent = parent
-
-        # Label for numero de cedula
-        self.label_cedula = ctk.CTkLabel(self, text="Ingrese el número de cédula del usuario:")
-        self.label_cedula.pack(pady=10)
-
-        # Entry for numero de cedula with validation
-        vcmd = (self.register(self.validate_numeric), '%P')
-        self.entry_cedula = ctk.CTkEntry(self, width=150, validate='key', validatecommand=vcmd)
-        self.entry_cedula.pack(pady=10)
-
-        # Botón Buscar
-        self.boton_buscar = ctk.CTkButton(self, text="Buscar", command=self.buscar_click)
-        self.boton_buscar.pack(pady=10)
-
-    def validate_numeric(self, value_if_allowed):
-        if value_if_allowed.isdigit() or value_if_allowed == "":
-            return True
-        else:
-            return False
-
-    def buscar_click(self):
-        # Aquí se debe buscar el usuario en la base de datos
-        # y mostrar su usuario y contraseña en un messagebox
-        usernarme = "Magleo"
-        password = "1234"
-        messagebox.showinfo(f"Resultado", "Usuario: "+usernarme+"\n\nContraseña: "+password)
-
-    def iniciar(self):
-        self.ventana.mainloop()
-
 #Clase encargada de modificar los datos de un usuario
 class ModificarDatos(ctk.CTkFrame):
     def __init__(self, parent=None):
@@ -188,7 +152,7 @@ class ModificarDatos(ctk.CTkFrame):
         self.label_cedula.grid(row=0, column=0, pady=10)
 
         # Entry for numero de cedula with validation
-        vcmd = (self.register(self.validate_numeric), '%P')
+        vcmd = (self.register(self.validate_numeric), '%S')
         self.entry_cedula = ctk.CTkEntry(self, validate='key', validatecommand=vcmd)
         self.entry_cedula.grid(row=0, column=1, padx=10, pady=10)
 
@@ -271,6 +235,11 @@ class ModificarDatos(ctk.CTkFrame):
             return False
 
     def buscar_click(self):
+        # Validar si el campo de cédula está vacío
+        #if not self.entry_cedula.get():
+        #    messagebox.showwarning("Error", "Por favor, ingrese el número de cédula.")
+        #    return
+
         # Aquí se debe buscar el usuario en la base de datos
         # Si el usuario es encontrado, mostrar el botón Habilitar
         self.boton_habilitar.grid()
@@ -327,3 +296,60 @@ class ModificarDatos(ctk.CTkFrame):
 
         # Aquí se debe agregar la lógica para actualizar los datos del usuario
         pass
+
+#Clase encargada de recuperar los datos de un usuario
+class RecuperarDatosApp(ctk.CTkFrame):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.parent = parent
+
+        # Label for numero de cedula
+        self.label_cedula = ctk.CTkLabel(self, text="Ingrese el número de cédula del usuario:")
+        self.label_cedula.pack(pady=10)
+
+        # Entry for numero de cedula with validation
+        vcmd = (self.register(self.validate_numeric), '%P')
+        self.entry_cedula = ctk.CTkEntry(self, width=150, validate='key', validatecommand=vcmd)
+        self.entry_cedula.pack(pady=10)
+
+        # Botón Buscar
+        self.boton_buscar = ctk.CTkButton(self, text="Buscar", command=self.buscar_click)
+        self.boton_buscar.pack(pady=10)
+
+    def validate_numeric(self, value_if_allowed):
+        if value_if_allowed.isdigit() or value_if_allowed == "":
+            return True
+        else:
+            return False
+
+    def buscar_click(self):
+        numero_cedula = self.entry_cedula.get()
+        if not numero_cedula:
+            messagebox.showwarning("Error", "Por favor, ingrese el número de cédula.")
+            return
+            
+        # Aquí se debe buscar el usuario en la base de datos
+        # y mostrar su usuario y contraseña en un messagebox
+        usernarme = "Magleo"
+        password = "1234"
+        messagebox.showinfo(f"Resultado", "Usuario: "+usernarme+"\n\nContraseña: "+password)
+
+    def iniciar(self):
+        self.ventana.mainloop()
+
+class EliminarUsuario(RecuperarDatosApp):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    def buscar_click(self):
+        numero_cedula = self.entry_cedula.get()
+        if not numero_cedula:
+            messagebox.showwarning("Error", "Por favor, ingrese el número de cédula.")
+            return
+
+        respuesta = messagebox.askyesno("Confirmación", f"¿Estás seguro que deseas eliminar a {numero_cedula}?")
+        if respuesta:
+            # Aquí se debe eliminar el usuario en la base de datos
+            messagebox.showinfo("Resultado", "Usuario eliminado exitosamente.")
+        else:
+            messagebox.showinfo("Resultado", "Eliminación cancelada.")

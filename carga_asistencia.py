@@ -1,6 +1,6 @@
 import customtkinter as ctk
 from tkcalendar import DateEntry
-from tkinter import ttk
+from tkinter import ttk, Canvas, Scrollbar
 
 # ...existing code...
 
@@ -8,102 +8,133 @@ class CargaAsistencia(ctk.CTkFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
+        
+         # Crear un Canvas para permitir el desplazamiento
+        self.canvas = Canvas(self, highlightthickness=0) #Poner color del fondo xd bg="color"
+        self.scrollbar = Scrollbar(self, orient="vertical", command=self.canvas.yview)
+        self.scrollable_frame = ctk.CTkFrame(self.canvas) #Poner del mismo color del canvas para que no se vea la separacion fg_color="color"
+        
+        # Configuración del Scroll
+        self.scrollable_frame.bind(
+            "<Configure>",
+            lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+        )
+
+        self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+
+       # Ubicar el Canvas y la Scrollbar en la ventana
+        self.canvas.grid(row=0, column=0, sticky="nsew")
+        self.scrollbar.grid(row=0, column=1, sticky="ns")
+        
+        # Habilitar scroll con la rueda del mouse solo en el área de desplazamiento
+        self.scrollable_frame.bind("<Enter>", lambda e: self.canvas.bind_all("<MouseWheel>", self._on_mouse_wheel))
+        self.canvas.bind("<Enter>", lambda e: self.canvas.bind_all("<MouseWheel>", self._on_mouse_wheel))
+
+        # Deshabilitar scroll cuando el cursor salga del área desplazable
+        self.canvas.bind("<Leave>", lambda e: self.canvas.unbind_all("<MouseWheel>"))
+        self.scrollable_frame.bind("<Leave>", lambda e: self.canvas.unbind_all("<MouseWheel>"))
+
+
+        # Expandir y permitir redimensionar
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
                  
         # Add title
-        self.label_titulo = ctk.CTkLabel(self, text="Carga de asistencia", font=("Arial", 24))
+        self.label_titulo = ctk.CTkLabel(self.scrollable_frame, text="Carga de asistencia", font=("Arial", 24))
         self.label_titulo.grid(row=0, column=0, columnspan=6, pady=20)
         
         # ...existing code...
         
         # Dropdown list and Label for "Nombre de laboratorio"
         values_lab=["Laboratorio 1", "Laboratorio 2"]#recuperar de la BD
-        self.entry_laboratorio = ctk.CTkComboBox(self, values=values_lab, state="readonly")
+        self.entry_laboratorio = ctk.CTkComboBox(self.scrollable_frame, values=values_lab, state="readonly")
         self.entry_laboratorio.grid(row=1, column=3, padx=10, pady=10)
         
-        self.label_laboratorio = ctk.CTkLabel(self, text="Laboratorio")
+        self.label_laboratorio = ctk.CTkLabel(self.scrollable_frame, text="Laboratorio")
         self.label_laboratorio.grid(row=1, column=2, padx=10, pady=10)
 
         # Dropdown list and Label for "Sede"
         values_sede=["Villa asia", "Atlantico"]#recuperar de la BD  
-        self.entry_sede = ctk.CTkComboBox(self, values=values_sede, state="readonly")
+        self.entry_sede = ctk.CTkComboBox(self.scrollable_frame, values=values_sede, state="readonly")
         self.entry_sede.grid(row=1, column=1, padx=10, pady=10)
         
-        self.label_sede = ctk.CTkLabel(self, text="Sede")
+        self.label_sede = ctk.CTkLabel(self.scrollable_frame, text="Sede")
         self.label_sede.grid(row=1, column=0, padx=10, pady=10)
         
         # DateEntry y Label para "Fecha"
-        self.entry_fecha = DateEntry(self,date_pattern="dd/mm/yyyy")
+        self.entry_fecha = DateEntry(self.scrollable_frame,date_pattern="dd/mm/yyyy")
         self.entry_fecha.grid(row=1, column=5, padx=10, pady=10)
         
-        self.label_fecha = ctk.CTkLabel(self, text="Fecha")
+        self.label_fecha = ctk.CTkLabel(self.scrollable_frame, text="Fecha")
         self.label_fecha.grid(row=1, column=4, padx=10, pady=10)
         
         # Dropdown lists for "Hora de inicio"
-        self.label_hora_inicio = ctk.CTkLabel(self, text="Hora de inicio")
+        self.label_hora_inicio = ctk.CTkLabel(self.scrollable_frame, text="Hora de inicio")
         self.label_hora_inicio.grid(row=3, column=0, padx=10, pady=10)
 
-        self.entry_hora_inicio_horas = ctk.CTkComboBox(self, values=[str(i) for i in range(24)], width=60)
+        self.entry_hora_inicio_horas = ctk.CTkComboBox(self.scrollable_frame, values=[str(i) for i in range(24)], width=60)
         self.entry_hora_inicio_horas.grid(row=3, column=1, padx=5, pady=10)
 
-        self.entry_hora_inicio_minutos = ctk.CTkComboBox(self, values=[str(i) for i in range(60)], width=60)
+        self.entry_hora_inicio_minutos = ctk.CTkComboBox(self.scrollable_frame, values=[str(i) for i in range(60)], width=60)
         self.entry_hora_inicio_minutos.grid(row=3, column=2, padx=5, pady=10)
 
         # Dropdown lists for "Hora de finalización"
-        self.label_hora_finalizacion = ctk.CTkLabel(self, text="Hora de finalización")
+        self.label_hora_finalizacion = ctk.CTkLabel(self.scrollable_frame, text="Hora de finalización")
         self.label_hora_finalizacion.grid(row=3, column=3, padx=10, pady=10)
 
-        self.entry_hora_finalizacion_horas = ctk.CTkComboBox(self, values=[str(i) for i in range(24)], width=60)
+        self.entry_hora_finalizacion_horas = ctk.CTkComboBox(self.scrollable_frame, values=[str(i) for i in range(24)], width=60)
         self.entry_hora_finalizacion_horas.grid(row=3, column=4, padx=5, pady=10)
 
-        self.entry_hora_finalizacion_minutos = ctk.CTkComboBox(self, values=[str(i) for i in range(60)], width=60)
+        self.entry_hora_finalizacion_minutos = ctk.CTkComboBox(self.scrollable_frame, values=[str(i) for i in range(60)], width=60)
         self.entry_hora_finalizacion_minutos.grid(row=3, column=5, padx=5, pady=10)
 
         # Add title
-        self.label_titulo = ctk.CTkLabel(self, text="Datos de persona", font=("Arial", 24))
+        self.label_titulo = ctk.CTkLabel(self.scrollable_frame, text="Datos de persona", font=("Arial", 24))
         self.label_titulo.grid(row=5, column=0, columnspan=6, pady=20)
         
         # Add labels and entries for personal data
-        self.label_tipo_usuario = ctk.CTkLabel(self, text="Tipo de uso")
+        self.label_tipo_usuario = ctk.CTkLabel(self.scrollable_frame, text="Tipo de uso")
         self.label_tipo_usuario.grid(row=6, column=0, padx=10, pady=10)
         values = ["Servicios de internet", "Atención al usuario", 
                   "Apoyo al estudiante en asesorías con sus equipos, profesores, preparadores",
                   "Talleres de capacitacion al personal administrativo y docente", 
                   "Apoyo en actividades a otras instituciones"] #Recuperar de la BD
-        self.entry_tipo_usuario = ctk.CTkComboBox(self, values=values)
+        self.entry_tipo_usuario = ctk.CTkComboBox(self.scrollable_frame, values=values)
         self.entry_tipo_usuario.grid(row=6, column=1, padx=10, pady=10)
         
-        self.label_nombre = ctk.CTkLabel(self, text="Nombre")
+        self.label_nombre = ctk.CTkLabel(self.scrollable_frame, text="Nombre")
         self.label_nombre.grid(row=6, column=2, padx=10, pady=10)
-        self.entry_nombre = ctk.CTkEntry(self)
+        self.entry_nombre = ctk.CTkEntry(self.scrollable_frame)
         self.entry_nombre.grid(row=6, column=3, padx=10, pady=10)
         
-        self.label_apellido = ctk.CTkLabel(self, text="Apellido")
+        self.label_apellido = ctk.CTkLabel(self.scrollable_frame, text="Apellido")
         self.label_apellido.grid(row=6, column=4, padx=10, pady=10)
-        self.entry_apellido = ctk.CTkEntry(self)
+        self.entry_apellido = ctk.CTkEntry(self.scrollable_frame)
         self.entry_apellido.grid(row=6, column=5, padx=10, pady=10)
         
-        self.label_cedula = ctk.CTkLabel(self, text="Cedula")
+        self.label_cedula = ctk.CTkLabel(self.scrollable_frame, text="Cedula")
         self.label_cedula.grid(row=9, column=0, padx=10, pady=10)
-        self.entry_cedula = ctk.CTkEntry(self)
+        self.entry_cedula = ctk.CTkEntry(self.scrollable_frame)
         self.entry_cedula.grid(row=9, column=1, padx=10, pady=10)
 
         # Entry y Label para "Organización"
-        self.label_organizacion = ctk.CTkLabel(self, text="Organización")
+        self.label_organizacion = ctk.CTkLabel(self.scrollable_frame, text="Organización")
         self.label_organizacion.grid(row=9, column=2, padx=10, pady=10)
-        self.entry_organizacion = ctk.CTkEntry(self)
+        self.entry_organizacion = ctk.CTkEntry(self.scrollable_frame)
         self.entry_organizacion.grid(row=9, column=3, padx=10, pady=10)
         
-        self.label_telefono = ctk.CTkLabel(self, text="Telefono")
+        self.label_telefono = ctk.CTkLabel(self.scrollable_frame, text="Telefono")
         self.label_telefono.grid(row=9, column=4, padx=10, pady=10)
-        self.entry_telefono = ctk.CTkEntry(self)
+        self.entry_telefono = ctk.CTkEntry(self.scrollable_frame)
         self.entry_telefono.grid(row=9, column=5, padx=10, pady=10)
         
-        self.label_numero_bien = ctk.CTkLabel(self, text="Numero de bien")
+        self.label_numero_bien = ctk.CTkLabel(self.scrollable_frame, text="Numero de bien")
         self.label_numero_bien.grid(row=10, column=2, padx=10, pady=10)
-        self.entry_numero_bien = ctk.CTkEntry(self)
+        self.entry_numero_bien = ctk.CTkEntry(self.scrollable_frame)
         self.entry_numero_bien.grid(row=10, column=3, padx=10, pady=10)
         
-        self.button_añadir_persona = ctk.CTkButton(self, text="Añadir persona", command=self.añadir_persona)
+        self.button_añadir_persona = ctk.CTkButton(self.scrollable_frame, text="Añadir persona", command=self.añadir_persona)
         self.button_añadir_persona.grid(row=12, column=2, columnspan=2, pady=20)
         
         # Initialize counter
@@ -119,7 +150,7 @@ class CargaAsistencia(ctk.CTkFrame):
         style.map('Custom.Treeview', background=[('selected', '#347083')])  # Selected row color
 
         # Create table to display added persons
-        self.tree = ttk.Treeview(self, columns=("no", "tipo_usuario", "nombre", "apellido", "cedula", "organizacion", "telefono", "numero_bien"), show='headings', style="Custom.Treeview")
+        self.tree = ttk.Treeview(self.scrollable_frame, columns=("no", "tipo_usuario", "nombre", "apellido", "cedula", "organizacion", "telefono", "numero_bien"), show='headings', style="Custom.Treeview")
         self.tree.heading("no", text="No")
         self.tree.heading("tipo_usuario", text="Tipo de uso")
         self.tree.heading("nombre", text="Nombre")
@@ -145,25 +176,32 @@ class CargaAsistencia(ctk.CTkFrame):
         self.tree.bind("<Double-1>", self.on_double_click)
 
         # Add label and radio buttons for "Fallo alguna computadora?"
-        self.label_fallo_computadora = ctk.CTkLabel(self, text="Fallo alguna computadora?")
+        self.label_fallo_computadora = ctk.CTkLabel(self.scrollable_frame, text="Fallo alguna computadora?")
         self.label_fallo_computadora.grid(row=14, column=0, padx=10, pady=10)
         
         self.radio_var = ctk.StringVar(value="no")
-        self.radio_si = ctk.CTkRadioButton(self, text="si", variable=self.radio_var, value="si", command=self.on_fallo_computadora_change)
+        self.radio_si = ctk.CTkRadioButton(self.scrollable_frame, text="si", variable=self.radio_var, value="si", command=self.on_fallo_computadora_change)
         self.radio_si.grid(row=14, column=1, padx=10, pady=10)
         
-        self.radio_no = ctk.CTkRadioButton(self, text="no", variable=self.radio_var, value="no", command=self.on_fallo_computadora_change)
+        self.radio_no = ctk.CTkRadioButton(self.scrollable_frame, text="no", variable=self.radio_var, value="no", command=self.on_fallo_computadora_change)
         self.radio_no.grid(row=14, column=2, padx=10, pady=10)
         
         # Labels and entries for "numero de bien" and "Descripcion de la falla"
-        self.label_numero_bien_falla = ctk.CTkLabel(self, text="Numero de bien")
-        self.entry_numero_bien_falla = ctk.CTkEntry(self)
-        self.label_descripcion_falla = ctk.CTkLabel(self, text="Descripcion de la falla")
-        self.entry_descripcion_falla = ctk.CTkEntry(self)
+        self.label_numero_bien_falla = ctk.CTkLabel(self.scrollable_frame, text="Numero de bien")
+        self.entry_numero_bien_falla = ctk.CTkEntry(self.scrollable_frame)
+        self.label_descripcion_falla = ctk.CTkLabel(self.scrollable_frame, text="Descripcion de la falla")
+        self.entry_descripcion_falla = ctk.CTkEntry(self.scrollable_frame)
         
         # Hide these fields initially
         self.hide_fallo_computadora_fields()
+        
+    def _on_mouse_wheel(self, event):
+        """Desplaza el canvas con la rueda del mouse, solo si el cursor NO está sobre la tabla."""
+        if self.tree.winfo_containing(event.x_root, event.y_root) == self.tree:
+            return  # No hace nada si el cursor está sobre la tabla
+        self.canvas.yview_scroll(-1 * (event.delta // 120), "units")
 
+        
     def on_double_click(self, event):
         item = self.tree.selection()[0]
         column = self.tree.identify_column(event.x)

@@ -36,7 +36,6 @@ class CargaAsistencia(ctk.CTkFrame):
 
         # Deshabilitar scroll cuando el cursor salga del área desplazable
         self.canvas.bind("<Leave>", lambda e: self.canvas.unbind_all("<MouseWheel>"))
-        self.scrollable_frame.bind("<Leave>", lambda e: self.canvas.unbind_all("<MouseWheel>"))
 
 
         # Expandir y permitir redimensionar

@@ -8,11 +8,14 @@ class CargaAsistencia(ctk.CTkFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
+
+        # Color para el canvas y el scrollBar_frame
+        color= "#333333"
         
-         # Crear un Canvas para permitir el desplazamiento
-        self.canvas = Canvas(self, highlightthickness=0) #Poner color del fondo xd bg="color"
+        # Crear un Canvas para permitir el desplazamiento
+        self.canvas = Canvas(self, highlightthickness=0, bg= color) #Poner color del fondo xd bg="color"
         self.scrollbar = Scrollbar(self, orient="vertical", command=self.canvas.yview)
-        self.scrollable_frame = ctk.CTkFrame(self.canvas) #Poner del mismo color del canvas para que no se vea la separacion fg_color="color"
+        self.scrollable_frame = ctk.CTkFrame(self.canvas, fg_color=color) #Poner del mismo color del canvas para que no se vea la separacion fg_color="color"
         
         # Configuración del Scroll
         self.scrollable_frame.bind(
@@ -179,7 +182,7 @@ class CargaAsistencia(ctk.CTkFrame):
         self.label_fallo_computadora = ctk.CTkLabel(self.scrollable_frame, text="Fallo alguna computadora?")
         self.label_fallo_computadora.grid(row=14, column=0, padx=10, pady=10)
         
-        self.radio_var = ctk.StringVar(value="no")
+        self.radio_var = ctk.StringVar(value="")
         self.radio_si = ctk.CTkRadioButton(self.scrollable_frame, text="si", variable=self.radio_var, value="si", command=self.on_fallo_computadora_change)
         self.radio_si.grid(row=14, column=1, padx=10, pady=10)
         
@@ -194,14 +197,23 @@ class CargaAsistencia(ctk.CTkFrame):
         
         # Hide these fields initially
         self.hide_fallo_computadora_fields()
-        
+
+        # Additional widgets for "si" option
+        self.label_cantidad_equipos = ctk.CTkLabel(self.scrollable_frame, text="Cantidad de equipos")
+        self.combo_cantidad_equipos = ttk.Combobox(self.scrollable_frame, values=[1, 2, 3, 4, 5], state="readonly")
+        self.equipos_entries = []
+
+        # Submit button
+        self.btn_submit = ctk.CTkButton(self.scrollable_frame, text="Submit", command=self.submit)
+        self.btn_submit.grid(row=20, column=4, padx=10, pady=10)
+        self.btn_submit.grid_remove()
+
     def _on_mouse_wheel(self, event):
         """Desplaza el canvas con la rueda del mouse, solo si el cursor NO está sobre la tabla."""
         if self.tree.winfo_containing(event.x_root, event.y_root) == self.tree:
             return  # No hace nada si el cursor está sobre la tabla
         self.canvas.yview_scroll(-1 * (event.delta // 120), "units")
 
-        
     def on_double_click(self, event):
         item = self.tree.selection()[0]
         column = self.tree.identify_column(event.x)
@@ -228,15 +240,36 @@ class CargaAsistencia(ctk.CTkFrame):
 
     def on_fallo_computadora_change(self):
         if self.radio_var.get() == "si":
-            self.show_fallo_computadora_fields()
+            self.label_cantidad_equipos.grid(row=15, column=0, padx=10, pady=10)
+            self.combo_cantidad_equipos.grid(row=15, column=1, padx=10, pady=10)
+            self.combo_cantidad_equipos.bind("<<ComboboxSelected>>", self.on_cantidad_equipos_change)
+            self.btn_submit.grid_remove()
         else:
-            self.hide_fallo_computadora_fields()
+            self.label_cantidad_equipos.grid_forget()
+            self.combo_cantidad_equipos.grid_forget()
+            self.clear_equipos_entries()
+            self.btn_submit.grid(row=16, column=4, padx=10, pady=10)
 
-    def show_fallo_computadora_fields(self):
-        self.label_numero_bien_falla.grid(row=15, column=0, padx=10, pady=10)
-        self.entry_numero_bien_falla.grid(row=15, column=1, padx=10, pady=10)
-        self.label_descripcion_falla.grid(row=15, column=2, padx=10, pady=10)
-        self.entry_descripcion_falla.grid(row=15, column=3, padx=10, pady=10)
+    def on_cantidad_equipos_change(self, event):
+        self.clear_equipos_entries()
+        cantidad = int(self.combo_cantidad_equipos.get())
+        for i in range(cantidad):
+            label_nro_bien = ctk.CTkLabel(self.scrollable_frame, text=f"Nro de bien del equipo {i+1}")
+            entry_nro_bien = ctk.CTkEntry(self.scrollable_frame)
+            label_descripcion = ctk.CTkLabel(self.scrollable_frame, text=f"Descripcion {i+1}")
+            entry_descripcion = ctk.CTkEntry(self.scrollable_frame)
+            label_nro_bien.grid(row=16+i, column=0, padx=10, pady=10)
+            entry_nro_bien.grid(row=16+i, column=1, padx=10, pady=10)
+            label_descripcion.grid(row=16+i, column=2, padx=10, pady=10)
+            entry_descripcion.grid(row=16+i, column=3, padx=10, pady=10)
+            self.equipos_entries.append((label_nro_bien, entry_nro_bien, label_descripcion, entry_descripcion))
+        self.btn_submit.grid(row=16+cantidad, column=4, padx=10, pady=10)
+
+    def clear_equipos_entries(self):
+        for widgets in self.equipos_entries:
+            for widget in widgets:
+                widget.grid_forget()
+        self.equipos_entries.clear()
 
     def hide_fallo_computadora_fields(self):
         self.label_numero_bien_falla.grid_forget()
@@ -268,5 +301,13 @@ class CargaAsistencia(ctk.CTkFrame):
         self.entry_telefono.delete(0, 'end')
         self.entry_numero_bien.delete(0, 'end')
 
-# ...existing code...
+        # Clear the failure fields if they were filled
+        if self.radio_var.get() == "si":
+            self.entry_numero_bien_falla.delete(0, 'end')
+            self.entry_descripcion_falla.delete(0, 'end')
+            self.radio_var.set("")
+            self.clear_equipos_entries()
 
+    def submit(self):
+        # Add your submit logic here
+        pass

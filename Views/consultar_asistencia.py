@@ -1,7 +1,8 @@
 import customtkinter as ctk
 from tkcalendar import DateEntry
 from tkinter import ttk, messagebox
-from pdf import PDFGenerator
+from Pdf.pdf import PDFGenerator
+import os
 
 class ConsultarAsistencia(ctk.CTkFrame):
     def __init__(self, parent=None):
@@ -53,7 +54,8 @@ class ConsultarAsistencia(ctk.CTkFrame):
             </html>
             """
             pdf_generator = PDFGenerator("reporte_asistencia2.pdf")
-            success = pdf_generator.generate_pdf(html_content, css_path="estilos.css")
+            css_path = os.path.join(os.path.dirname(__file__), "..", "Pdf", "estilos.css")
+            success = pdf_generator.generate_pdf(html_content, css_path=css_path)
             if success:
                 messagebox.showinfo("Éxito", "Reporte generado exitosamente")
             else:

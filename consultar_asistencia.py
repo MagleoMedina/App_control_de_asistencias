@@ -1,6 +1,7 @@
 import customtkinter as ctk
 from tkcalendar import DateEntry
 from tkinter import ttk, messagebox
+from pdf import PDFGenerator
 
 class ConsultarAsistencia(ctk.CTkFrame):
     def __init__(self, parent=None):
@@ -37,7 +38,25 @@ class ConsultarAsistencia(ctk.CTkFrame):
         if not self.sede_entry.get() or not self.laboratorio_entry.get() or not self.fecha_entry.get():
             messagebox.showerror("Error", "Todos los campos deben estar llenos")
         else:
-            # Lógica para generar el reporte
-            pass
+            # Generate the report
+            html_content = f"""
+            <html>
+            <head>
+                <link rel="stylesheet" type="text/css" href="estilos.css">
+            </head>
+            <body>
+                <h1>Reporte de Asistencia</h1>
+                <p><strong>Sede:</strong> {self.sede_entry.get()}</p>
+                <p><strong>Laboratorio:</strong> {self.laboratorio_entry.get()}</p>
+                <p><strong>Fecha:</strong> {self.fecha_entry.get()}</p>
+            </body>
+            </html>
+            """
+            pdf_generator = PDFGenerator("reporte_asistencia2.pdf")
+            success = pdf_generator.generate_pdf(html_content, css_path="estilos.css")
+            if success:
+                messagebox.showinfo("Éxito", "Reporte generado exitosamente")
+            else:
+                messagebox.showerror("Error", "No se pudo generar el reporte")
 
 

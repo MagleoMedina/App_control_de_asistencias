@@ -39,21 +39,18 @@ class ConsultarAsistencia(ctk.CTkFrame):
         if not self.sede_entry.get() or not self.laboratorio_entry.get() or not self.fecha_entry.get():
             messagebox.showerror("Error", "Todos los campos deben estar llenos")
         else:
-            # Generate the report
-            html_content = f"""
-            <html>
-            <head>
-                <link rel="stylesheet" type="text/css" href="estilos.css">
-            </head>
-            <body>
-                <h1>Reporte de Asistencia</h1>
-                <p><strong>Sede:</strong> {self.sede_entry.get()}</p>
-                <p><strong>Laboratorio:</strong> {self.laboratorio_entry.get()}</p>
-                <p><strong>Fecha:</strong> {self.fecha_entry.get()}</p>
-            </body>
-            </html>
-            """
-            pdf_generator = PDFGenerator("reporte_asistencia2.pdf")
+            # Read the HTML template
+            html_template_path = os.path.join(os.path.dirname(__file__), "..", "Pdf", "consultar_asistencia.html")
+            with open(html_template_path, "r", encoding="utf-8") as file:
+                html_content = file.read()
+
+            # Replace placeholders with actual values
+            html_content = html_content.replace("{{sede}}", self.sede_entry.get())
+            html_content = html_content.replace("{{laboratorio}}", self.laboratorio_entry.get())
+            html_content = html_content.replace("{{fecha}}", self.fecha_entry.get())
+
+            # Generate the PDF
+            pdf_generator = PDFGenerator("repo.pdf")
             css_path = os.path.join(os.path.dirname(__file__), "..", "Pdf", "estilos.css")
             success = pdf_generator.generate_pdf(html_content, css_path=css_path)
             if success:

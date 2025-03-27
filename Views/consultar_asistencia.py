@@ -45,12 +45,15 @@ class ConsultarAsistencia(ctk.CTkFrame):
                 html_content = file.read()
 
             # Replace placeholders with actual values
-            html_content = html_content.replace("{{sede}}", self.sede_entry.get())
-            html_content = html_content.replace("{{laboratorio}}", self.laboratorio_entry.get())
-            html_content = html_content.replace("{{fecha}}", self.fecha_entry.get())
+            sede = self.sede_entry.get()
+            laboratorio = self.laboratorio_entry.get()  
+            fecha = self.fecha_entry.get()
+            html_content = html_content.replace("{{sede}}", sede)
+            html_content = html_content.replace("{{laboratorio}}", laboratorio)
+            html_content = html_content.replace("{{fecha}}", fecha)
 
             # Generate the PDF
-            pdf_generator = PDFGenerator("repo.pdf")
+            pdf_generator = PDFGenerator("rep.pdf")
             css_path = os.path.join(os.path.dirname(__file__), "..", "Pdf", "estilos.css")
             success = pdf_generator.generate_pdf(html_content, css_path=css_path)
             if success:

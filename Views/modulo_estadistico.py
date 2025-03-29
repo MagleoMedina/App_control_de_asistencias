@@ -1,6 +1,9 @@
 import customtkinter as ctk
 from tkcalendar import DateEntry
 from tkinter import ttk, messagebox
+from Pdf.pdf import PDFGenerator
+import os
+from datetime import datetime  
 
 class ModuloEstadistico(ctk.CTkFrame):
     def __init__(self, parent=None):
@@ -37,10 +40,47 @@ class ModuloEstadistico(ctk.CTkFrame):
         # Botón Generar Reporte
         self.generar_reporte_button = ctk.CTkButton(self, text="Generar reporte", command=self.generar_reporte)
         self.generar_reporte_button.grid(row=3, column=3, columnspan=2, pady=20)
-        
+
+    def crear_pdf(self):
+        # Read the HTML template
+        html_template_path = os.path.join(os.path.dirname(__file__), "..", "Pdf", "modulo_estadistico.html")
+        with open(html_template_path, "r", encoding="utf-8") as file:
+            html_content = file.read()
+
+        # Ensure CSS file exists
+        css_path = os.path.join(os.path.dirname(__file__), "..", "Pdf", "estilos.css")
+
+        # Variables para el html
+        sede = self.sede_entry.get()
+        laboratorio = self.laboratorio_entry.get()  
+        fecha_inicio = self.fecha_inicio_entry.get()
+        fecha_finalizacion = self.fecha_finalizacion_entry.get()
+
+        # Reemplazar en el html
+        html_content = html_content.replace("{{sede}}", sede)
+        html_content = html_content.replace("{{laboratorio}}", laboratorio)
+        html_content = html_content.replace("{{fecha_inicio}}", fecha_inicio)
+        html_content = html_content.replace("{{fecha_finalizacion}}", fecha_finalizacion)
+
+        # Generate the PDF with a dynamic filename
+        current_datetime = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
+        pdf_filename = f"Estadisticas_{sede}_{laboratorio}_{current_datetime}.pdf"
+        pdf_generator = PDFGenerator(pdf_filename)
+
+        success = pdf_generator.generate_pdf(html_content, css_path=css_path)
+        if success:
+            messagebox.showinfo("Éxito", f"Reporte generado exitosamente: {pdf_filename}")
+        else:
+            messagebox.showerror("Error", "No se pudo generar el reporte")
+
     def generar_reporte(self):
         if not self.sede_entry.get() or not self.laboratorio_entry.get() or not self.fecha_inicio_entry.get() or not self.fecha_finalizacion_entry.get():
             messagebox.showerror("Error", "Todos los campos deben estar llenos")
+        
+        elif self.fecha_inicio_entry.get() > datetime.now().strftime("%d/%m/%Y") or self.fecha_finalizacion_entry.get() > datetime.now().strftime("%d/%m/%Y"):
+            messagebox.showerror("Error", "La fecha no puede ser mayor a la actual")
+        
+        # colocar un elif no existe reportes para esa fecha
         else:
             # Lógica para generar el reporte
-            pass
+            self.crear_pdf()

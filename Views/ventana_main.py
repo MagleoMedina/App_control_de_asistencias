@@ -31,7 +31,7 @@ class VentanaMain:
             ("Carga de Asistencia", "📝", self.carga_asistencia),
             ("Carga de Asistencia Estudiantes", "👨‍🎓", self.carga_asistencia_estudiantes),
             ("Consultar Asistencia", "🔍", self.consultar_asistencia),
-            ("Consultar Falla equipo", "💻", self.consultar_falla),
+            ("Consultar equipo", "💻", self.consultar_falla),
             ("Módulo Estadístico", "📊", self.modulo_estadistico),
             ("Cerrar Sesión", "🚪", self.cerrar)
         ]

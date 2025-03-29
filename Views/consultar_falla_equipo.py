@@ -12,7 +12,7 @@ class ConsultarFallaEquipo(ctk.CTkFrame):
         self.parent = parent
         
         # Título centrado
-        self.title_label = ctk.CTkLabel(self, text="Consultar falla", font=("Arial", 20))
+        self.title_label = ctk.CTkLabel(self, text="Consultar equipo", font=("Arial", 20))
         self.title_label.grid(row=0, column=3, columnspan=3, pady=10)
         
         # Label "Nro de bien"

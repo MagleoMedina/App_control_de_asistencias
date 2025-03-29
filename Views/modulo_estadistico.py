@@ -49,7 +49,7 @@ class ModuloEstadistico(ctk.CTkFrame):
 
         # Ensure CSS file exists
         css_path = os.path.join(os.path.dirname(__file__), "..", "Pdf", "estilos.css")
-        
+
         # Variables para el html
         sede = self.sede_entry.get()
         laboratorio = self.laboratorio_entry.get()  
@@ -66,8 +66,6 @@ class ModuloEstadistico(ctk.CTkFrame):
         current_datetime = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
         pdf_filename = f"Estadisticas_{sede}_{laboratorio}_{current_datetime}.pdf"
         pdf_generator = PDFGenerator(pdf_filename)
-
-       
 
         success = pdf_generator.generate_pdf(html_content, css_path=css_path)
         if success:

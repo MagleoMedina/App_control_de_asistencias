@@ -4,7 +4,7 @@ from Views.carga_asistencia import CargaAsistencia
 from Views.carga_asistencia_estudiantes import CargaAsistenciaEstudiantes
 from Views.consultar_asistencia import ConsultarAsistencia
 from Views.modulo_estadistico import ModuloEstadistico
-from Views.equipos import ConsultarFallaEquipo, Equipos
+from Views.equipos import Equipos
 from Views.gestion_de_usuarios import GestionUsuarios
 
 class VentanaMain:

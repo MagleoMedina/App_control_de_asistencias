@@ -4,7 +4,7 @@ from Views.carga_asistencia import CargaAsistencia
 from Views.carga_asistencia_estudiantes import CargaAsistenciaEstudiantes
 from Views.consultar_asistencia import ConsultarAsistencia
 from Views.modulo_estadistico import ModuloEstadistico
-from Views.consultar_falla_equipo import ConsultarFallaEquipo
+from Views.equipos import ConsultarFallaEquipo, Equipos
 from Views.gestion_de_usuarios import GestionUsuarios
 
 class VentanaMain:
@@ -31,7 +31,7 @@ class VentanaMain:
             ("Carga de Asistencia", "📝", self.carga_asistencia),
             ("Carga de Asistencia Estudiantes", "👨‍🎓", self.carga_asistencia_estudiantes),
             ("Consultar Asistencia", "🔍", self.consultar_asistencia),
-            ("Consultar equipo", "💻", self.consultar_falla),
+            ("Gestion de Equipos", "💻", self.gestion_equipos),
             ("Módulo Estadístico", "📊", self.modulo_estadistico),
             ("Cerrar Sesión", "🚪", self.cerrar)
         ]
@@ -69,9 +69,9 @@ class VentanaMain:
         app = ConsultarAsistencia(self.main_frame)
         app.pack(fill="both", expand=True)
 
-    def consultar_falla(self):
+    def gestion_equipos(self):
         self.limpiar_frame()
-        app = ConsultarFallaEquipo(self.main_frame)
+        app = Equipos(self.main_frame)
         app.pack(fill="both", expand=True)
 
     def modulo_estadistico(self):

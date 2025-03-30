@@ -7,7 +7,8 @@ class VentanaLogin:
         self.ventana = ctk.CTk()
         self.ventana.title("Login")
         self.ventana.geometry("1280x720+10+10")
-
+        ctk.set_appearance_mode("light")
+        
         # Configuración del contenedor principal
         self.frame_principal = ctk.CTkFrame(self.ventana,fg_color="gray99",border_width=3, border_color="DeepSkyBlue2",height=400)
         self.frame_principal.place(relx=0.5, rely=0.5, anchor='center')  # Centrar el frame

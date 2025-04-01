@@ -3,8 +3,33 @@
     <link rel="stylesheet" type="text/css" href="estilos.css">
 </head>
 <body>
-    <h1>Mondogo</h1>
-    <p><strong>nro de bien:</strong> {{nro_de_bien}}</p>
-
+    <div>
+        <div class="header">
+            <img src="../Pdf/logo_uneg.png" alt="Logo UNEG" class="logo">
+            <div class="title">
+                <h2 class="espacio2">UNIVERSIDAD NACIONAL EXPERIMENTAL DE GUAYANA</h2>
+                <h2>SISTEMA DE ADMINISTRACION DE LABORATORIOS UNEG</h2>
+                <h2 class="espacio3">REPORTE CONSULTA EQUIPOS - {{fecha_actual}}</h2>
+            </div>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Equipo</th>
+                    <th>Número de bien</th>
+                    <th>Sede</th>
+                    <th>Laboratorio</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{tabla_equipos}}
+            </tbody>
+        </table>
+        <div class="info">
+            <h3 class="espacio">Lista de Fallos:</h3>
+            {{lista_fallos}}
+        </div>
+    </div>
 </body>
 </html>

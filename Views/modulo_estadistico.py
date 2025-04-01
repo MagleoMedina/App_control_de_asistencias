@@ -55,13 +55,40 @@ class ModuloEstadistico(ctk.CTkFrame):
         laboratorio = self.laboratorio_entry.get()  
         fecha_inicio = self.fecha_inicio_entry.get()
         fecha_finalizacion = self.fecha_finalizacion_entry.get()
+        # Simulación de actividades
+        actividades = [
+            {"nombre": "Servicios de Internet", "cantidad": 5},
+            {"nombre": "Atencion al usuario", "cantidad": 3},
+            {"nombre": "Apoyo al estudiante en asesoría, con sus equipos, profesores, preparadores", "cantidad": 10},
+            {"nombre": "Talleres de capacitación al personal administrativo y docente", "cantidad": 2},
+            {"nombre": "Apoyo en actividades a otras instituciones", "cantidad": 3},
+            {"nombre": "Atencion al usuario", "cantidad": 3},
+            {"nombre": "Apoyo a instituciones externas", "cantidad": 5},
+            {"nombre": "Apoyo a personas de la comunidad", "cantidad": 3},
+            {"nombre": "Otro", "cantidad": 3},
+        ]
+
+        # Convertir la lista en filas HTML
+        actividades_html = "".join(
+            f"<tr><td>{actividad['nombre']}</td><td>{actividad['cantidad']}</td></tr>"
+            for actividad in actividades
+        )
+        
+        # Calcular el total
+        total_cantidad = sum(actividad['cantidad'] for actividad in actividades)
+
+        # Agregar la fila de total
+        actividades_html += f"<tr><td><strong>Total</strong></td><td><strong>{total_cantidad}</strong></td></tr>"
+
 
         # Reemplazar en el html
         html_content = html_content.replace("{{sede}}", sede)
         html_content = html_content.replace("{{laboratorio}}", laboratorio)
         html_content = html_content.replace("{{fecha_inicio}}", fecha_inicio)
         html_content = html_content.replace("{{fecha_finalizacion}}", fecha_finalizacion)
-
+        html_content = html_content.replace("{{actividades}}", actividades_html)
+        html_content = html_content.replace("{{fecha_actual}}", datetime.now().strftime("%d/%m/%Y"))
+        
         # Generate the PDF with a dynamic filename
         current_datetime = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
         pdf_filename = f"Estadisticas_{sede}_{laboratorio}_{current_datetime}.pdf"

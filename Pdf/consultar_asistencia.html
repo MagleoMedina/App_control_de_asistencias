@@ -3,10 +3,36 @@
     <link rel="stylesheet" type="text/css" href="estilos.css">
 </head>
 <body>
-    <h1>Reporte de Asistencia</h1>
-    <p><strong>Sede:</strong> {{sede}}</p>
-    <p><strong>Laboratorio:</strong> {{laboratorio}}</p>
-    <p><strong>Fecha:</strong> {{fecha}}</p>
-    <p><strong>Fecha:</strong> {{fetch}}</p>
+    <div>
+        <div class="header">
+            <img src="../Pdf/logo_uneg.png" alt="Logo UNEG" class="logo">
+            <div class="title">
+                <h2 class="espacio2">UNIVERSIDAD NACIONAL EXPERIMENTAL DE GUAYANA</h2>
+                <h2>SISTEMA DE ADMINISTRACION DE LABORATORIOS UNEG</h2>
+                <h2>REPORTE DE ASISTENCIA - {{fecha_actual}}</h2>
+            </div>
+        </div>
+        <div class="info">
+            <h2 class="espacio"><strong>SEDE:</strong> {{sede}} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong> LABORATORIO:</strong> {{laboratorio}} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong> FECHA:</strong> {{fecha}}</h2>
+            <h2><strong>HORA DE INICIO:</strong> {{hora_inicio}} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong> HORA DE FINALIZACIÓN:</strong> {{hora_finalizacion}}</h2>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 40px">No.</th>
+                    <th style="width: 100px">Tipo de Uso</th>
+                    <th>Nombre</th>
+                    <th>Apellido</th>
+                    <th>Cédula</th>
+                    <th>Organización</th>
+                    <th>Teléfono</th>
+                    <th>Numero de Bien</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{tabla_consulta_asistencia}}
+            </tbody>
+        </table>
+    </div>
 </body>
 </html>

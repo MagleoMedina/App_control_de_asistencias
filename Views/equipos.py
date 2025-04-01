@@ -123,10 +123,44 @@ class ConsultarFallaEquipo(ctk.CTkFrame):
 
         # Variables para el html
         nro_bien = self.nro_bien_entry.get()
+        # Lista de equipos con datos
+        equipos = [
+            {"Equipo": "Computadora", "Número de bien": "12345", "Sede": "Sede Central", "Laboratorio": "Lab 101", "Status": "Operativo"},
+            {"Equipo": "Teclado", "Número de bien": "67890", "Sede": "Sede Central", "Laboratorio": "Lab 102", "Status": "En reparación"},
+            {"Equipo": "Ratón", "Número de bien": "54321", "Sede": "Sede Norte", "Laboratorio": "Lab 103", "Status": "Operativo"},
+            {"Equipo": "Monitor", "Número de bien": "98765", "Sede": "Sede Sur", "Laboratorio": "Lab 104", "Status": "Dañado"},
+        ]
+
+        # Lista de fallos registrados
+        fallos = [
+            {"Equipo": "12345", "FechaHora": "2025-03-31 14:30", "Descripción": "Fallo en el disco duro"},
+            {"Equipo": "98765", "FechaHora": "2025-03-30 10:15", "Descripción": "Pantalla rota"},
+        ]
+
+        # Generar la tabla en HTML
+        tabla_equipos = "".join(
+            f"<tr><td>{e['Equipo']}</td><td>{e['Número de bien']}</td><td>{e['Sede']}</td>"
+            f"<td>{e['Laboratorio']}</td><td>{e['Status']}</td></tr>"
+            for e in equipos
+        )
+
+        # Generar la lista de fallos en HTML solo si hay fallos
+        if fallos:
+            lista_fallos = "".join(
+                f"<p>El equipo <strong>{f['Equipo']}</strong> falló el <strong>{f['FechaHora']}</strong>. "
+                f"Descripción de la falla: <strong>{f['Descripción']}</strong></p>"
+                for f in fallos
+            )
+        else:
+            lista_fallos = "<p>No se han registrado fallos en estos equipos.</p>"
+
       
 
         # Reemplazar en el html
         html_content = html_content.replace("{{nro_de_bien}}", nro_bien)
+        html_content = html_content.replace("{{lista_fallos}}", lista_fallos)
+        html_content = html_content.replace("{{tabla_equipos}}", tabla_equipos)
+        html_content = html_content.replace("{{fecha_actual}}", datetime.now().strftime("%d/%m/%Y"))
        
 
         # Generate the PDF with a dynamic filename

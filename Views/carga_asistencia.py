@@ -257,11 +257,23 @@ class CargaAsistencia(ctk.CTkFrame):
             entry_nro_bien = ctk.CTkEntry(self.scrollable_frame)
             label_descripcion = ctk.CTkLabel(self.scrollable_frame, text=f"Descripcion {i+1}")
             entry_descripcion = ctk.CTkEntry(self.scrollable_frame)
+            
+            # Add labels and entries for registering the time of the failure
+            label_hora_falla = ctk.CTkLabel(self.scrollable_frame, text=f"Hora de la falla {i+1}")
+            entry_hora_falla_horas = ctk.CTkComboBox(self.scrollable_frame, values=[str(h) for h in range(24)], width=60)
+            entry_hora_falla_minutos = ctk.CTkComboBox(self.scrollable_frame, values=[str(m) for m in range(60)], width=60)
+
             label_nro_bien.grid(row=16+i, column=0, padx=10, pady=10)
             entry_nro_bien.grid(row=16+i, column=1, padx=10, pady=10)
             label_descripcion.grid(row=16+i, column=2, padx=10, pady=10)
             entry_descripcion.grid(row=16+i, column=3, padx=10, pady=10)
-            self.equipos_entries.append((label_nro_bien, entry_nro_bien, label_descripcion, entry_descripcion))
+            
+            # Place the time of failure widgets
+            label_hora_falla.grid(row=16+i, column=4, padx=10, pady=10)
+            entry_hora_falla_horas.grid(row=16+i, column=5, padx=5, pady=10)
+            entry_hora_falla_minutos.grid(row=16+i, column=6, padx=5, pady=10)
+
+            self.equipos_entries.append((label_nro_bien, entry_nro_bien, label_descripcion, entry_descripcion, label_hora_falla, entry_hora_falla_horas, entry_hora_falla_minutos))
         self.btn_submit.grid(row=16+cantidad, column=4, padx=10, pady=10)
 
     def clear_equipos_entries(self):

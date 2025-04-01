@@ -49,11 +49,27 @@ class ConsultarAsistencia(ctk.CTkFrame):
         sede = self.sede_entry.get()
         laboratorio = self.laboratorio_entry.get()  
         fecha = self.fecha_entry.get()
+        # Datos de ejemplo extraídos de una BD (simulación)
+        datos = [
+            {"Tipo de uso": "Apoyo al estudiante en asesorías con sus equipos, profesores, preparadores", "Nombre": "Carlos", "Apellido": "Pérez", "Cédula": "12345678", "Organización": "UNEG", "Teléfono": "0412-3456789", "Número de bien": "00123"},
+            {"Tipo de uso": "Talleres de capacitación al personal administrativo y docente", "Nombre": "Ana", "Apellido": "Gómez", "Cédula": "87654321", "Organización": "UNEG", "Teléfono": "0414-9876543", "Número de bien": "00456"},
+        ]
+
+        # Generar las filas de la tabla en HTML con un contador para "No"
+        tabla_consulta_asistencia = "".join(
+            f"<tr><td style='width: 40px'>{i+1}</td><td style='width: 100px'>{fila['Tipo de uso']}</td><td>{fila['Nombre']}</td>"
+            f"<td>{fila['Apellido']}</td><td>{fila['Cédula']}</td><td>{fila['Organización']}</td>"
+            f"<td>{fila['Teléfono']}</td><td>{fila['Número de bien']}</td></tr>"
+            for i, fila in enumerate(datos)
+        )
 
         #Reemplazar en el html
         html_content = html_content.replace("{{sede}}", sede)
         html_content = html_content.replace("{{laboratorio}}", laboratorio)
         html_content = html_content.replace("{{fecha}}", fecha)
+        html_content = html_content.replace("{{fecha_actual}}", datetime.now().strftime("%d/%m/%Y"))
+        html_content = html_content.replace("{{tabla_consulta_asistencia}}", tabla_consulta_asistencia)
+        
 
         # Generate the PDF with a dynamic filename
         current_datetime = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")

@@ -88,11 +88,19 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
             entry_nro_bien = ctk.CTkEntry(self, validate="key", validatecommand=(self.register(self.validate_numeric), "%P"))
             label_descripcion = ctk.CTkLabel(self, text=f"Descripcion {i+1}")
             entry_descripcion = ctk.CTkEntry(self)
+            label_hora_falla = ctk.CTkLabel(self, text=f"Hora de la falla {i+1}")
+            combo_hora =  ctk.CTkComboBox(self, values=[f"{h:02}" for h in range(24)], state="readonly", width=60)
+            combo_minutos =  ctk.CTkComboBox(self, values=[f"{m:02}" for m in range(60)], state="readonly", width=60)
+
             label_nro_bien.grid(row=5+i, column=1, padx=10, pady=10)
             entry_nro_bien.grid(row=5+i, column=2, padx=10, pady=10)
             label_descripcion.grid(row=5+i, column=3, padx=10, pady=10)
             entry_descripcion.grid(row=5+i, column=4, padx=10, pady=10)
-            self.equipos_entries.append((label_nro_bien, entry_nro_bien, label_descripcion, entry_descripcion))
+            label_hora_falla.grid(row=5+i, column=5, padx=10, pady=10)
+            combo_hora.grid(row=5+i, column=6, padx=5, pady=10)
+            combo_minutos.grid(row=5+i, column=7, padx=5, pady=10)
+
+            self.equipos_entries.append((label_nro_bien, entry_nro_bien, label_descripcion, entry_descripcion, label_hora_falla, combo_hora, combo_minutos))
         self.btn_submit.grid(row=5+cantidad, column=4, padx=10, pady=10)
 
     def clear_equipos_entries(self):

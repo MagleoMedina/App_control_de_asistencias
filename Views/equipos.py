@@ -123,6 +123,7 @@ class ConsultarFallaEquipo(ctk.CTkFrame):
 
         # Variables para el html
         nro_bien = self.nro_bien_entry.get()
+
         # Lista de equipos con datos
         equipos = [
             {"Equipo": "Computadora", "Número de bien": "12345", "Sede": "Sede Central", "Laboratorio": "Lab 101", "Status": "Operativo"},
@@ -154,13 +155,13 @@ class ConsultarFallaEquipo(ctk.CTkFrame):
         else:
             lista_fallos = "<p>No se han registrado fallos en estos equipos.</p>"
 
-      
-
         # Reemplazar en el html
         html_content = html_content.replace("{{nro_de_bien}}", nro_bien)
         html_content = html_content.replace("{{lista_fallos}}", lista_fallos)
         html_content = html_content.replace("{{tabla_equipos}}", tabla_equipos)
         html_content = html_content.replace("{{fecha_actual}}", datetime.now().strftime("%d/%m/%Y"))
+
+
        
 
         # Generate the PDF with a dynamic filename

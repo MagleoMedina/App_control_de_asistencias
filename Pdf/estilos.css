@@ -1,0 +1,58 @@
+@page {
+    size: A4; /* Tamaño de la hoja */
+    margin: 25mm 25mm 25mm 25mm; /* Márgenes: superior, derecho, inferior, izquierdo */
+}
+
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logo {
+    width: 80px;
+    height: auto;
+}
+
+.title {
+    text-align: center;
+}
+
+.info {
+    text-align: left;
+}
+
+.espacio {
+    padding-top: 20px;
+}
+
+.espacio2 {
+    padding-top: 5px;
+}
+
+.espacio3 {
+    padding-bottom: 10px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid black; 
+}
+
+th, td {
+    padding-top: 8px;
+    padding-bottom: 5px;
+    padding-left: 3px;
+    padding-right: 3px;
+    text-align: center;
+}
+
+th {
+    background-color: #f2f2f2;
+}

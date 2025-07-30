@@ -2,3 +2,5 @@ customtkinter
 tkcalendar
 pyinstaller
 xhtml2pdf
+libsql
+python-dotenv

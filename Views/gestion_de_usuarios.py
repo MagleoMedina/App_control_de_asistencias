@@ -1,5 +1,6 @@
 import customtkinter as ctk
 from tkinter import messagebox
+from db_manager import DBManager
 
 #Clase encargada de registrar nuevos usuarios
 class GestionUsuarios(ctk.CTkFrame):
@@ -54,6 +55,7 @@ class VentanaRegistro(ctk.CTkFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
+        self.db = DBManager()
 
         # Nombre de usuario
         self.label_usuario = ctk.CTkLabel(self, text="Nombre de Usuario:")
@@ -130,9 +132,22 @@ class VentanaRegistro(ctk.CTkFrame):
         if campos_vacios:
             messagebox.showwarning("Error", "Por favor, completa todos los campos.")
         else:
-            # Mostrar un mensaje de confirmación con los datos ingresados
-            messagebox.showinfo("Registro exitoso", "Usuario registrado exitosamente.")
-        
+            # Lógica de registro en la base de datos
+            resultado = self.db.registrar_usuario(
+                datos["Nombre de usuario"],
+                datos["Contraseña"],
+                datos["Nombre"],
+                datos["Apellido"],
+                datos["Cédula"],
+                datos["Teléfono"],
+                datos["Número de ficha"],
+                datos["Tipo de usuario"]
+            )
+            if resultado:
+                messagebox.showinfo("Registro exitoso", "Usuario registrado exitosamente.")
+            else:
+                messagebox.showerror("Error", "No se pudo registrar el usuario. Verifica los datos o si ya existe.")
+
     def solo_numeros(self, char):
         """Validación para aceptar solo caracteres numéricos."""
         return char.isdigit()   

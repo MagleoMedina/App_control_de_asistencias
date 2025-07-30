@@ -38,8 +38,8 @@ class DBManager:
         """
         if self._connection is None:
             try:
-                # Conecta a la réplica local ("salu.db" en este caso) y la sincroniza con Turso
-                self._connection = libsql.connect("salu.db", sync_url=self.url, auth_token=self.auth_token)
+                # Conecta a la réplica local ("salu-db.db" en este caso) y la sincroniza con Turso
+                self._connection = libsql.connect("salu-db.db", sync_url=self.url, auth_token=self.auth_token)
                 self._connection.sync()
                 print("Conexión a la base de datos Turso establecida y sincronizada.")
             except Exception as e:
@@ -129,14 +129,6 @@ class DBManager:
             )
             """,
             """
-            CREATE TABLE IF NOT EXISTS "Usuario_laboratorio" (
-                "Persona"	INTEGER,
-                "Nombre_organizacion"	TEXT NOT NULL,
-                PRIMARY KEY("Persona"),
-                FOREIGN KEY("Persona") REFERENCES "Persona"("ID")
-            )
-            """,
-            """
             CREATE TABLE IF NOT EXISTS "Administrador" (
                 "Persona"	INTEGER,
                 "Tipo"	INTEGER NOT NULL,
@@ -145,6 +137,14 @@ class DBManager:
                 FOREIGN KEY("Persona") REFERENCES "Persona"("ID"),
                 FOREIGN KEY("Usuario") REFERENCES "Usuario"("Numero_de_ficha"),
                 FOREIGN KEY("Tipo") REFERENCES "Tipo"("ID")
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS "Usuario_laboratorio" (
+                "Persona"	INTEGER,
+                "Nombre_organizacion"	TEXT NOT NULL,
+                PRIMARY KEY("Persona"),
+                FOREIGN KEY("Persona") REFERENCES "Persona"("ID")
             )
             """,
             """
@@ -319,7 +319,7 @@ class DBManager:
             print("Error al insertar en Usuario.")
             return False
 
-        # Obtener el Numero_de_ficha recién creado (ya lo tenemos: ficha)
+        # Obtener el Numero_de_ficha recién creado 
         ficha_id = ficha
 
         # Obtener el ID del tipo de usuario
@@ -392,3 +392,65 @@ class DBManager:
             "Numero_de_ficha": result[6],
             "Tipo_usuario": result[7]
         }
+
+    def actualizar_usuario_por_cedula(self, cedula, username, password, nombre, apellido, telefono, ficha, tipo_usuario):
+        """
+        Actualiza los datos de un usuario en la base de datos por su cédula.
+        Actualiza Persona, Usuario y Administrador.
+        Retorna True si la actualización fue exitosa, False si hubo error.
+        """
+        # Obtener el ID de la persona
+        persona_id = self.execute_query(
+            "SELECT ID FROM Persona WHERE Cedula = ?", (cedula,), fetch_one=True
+        )
+        if not persona_id:
+            print("No se encontró la persona con esa cédula.")
+            return False
+        persona_id = persona_id[0]
+
+        # Actualizar Persona
+        persona_sql = """
+            UPDATE Persona SET Nombre = ?, Apellido = ?, Nro_telefono = ? WHERE ID = ?
+        """
+        persona_result = self.execute_query(
+            persona_sql, (nombre, apellido, telefono, persona_id), commit=True
+        )
+        if persona_result is None:
+            print("Error al actualizar Persona.")
+            return False
+
+        # Actualizar Usuario
+        usuario_sql = """
+            UPDATE Usuario SET Username = ?, Password = ?, Numero_de_ficha = ? WHERE Numero_de_ficha = (
+                SELECT Usuario FROM Administrador WHERE Persona = ?
+            )
+        """
+        usuario_result = self.execute_query(
+            usuario_sql, (username, password, ficha, persona_id), commit=True
+        )
+        if usuario_result is None:
+            print("Error al actualizar Usuario.")
+            return False
+
+        # Obtener el ID del tipo de usuario
+        tipo_id = self.execute_query(
+            "SELECT ID FROM Tipo WHERE Descripcion = ?", (tipo_usuario,), fetch_one=True
+        )
+        if not tipo_id:
+            print("No se pudo obtener el tipo de usuario.")
+            return False
+        tipo_id = tipo_id[0]
+
+        # Actualizar Administrador
+        admin_sql = """
+            UPDATE Administrador SET Tipo = ?, Usuario = ? WHERE Persona = ?
+        """
+        admin_result = self.execute_query(
+            admin_sql, (tipo_id, ficha, persona_id), commit=True
+        )
+        if admin_result is None:
+            print("Error al actualizar Administrador.")
+            return False
+
+        print("Usuario actualizado exitosamente en la base de datos.")
+        return True

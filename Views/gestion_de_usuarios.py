@@ -107,7 +107,7 @@ class VentanaRegistro(ctk.CTkFrame):
         self.label_tipo_usuario = ctk.CTkLabel(self, text="Tipo de Usuario:")
         self.label_tipo_usuario.grid(row=7, column=0, sticky='w', pady=5)
         values = self.db.obtener_tipos_usuario() # Extrae los tipos desde la BD
-        self.combo_tipo_usuario = ctk.CTkComboBox(self, values=values, state= "readonly") 
+        self.combo_tipo_usuario = ctk.CTkComboBox(self, values=values, state='readonly') 
         self.combo_tipo_usuario.grid(row=7, column=1, pady=5)
 
         # Botón de registro
@@ -353,8 +353,33 @@ class ModificarDatos(ctk.CTkFrame):
             messagebox.showwarning("Error", "Por favor, completa todos los campos.")
             return
 
-        # Aquí se debe agregar la lógica para actualizar los datos del usuario
-        pass
+        # Obtener los datos actualizados de los campos
+        datos_actualizados = {
+            "Username": self.entry_usuario.get(),
+            "Password": self.entry_password.get(),
+            "Nombre": self.entry_nombre.get(),
+            "Apellido": self.entry_apellido.get(),
+            "Cedula": self.entry_cedula.get(),
+            "Nro_telefono": self.entry_telefono.get(),
+            "Numero_de_ficha": self.entry_ficha.get(),
+            "Tipo_usuario": self.combo_tipo_usuario.get()
+        }
+
+        # Llamar al método de actualización en DBManager
+        resultado = self.db.actualizar_usuario_por_cedula(
+            datos_actualizados["Cedula"],
+            datos_actualizados["Username"],
+            datos_actualizados["Password"],
+            datos_actualizados["Nombre"],
+            datos_actualizados["Apellido"],
+            datos_actualizados["Nro_telefono"],
+            datos_actualizados["Numero_de_ficha"],
+            datos_actualizados["Tipo_usuario"]
+        )
+        if resultado:
+            messagebox.showinfo("Actualización exitosa", "Usuario actualizado exitosamente.")
+        else:
+            messagebox.showerror("Error", "No se pudo actualizar el usuario. Verifica los datos.")
 
 #Clase encargada de recuperar los datos de un usuario
 class RecuperarDatosApp(ctk.CTkFrame):

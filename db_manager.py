@@ -38,8 +38,8 @@ class DBManager:
         """
         if self._connection is None:
             try:
-                # Conecta a la réplica local ("salu.db" en este caso) y la sincroniza con Turso
-                self._connection = libsql.connect("salu.db", sync_url=self.url, auth_token=self.auth_token)
+                # Conecta a la réplica local ("salu-db.db" en este caso) y la sincroniza con Turso
+                self._connection = libsql.connect("salu-db.db", sync_url=self.url, auth_token=self.auth_token)
                 self._connection.sync()
                 print("Conexión a la base de datos Turso establecida y sincronizada.")
             except Exception as e:
@@ -115,7 +115,7 @@ class DBManager:
                 "Numero_de_ficha"	INTEGER,
                 "Username"	TEXT NOT NULL UNIQUE,
                 "Password"	TEXT NOT NULL,
-                PRIMARY KEY("Numero_de_ficha" AUTOINCREMENT)
+                PRIMARY KEY("Numero_de_ficha")
             )
             """,
             """
@@ -129,14 +129,6 @@ class DBManager:
             )
             """,
             """
-            CREATE TABLE IF NOT EXISTS "Usuario_laboratorio" (
-                "Persona"	INTEGER,
-                "Nombre_organizacion"	TEXT NOT NULL,
-                PRIMARY KEY("Persona"),
-                FOREIGN KEY("Persona") REFERENCES "Persona"("ID")
-            )
-            """,
-            """
             CREATE TABLE IF NOT EXISTS "Administrador" (
                 "Persona"	INTEGER,
                 "Tipo"	INTEGER NOT NULL,
@@ -145,6 +137,14 @@ class DBManager:
                 FOREIGN KEY("Persona") REFERENCES "Persona"("ID"),
                 FOREIGN KEY("Usuario") REFERENCES "Usuario"("Numero_de_ficha"),
                 FOREIGN KEY("Tipo") REFERENCES "Tipo"("ID")
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS "Usuario_laboratorio" (
+                "Persona"	INTEGER,
+                "Nombre_organizacion"	TEXT NOT NULL,
+                PRIMARY KEY("Persona"),
+                FOREIGN KEY("Persona") REFERENCES "Persona"("ID")
             )
             """,
             """
@@ -307,26 +307,20 @@ class DBManager:
             return False
         persona_id = persona_id[0]
 
-        # Insertar en Usuario
+        # Insertar en Usuario (ahora incluye Numero_de_ficha)
         usuario_sql = """
-            INSERT INTO Usuario (Username, Password)
-            VALUES (?, ?)
+            INSERT INTO Usuario (Numero_de_ficha, Username, Password)
+            VALUES (?, ?, ?)
         """
         usuario_result = self.execute_query(
-            usuario_sql, (username, password), commit=True
+            usuario_sql, (ficha, username, password), commit=True
         )
         if usuario_result is None:
             print("Error al insertar en Usuario.")
             return False
 
-        # Obtener el Numero_de_ficha recién creado
-        ficha_id = self.execute_query(
-            "SELECT Numero_de_ficha FROM Usuario WHERE Username = ?", (username,), fetch_one=True
-        )
-        if not ficha_id:
-            print("No se pudo obtener el Numero_de_ficha.")
-            return False
-        ficha_id = ficha_id[0]
+        # Obtener el Numero_de_ficha recién creado 
+        ficha_id = ficha
 
         # Obtener el ID del tipo de usuario
         tipo_id = self.execute_query(
@@ -352,3 +346,154 @@ class DBManager:
         print("Usuario registrado exitosamente en la base de datos.")
         return True
 
+    def obtener_tipos_usuario(self):
+        """
+        Obtiene la lista de tipos de usuario desde la tabla Tipo.
+        Retorna una lista de descripciones.
+        """
+        tipos = self.execute_query(
+            "SELECT Descripcion FROM Tipo", fetch_one=False
+        )
+        if tipos is None:
+            return []
+        return [t[0] for t in tipos]
+
+    def buscar_usuario_por_cedula(self, cedula):
+        """
+        Busca y retorna los datos completos de un usuario por su cédula.
+        Retorna un diccionario con los campos o None si no existe.
+        """
+        query = """
+        SELECT
+            u.Username,
+            u.Password,
+            p.Nombre,
+            p.Apellido,
+            p.Cedula,
+            p.Nro_telefono,
+            u.Numero_de_ficha,
+            t.Descripcion as Tipo_usuario
+        FROM Persona p
+        JOIN Administrador a ON a.Persona = p.ID
+        JOIN Usuario u ON a.Usuario = u.Numero_de_ficha
+        JOIN Tipo t ON a.Tipo = t.ID
+        WHERE p.Cedula = ?
+        """
+        result = self.execute_query(query, (cedula,), fetch_one=True)
+        if not result:
+            return None
+        return {
+            "Username": result[0],
+            "Password": result[1],
+            "Nombre": result[2],
+            "Apellido": result[3],
+            "Cedula": result[4],
+            "Nro_telefono": result[5],
+            "Numero_de_ficha": result[6],
+            "Tipo_usuario": result[7]
+        }
+
+    def actualizar_usuario_por_cedula(self, cedula, username, password, nombre, apellido, telefono, ficha, tipo_usuario):
+        """
+        Actualiza los datos de un usuario en la base de datos por su cédula.
+        Actualiza Persona, Usuario y Administrador.
+        Retorna True si la actualización fue exitosa, False si hubo error.
+        """
+        # Obtener el ID de la persona
+        persona_id = self.execute_query(
+            "SELECT ID FROM Persona WHERE Cedula = ?", (cedula,), fetch_one=True
+        )
+        if not persona_id:
+            print("No se encontró la persona con esa cédula.")
+            return False
+        persona_id = persona_id[0]
+
+        # Actualizar Persona
+        persona_sql = """
+            UPDATE Persona SET Nombre = ?, Apellido = ?, Nro_telefono = ? WHERE ID = ?
+        """
+        persona_result = self.execute_query(
+            persona_sql, (nombre, apellido, telefono, persona_id), commit=True
+        )
+        if persona_result is None:
+            print("Error al actualizar Persona.")
+            return False
+
+        # Actualizar Usuario
+        usuario_sql = """
+            UPDATE Usuario SET Username = ?, Password = ?, Numero_de_ficha = ? WHERE Numero_de_ficha = (
+                SELECT Usuario FROM Administrador WHERE Persona = ?
+            )
+        """
+        usuario_result = self.execute_query(
+            usuario_sql, (username, password, ficha, persona_id), commit=True
+        )
+        if usuario_result is None:
+            print("Error al actualizar Usuario.")
+            return False
+
+        # Obtener el ID del tipo de usuario
+        tipo_id = self.execute_query(
+            "SELECT ID FROM Tipo WHERE Descripcion = ?", (tipo_usuario,), fetch_one=True
+        )
+        if not tipo_id:
+            print("No se pudo obtener el tipo de usuario.")
+            return False
+        tipo_id = tipo_id[0]
+
+        # Actualizar Administrador
+        admin_sql = """
+            UPDATE Administrador SET Tipo = ?, Usuario = ? WHERE Persona = ?
+        """
+        admin_result = self.execute_query(
+            admin_sql, (tipo_id, ficha, persona_id), commit=True
+        )
+        if admin_result is None:
+            print("Error al actualizar Administrador.")
+            return False
+
+        print("Usuario actualizado exitosamente en la base de datos.")
+        return True
+
+    def recuperar_credenciales_por_cedula(self, cedula):
+        """
+        Recupera el Username y Password de un usuario por su cédula.
+        Retorna un diccionario con 'Username' y 'Password', o None si no existe.
+        """
+        query = """
+        SELECT u.Username, u.Password
+        FROM Persona p
+        JOIN Administrador a ON a.Persona = p.ID
+        JOIN Usuario u ON a.Usuario = u.Numero_de_ficha
+        WHERE p.Cedula = ?
+        """
+        result = self.execute_query(query, (cedula,), fetch_one=True)
+        if not result:
+            return None
+        return {"Username": result[0], "Password": result[1]}
+
+    def eliminar_credenciales_por_cedula(self, cedula):
+        """
+        Elimina únicamente el Username y Password de la tabla Usuario para el usuario con la cédula dada.
+        Mantiene el registro y la primary key Numero_de_ficha.
+        Retorna True si la operación fue exitosa, False si hubo error o no existe.
+        """
+        # Obtener el Numero_de_ficha del usuario por la cédula
+        ficha = self.execute_query(
+            "SELECT u.Numero_de_ficha FROM Persona p JOIN Administrador a ON a.Persona = p.ID JOIN Usuario u ON a.Usuario = u.Numero_de_ficha WHERE p.Cedula = ?",
+            (cedula,), fetch_one=True
+        )
+        if not ficha:
+            print("No se encontró usuario con esa cédula.")
+            return False
+        ficha = ficha[0]
+
+        # Actualizar Usuario: dejar Username y Password vacíos
+        update_sql = "UPDATE Usuario SET Username = '', Password = '' WHERE Numero_de_ficha = ?"
+        result = self.execute_query(update_sql, (ficha,), commit=True)
+        if result:
+            print("Credenciales eliminadas de la tabla Usuario.")
+            return True
+        else:
+            print("Error al eliminar las credenciales del usuario.")
+            return False

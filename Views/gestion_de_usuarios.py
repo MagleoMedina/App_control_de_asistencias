@@ -106,7 +106,7 @@ class VentanaRegistro(ctk.CTkFrame):
         # Tipo de usuario
         self.label_tipo_usuario = ctk.CTkLabel(self, text="Tipo de Usuario:")
         self.label_tipo_usuario.grid(row=7, column=0, sticky='w', pady=5)
-        values = ["Administrador", "Asistente"]# Esta data debe de recuperarse de la BD de la tabla Tipo
+        values = self.db.obtener_tipos_usuario() # Extrae los tipos desde la BD
         self.combo_tipo_usuario = ctk.CTkComboBox(self, values=values)
         self.combo_tipo_usuario.grid(row=7, column=1, pady=5)
 

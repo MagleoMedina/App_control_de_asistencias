@@ -115,7 +115,7 @@ class DBManager:
                 "Numero_de_ficha"	INTEGER,
                 "Username"	TEXT NOT NULL UNIQUE,
                 "Password"	TEXT NOT NULL,
-                PRIMARY KEY("Numero_de_ficha" AUTOINCREMENT)
+                PRIMARY KEY("Numero_de_ficha")
             )
             """,
             """
@@ -307,26 +307,20 @@ class DBManager:
             return False
         persona_id = persona_id[0]
 
-        # Insertar en Usuario
+        # Insertar en Usuario (ahora incluye Numero_de_ficha)
         usuario_sql = """
-            INSERT INTO Usuario (Username, Password)
-            VALUES (?, ?)
+            INSERT INTO Usuario (Numero_de_ficha, Username, Password)
+            VALUES (?, ?, ?)
         """
         usuario_result = self.execute_query(
-            usuario_sql, (username, password), commit=True
+            usuario_sql, (ficha, username, password), commit=True
         )
         if usuario_result is None:
             print("Error al insertar en Usuario.")
             return False
 
-        # Obtener el Numero_de_ficha recién creado
-        ficha_id = self.execute_query(
-            "SELECT Numero_de_ficha FROM Usuario WHERE Username = ?", (username,), fetch_one=True
-        )
-        if not ficha_id:
-            print("No se pudo obtener el Numero_de_ficha.")
-            return False
-        ficha_id = ficha_id[0]
+        # Obtener el Numero_de_ficha recién creado (ya lo tenemos: ficha)
+        ficha_id = ficha
 
         # Obtener el ID del tipo de usuario
         tipo_id = self.execute_query(
@@ -352,3 +346,14 @@ class DBManager:
         print("Usuario registrado exitosamente en la base de datos.")
         return True
 
+    def obtener_tipos_usuario(self):
+        """
+        Obtiene la lista de tipos de usuario desde la tabla Tipo.
+        Retorna una lista de descripciones.
+        """
+        tipos = self.execute_query(
+            "SELECT Descripcion FROM Tipo", fetch_one=False
+        )
+        if tipos is None:
+            return []
+        return [t[0] for t in tipos]

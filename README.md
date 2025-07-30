@@ -20,6 +20,7 @@ Para instalar las dependencias necesarias, puedes utilizar `pip`. A continuació
 Puedes instalar todas las dependencias ejecutando el siguiente comando:
 
 ```sh
+
 pip install -r requirements.txt
 ```
 
@@ -51,3 +52,5 @@ App_control_de_asistencias/
 ├── README.md                         # Documentación principal del proyecto
 └── LICENSE                           # Licencia del proyecto
 ```
+
+

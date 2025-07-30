@@ -471,3 +471,29 @@ class DBManager:
         if not result:
             return None
         return {"Username": result[0], "Password": result[1]}
+
+    def eliminar_credenciales_por_cedula(self, cedula):
+        """
+        Elimina únicamente el Username y Password de la tabla Usuario para el usuario con la cédula dada.
+        Mantiene el registro y la primary key Numero_de_ficha.
+        Retorna True si la operación fue exitosa, False si hubo error o no existe.
+        """
+        # Obtener el Numero_de_ficha del usuario por la cédula
+        ficha = self.execute_query(
+            "SELECT u.Numero_de_ficha FROM Persona p JOIN Administrador a ON a.Persona = p.ID JOIN Usuario u ON a.Usuario = u.Numero_de_ficha WHERE p.Cedula = ?",
+            (cedula,), fetch_one=True
+        )
+        if not ficha:
+            print("No se encontró usuario con esa cédula.")
+            return False
+        ficha = ficha[0]
+
+        # Actualizar Usuario: dejar Username y Password vacíos
+        update_sql = "UPDATE Usuario SET Username = '', Password = '' WHERE Numero_de_ficha = ?"
+        result = self.execute_query(update_sql, (ficha,), commit=True)
+        if result:
+            print("Credenciales eliminadas de la tabla Usuario.")
+            return True
+        else:
+            print("Error al eliminar las credenciales del usuario.")
+            return False

@@ -434,7 +434,11 @@ class EliminarUsuario(RecuperarDatosApp):
 
         respuesta = messagebox.askyesno("Confirmación", f"¿Estás seguro que deseas eliminar a {numero_cedula}?")
         if respuesta:
-            # Aquí se debe eliminar el usuario en la base de datos
-            messagebox.showinfo("Resultado", "Usuario eliminado exitosamente.")
+            # Elimina solo el registro de Usuario en la base de datos
+            resultado = self.db.eliminar_credenciales_por_cedula(numero_cedula)
+            if resultado:
+                messagebox.showinfo("Resultado", "Usuario eliminado exitosamente.")
+            else:
+                messagebox.showerror("Error", "No se pudo eliminar el usuario. Verifica la cédula.")
         else:
             messagebox.showinfo("Resultado", "Eliminación cancelada.")

@@ -265,36 +265,90 @@ class DBManager:
         
         print("Base de datos inicializada: tablas creadas o verificadas.")
 
-"""
-# Código de ejemplo para probar la clase DBManager
-if __name__ == '__main__':
-    print("--- Probando DBManager ---")
-    db_manager = DBManager()
-    
-    # Inicializa la base de datos (crea las tablas)
-    db_manager.init_database()
 
-    # Ejemplo de inserción de datos en la tabla 'Tipo'
-    print("\n--- Insertando datos de prueba en 'Tipo' ---")
-    insert_tipo_query = "INSERT INTO Tipo (Descripcion) VALUES (?)"
-    if db_manager.execute_query(insert_tipo_query, ("Administrador",), commit=True):
-        print("Tipo 'Administrador' insertado.")
-    if db_manager.execute_query(insert_tipo_query, ("Profesor",), commit=True):
-        print("Tipo 'Profesor' insertado.")
-    if db_manager.execute_query(insert_tipo_query, ("Estudiante",), commit=True):
-        print("Tipo 'Estudiante' insertado.")
+    """ ENDPOINTS DEL PROYECTO """ #no son endpoints REST, son funciones que se pueden llamar desde la aplicación 
+                                   # Pero hacen lo mismo pe 
 
-    # Ejemplo de consulta de datos de la tabla 'Tipo'
-    print("\n--- Consultando datos de 'Tipo' ---")
-    tipos = db_manager.execute_query("SELECT * FROM Tipo")
-    if tipos:
-        print("Tipos de usuario existentes:")
-        for tipo in tipos:
-            print(f"ID: {tipo[0]}, Descripción: {tipo[1]}")
-    else:
-        print("No se encontraron tipos de usuario o hubo un error.")
+    def registrar_usuario(self, username, password, nombre, apellido, cedula, telefono, ficha, tipo_usuario):
+        """
+        Registra un nuevo usuario en la base de datos.
+        Inserta en Persona, Usuario y Administrador.
+        Retorna True si el registro fue exitoso, False si hubo error.
+        """
+        # Verificar si el usuario ya existe por cedula o username
+        existe_persona = self.execute_query(
+            "SELECT ID FROM Persona WHERE Cedula = ?", (cedula,), fetch_one=True
+        )
+        existe_usuario = self.execute_query(
+            "SELECT Numero_de_ficha FROM Usuario WHERE Username = ?", (username,), fetch_one=True
+        )
+        if existe_persona or existe_usuario:
+            print("El usuario ya existe en la base de datos.")
+            return False
 
-    # Cierra la conexión al finalizar las pruebas
-    db_manager.close_db_connection()
-    print("\n--- Pruebas de DBManager finalizadas ---")
-"""
+        # Insertar en Persona
+        persona_sql = """
+            INSERT INTO Persona (Nombre, Apellido, Cedula, Nro_telefono)
+            VALUES (?, ?, ?, ?)
+        """
+        persona_result = self.execute_query(
+            persona_sql, (nombre, apellido, cedula, telefono), commit=True
+        )
+        if persona_result is None:
+            print("Error al insertar en Persona.")
+            return False
+
+        # Obtener el ID de la persona recién creada
+        persona_id = self.execute_query(
+            "SELECT ID FROM Persona WHERE Cedula = ?", (cedula,), fetch_one=True
+        )
+        if not persona_id:
+            print("No se pudo obtener el ID de la persona.")
+            return False
+        persona_id = persona_id[0]
+
+        # Insertar en Usuario
+        usuario_sql = """
+            INSERT INTO Usuario (Username, Password)
+            VALUES (?, ?)
+        """
+        usuario_result = self.execute_query(
+            usuario_sql, (username, password), commit=True
+        )
+        if usuario_result is None:
+            print("Error al insertar en Usuario.")
+            return False
+
+        # Obtener el Numero_de_ficha recién creado
+        ficha_id = self.execute_query(
+            "SELECT Numero_de_ficha FROM Usuario WHERE Username = ?", (username,), fetch_one=True
+        )
+        if not ficha_id:
+            print("No se pudo obtener el Numero_de_ficha.")
+            return False
+        ficha_id = ficha_id[0]
+
+        # Obtener el ID del tipo de usuario
+        tipo_id = self.execute_query(
+            "SELECT ID FROM Tipo WHERE Descripcion = ?", (tipo_usuario,), fetch_one=True
+        )
+        if not tipo_id:
+            print("No se pudo obtener el tipo de usuario.")
+            return False
+        tipo_id = tipo_id[0]
+
+        # Insertar en Administrador
+        admin_sql = """
+            INSERT INTO Administrador (Persona, Tipo, Usuario)
+            VALUES (?, ?, ?)
+        """
+        admin_result = self.execute_query(
+            admin_sql, (persona_id, tipo_id, ficha_id), commit=True
+        )
+        if admin_result is None:
+            print("Error al insertar en Administrador.")
+            return False
+
+        print("Usuario registrado exitosamente en la base de datos.")
+        return True
+

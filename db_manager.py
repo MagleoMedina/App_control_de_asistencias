@@ -454,3 +454,20 @@ class DBManager:
 
         print("Usuario actualizado exitosamente en la base de datos.")
         return True
+
+    def recuperar_credenciales_por_cedula(self, cedula):
+        """
+        Recupera el Username y Password de un usuario por su cédula.
+        Retorna un diccionario con 'Username' y 'Password', o None si no existe.
+        """
+        query = """
+        SELECT u.Username, u.Password
+        FROM Persona p
+        JOIN Administrador a ON a.Persona = p.ID
+        JOIN Usuario u ON a.Usuario = u.Numero_de_ficha
+        WHERE p.Cedula = ?
+        """
+        result = self.execute_query(query, (cedula,), fetch_one=True)
+        if not result:
+            return None
+        return {"Username": result[0], "Password": result[1]}

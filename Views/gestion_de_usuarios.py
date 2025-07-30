@@ -386,6 +386,7 @@ class RecuperarDatosApp(ctk.CTkFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
+        self.db = DBManager()  # Agrega la instancia de DBManager
 
         # Label for numero de cedula
         self.label_cedula = ctk.CTkLabel(self, text="Ingrese el número de cédula del usuario:")
@@ -411,12 +412,12 @@ class RecuperarDatosApp(ctk.CTkFrame):
         if not numero_cedula:
             messagebox.showwarning("Error", "Por favor, ingrese el número de cédula.")
             return
-            
-        # Aquí se debe buscar el usuario en la base de datos
-        # y mostrar su usuario y contraseña en un messagebox
-        usernarme = "Magleo"
-        password = "1234"
-        messagebox.showinfo(f"Resultado", "Usuario: "+usernarme+"\n\nContraseña: "+password)
+
+        credenciales = self.db.recuperar_credenciales_por_cedula(numero_cedula)
+        if credenciales:
+            messagebox.showinfo("Resultado", f"Usuario: {credenciales['Username']}\n\nContraseña: {credenciales['Password']}")
+        else:
+            messagebox.showerror("No encontrado", "No se encontró usuario con esa cédula.")
 
     def iniciar(self):
         self.ventana.mainloop()

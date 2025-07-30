@@ -357,3 +357,38 @@ class DBManager:
         if tipos is None:
             return []
         return [t[0] for t in tipos]
+
+    def buscar_usuario_por_cedula(self, cedula):
+        """
+        Busca y retorna los datos completos de un usuario por su cédula.
+        Retorna un diccionario con los campos o None si no existe.
+        """
+        query = """
+        SELECT
+            u.Username,
+            u.Password,
+            p.Nombre,
+            p.Apellido,
+            p.Cedula,
+            p.Nro_telefono,
+            u.Numero_de_ficha,
+            t.Descripcion as Tipo_usuario
+        FROM Persona p
+        JOIN Administrador a ON a.Persona = p.ID
+        JOIN Usuario u ON a.Usuario = u.Numero_de_ficha
+        JOIN Tipo t ON a.Tipo = t.ID
+        WHERE p.Cedula = ?
+        """
+        result = self.execute_query(query, (cedula,), fetch_one=True)
+        if not result:
+            return None
+        return {
+            "Username": result[0],
+            "Password": result[1],
+            "Nombre": result[2],
+            "Apellido": result[3],
+            "Cedula": result[4],
+            "Nro_telefono": result[5],
+            "Numero_de_ficha": result[6],
+            "Tipo_usuario": result[7]
+        }

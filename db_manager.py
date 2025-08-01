@@ -113,8 +113,8 @@ class DBManager:
             """
             CREATE TABLE IF NOT EXISTS "Usuario" (
                 "Numero_de_ficha"	INTEGER,
-                "Username"	TEXT NOT NULL UNIQUE,
-                "Password"	TEXT NOT NULL,
+                "Username"	TEXT UNIQUE,
+                "Password"	TEXT,
                 PRIMARY KEY("Numero_de_ficha")
             )
             """,
@@ -134,9 +134,9 @@ class DBManager:
                 "Tipo"	INTEGER NOT NULL,
                 "Usuario"	INTEGER NOT NULL,
                 PRIMARY KEY("Persona"),
-                FOREIGN KEY("Persona") REFERENCES "Persona"("ID"),
-                FOREIGN KEY("Usuario") REFERENCES "Usuario"("Numero_de_ficha"),
-                FOREIGN KEY("Tipo") REFERENCES "Tipo"("ID")
+                FOREIGN KEY("Persona") REFERENCES "Persona"("ID") ON UPDATE CASCADE,
+                FOREIGN KEY("Usuario") REFERENCES "Usuario"("Numero_de_ficha") ON UPDATE CASCADE,
+                FOREIGN KEY("Tipo") REFERENCES "Tipo"("ID") ON UPDATE CASCADE
             )
             """,
             """
@@ -144,7 +144,7 @@ class DBManager:
                 "Persona"	INTEGER,
                 "Nombre_organizacion"	TEXT NOT NULL,
                 PRIMARY KEY("Persona"),
-                FOREIGN KEY("Persona") REFERENCES "Persona"("ID")
+                FOREIGN KEY("Persona") REFERENCES "Persona"("ID") ON UPDATE CASCADE
             )
             """,
             """
@@ -160,7 +160,7 @@ class DBManager:
                 "Sede"	INTEGER NOT NULL,
                 "Nombre"	TEXT NOT NULL,
                 PRIMARY KEY("ID" AUTOINCREMENT),
-                FOREIGN KEY("Sede") REFERENCES "Sede"("ID")
+                FOREIGN KEY("Sede") REFERENCES "Sede"("ID") ON UPDATE CASCADE
             )
             """,
             """
@@ -169,7 +169,7 @@ class DBManager:
                 "Laboratorio"	INTEGER NOT NULL,
                 "Status"	TEXT NOT NULL,
                 PRIMARY KEY("Nro_de_bien"),
-                FOREIGN KEY("Laboratorio") REFERENCES "Laboratorio"("ID")
+                FOREIGN KEY("Laboratorio") REFERENCES "Laboratorio"("ID") ON UPDATE CASCADE
             )
             """,
             """
@@ -177,7 +177,7 @@ class DBManager:
                 "Nro_de_bien"	INTEGER,
                 "Descripcion"	TEXT NOT NULL,
                 PRIMARY KEY("Nro_de_bien"),
-                FOREIGN KEY("Nro_de_bien") REFERENCES "Equipo"("Nro_de_bien")
+                FOREIGN KEY("Nro_de_bien") REFERENCES "Equipo"("Nro_de_bien") ON UPDATE CASCADE
             )
             """,
             """
@@ -193,8 +193,8 @@ class DBManager:
                 "Equipo"	INTEGER,
                 "Componente"	INTEGER,
                 PRIMARY KEY("ID" AUTOINCREMENT),
-                FOREIGN KEY("Equipo") REFERENCES "Equipo"("Nro_de_bien"),
-                FOREIGN KEY("Componente") REFERENCES "Componente"("Nro_de_bien")
+                FOREIGN KEY("Equipo") REFERENCES "Equipo"("Nro_de_bien") ON UPDATE CASCADE,
+                FOREIGN KEY("Componente") REFERENCES "Componente"("Nro_de_bien") ON UPDATE CASCADE
             )
             """,
             """
@@ -207,9 +207,9 @@ class DBManager:
                 "Hora_inicio"	TEXT NOT NULL,
                 "Hora_finalizacion"	TEXT NOT NULL,
                 PRIMARY KEY("ID" AUTOINCREMENT),
-                FOREIGN KEY("Tipo_de_uso") REFERENCES "Tipo_de_uso"("ID"),
-                FOREIGN KEY("Administrador") REFERENCES "Administrador"("Persona"),
-                FOREIGN KEY("Laboratorio") REFERENCES "Laboratorio"("ID")
+                FOREIGN KEY("Tipo_de_uso") REFERENCES "Tipo_de_uso"("ID") ON UPDATE CASCADE,
+                FOREIGN KEY("Administrador") REFERENCES "Administrador"("Persona") ON UPDATE CASCADE,
+                FOREIGN KEY("Laboratorio") REFERENCES "Laboratorio"("ID") ON UPDATE CASCADE
             )
             """,
             """
@@ -219,9 +219,9 @@ class DBManager:
                 "Usuario_laboratorio"	INTEGER NOT NULL,
                 "Equipo"	INTEGER NOT NULL,
                 PRIMARY KEY("ID" AUTOINCREMENT),
-                FOREIGN KEY("Equipo") REFERENCES "Equipo"("Nro_de_bien"),
-                FOREIGN KEY("Usuario_laboratorio") REFERENCES "Usuario_laboratorio"("Persona"),
-                FOREIGN KEY("Uso_laboratorio_usr") REFERENCES "Uso_laboratorio_usr"("ID")
+                FOREIGN KEY("Equipo") REFERENCES "Equipo"("Nro_de_bien") ON UPDATE CASCADE,
+                FOREIGN KEY("Usuario_laboratorio") REFERENCES "Usuario_laboratorio"("Persona") ON UPDATE CASCADE,
+                FOREIGN KEY("Uso_laboratorio_usr") REFERENCES "Uso_laboratorio_usr"("ID") ON UPDATE CASCADE
             )
             """,
             """
@@ -229,7 +229,7 @@ class DBManager:
                 "ID"	INTEGER,
                 "Asistencia_usr"	INTEGER NOT NULL,
                 PRIMARY KEY("ID"),
-                FOREIGN KEY("Asistencia_usr") REFERENCES "Asistencia_usr"("ID")
+                FOREIGN KEY("Asistencia_usr") REFERENCES "Asistencia_usr"("ID") ON UPDATE CASCADE
             )
             """,
             """
@@ -240,8 +240,8 @@ class DBManager:
                 "Fecha"	TEXT NOT NULL,
                 "Cantidad"	INTEGER,
                 PRIMARY KEY("ID" AUTOINCREMENT),
-                FOREIGN KEY("Laboratorio") REFERENCES "Laboratorio"("ID"),
-                FOREIGN KEY("Administrador") REFERENCES "Administrador"("Persona")
+                FOREIGN KEY("Laboratorio") REFERENCES "Laboratorio"("ID") ON UPDATE CASCADE,
+                FOREIGN KEY("Administrador") REFERENCES "Administrador"("Persona") ON UPDATE CASCADE
             )
             """,
             """
@@ -250,8 +250,8 @@ class DBManager:
                 "Equipo"	INTEGER NOT NULL,
                 "Uso_laboratorio_estudiante"	INTEGER NOT NULL,
                 PRIMARY KEY("ID" AUTOINCREMENT),
-                FOREIGN KEY("Equipo") REFERENCES "Equipo"("Nro_de_bien"),
-                FOREIGN KEY("Uso_laboratorio_estudiante") REFERENCES "Uso_laboratorio_estudiante"("ID")
+                FOREIGN KEY("Equipo") REFERENCES "Equipo"("Nro_de_bien") ON UPDATE CASCADE,
+                FOREIGN KEY("Uso_laboratorio_estudiante") REFERENCES "Uso_laboratorio_estudiante"("ID") ON UPDATE CASCADE
             )
             """
         ]
@@ -497,3 +497,209 @@ class DBManager:
         else:
             print("Error al eliminar las credenciales del usuario.")
             return False
+
+    def agregar_sede(self, nombre):
+        """
+        Inserta una nueva sede en la tabla Sede.
+        Retorna True si fue exitoso, False si hubo error.
+        """
+        sql = "INSERT INTO Sede (Nombre) VALUES (?)"
+        result = self.execute_query(sql, (nombre,), commit=True)
+        return result is not None
+
+    def obtener_sedes(self):
+        """
+        Obtiene la lista de sedes (ID y Nombre).
+        Retorna una lista de tuplas (ID, Nombre).
+        """
+        sql = "SELECT ID, Nombre FROM Sede"
+        result = self.execute_query(sql)
+        if result is None:
+            return []
+        return result
+
+    def obtener_laboratorios_por_sede(self, sede_id):
+        """
+        Obtiene la lista de laboratorios (ID y Nombre) para una sede específica.
+        Retorna una lista de tuplas (ID, Nombre).
+        """
+        sql = "SELECT ID, Nombre FROM Laboratorio WHERE Sede = ?"
+        result = self.execute_query(sql, (sede_id,))
+        if result is None:
+            return []
+        #print(f"[DEBUG] Laboratorios encontrados para sede_id={sede_id}: {result}")
+        return result
+        
+
+    def agregar_laboratorio(self, nombre, sede_id):
+        """
+        Inserta un nuevo laboratorio relacionado con una sede.
+        Retorna True si fue exitoso, False si hubo error.
+        """
+        sql = "INSERT INTO Laboratorio (Sede, Nombre) VALUES (?, ?)"
+        result = self.execute_query(sql, (sede_id, nombre), commit=True)
+        return result is not None
+
+    def agregar_equipo(self, nro_bien, laboratorio_id, status, descripcion_equipo):
+        """
+        Inserta un nuevo equipo en la tabla Equipo y su tipo en la tabla Componente.
+        Retorna True si fue exitoso, False si hubo error.
+        """
+        # Verificar si ya existe el equipo
+        existe = self.execute_query(
+            "SELECT Nro_de_bien FROM Equipo WHERE Nro_de_bien = ?", (nro_bien,), fetch_one=True
+        )
+        if existe:
+            print("El equipo ya existe en la base de datos.")
+            return False
+
+        # Insertar en Equipo
+        sql_equipo = "INSERT INTO Equipo (Nro_de_bien, Laboratorio, Status) VALUES (?, ?, ?)"
+        result_equipo = self.execute_query(sql_equipo, (nro_bien, laboratorio_id, status), commit=True)
+        if result_equipo is None:
+            print("Error al insertar en Equipo.")
+            return False
+
+        # Insertar en Componente
+        sql_componente = "INSERT INTO Componente (Nro_de_bien, Descripcion) VALUES (?, ?)"
+        result_componente = self.execute_query(sql_componente, (nro_bien, descripcion_equipo), commit=True)
+        if result_componente is None:
+            print("Error al insertar en Componente.")
+            return False
+
+        print("Equipo y componente registrados exitosamente.")
+        return True
+
+    def obtener_tipos_equipo(self):
+        """
+        Obtiene la lista de tipos de equipo desde la tabla Componente (únicos).
+        Retorna una lista de descripciones.
+        """
+        sql = "SELECT DISTINCT Descripcion FROM Componente"
+        result = self.execute_query(sql)
+        if result is None:
+            return []
+        return [r[0] for r in result]
+
+    def buscar_equipo_por_nro_bien(self, nro_bien):
+        """
+        Busca un equipo por su número de bien y retorna toda su información relevante:
+        nro_bien, laboratorio_id, laboratorio_nombre, sede_id, sede_nombre, status, descripcion_equipo.
+        Retorna None si no existe.
+        """
+        query = """
+        SELECT 
+            e.Nro_de_bien,
+            e.Laboratorio,
+            l.Nombre as laboratorio_nombre,
+            s.ID as sede_id,
+            s.Nombre as sede_nombre,
+            e.Status,
+            c.Descripcion
+        FROM Equipo e
+        JOIN Laboratorio l ON e.Laboratorio = l.ID
+        JOIN Sede s ON l.Sede = s.ID
+        JOIN Componente c ON e.Nro_de_bien = c.Nro_de_bien
+        WHERE e.Nro_de_bien = ?
+        """
+        result = self.execute_query(query, (nro_bien,), fetch_one=True)
+        if not result:
+            return None
+        return {
+            "nro_bien": result[0],
+            "laboratorio_id": result[1],
+            "laboratorio_nombre": result[2],
+            "sede_id": result[3],
+            "sede_nombre": result[4],
+            "status": result[5],
+            "descripcion_equipo": result[6]
+        }
+
+    def actualizar_equipo(self, nro_bien, laboratorio_id, status, descripcion_equipo):
+        """
+        Actualiza los datos del equipo y su tipo en la base de datos.
+        Retorna True si fue exitoso, False si hubo error.
+        """
+        # Actualizar Equipo
+        sql_equipo = "UPDATE Equipo SET Laboratorio = ?, Status = ? WHERE Nro_de_bien = ?"
+        result_equipo = self.execute_query(sql_equipo, (laboratorio_id, status, nro_bien), commit=True)
+        if result_equipo is None:
+            print("Error al actualizar Equipo.")
+            return False
+
+        # Actualizar Componente
+        sql_componente = "UPDATE Componente SET Descripcion = ? WHERE Nro_de_bien = ?"
+        result_componente = self.execute_query(sql_componente, (descripcion_equipo, nro_bien), commit=True)
+        if result_componente is None:
+            print("Error al actualizar Componente.")
+            return False
+
+        print("Equipo y componente actualizados exitosamente.")
+        return True
+
+    def actualizar_equipo_con_nuevo_nro_bien(self, nro_bien_actual, nuevo_nro_bien, laboratorio_id, status, descripcion_equipo):
+        """
+        Actualiza los datos del equipo, incluyendo el cambio de número de bien (clave primaria).
+        Actualiza tanto en Equipo como en Componente.
+        Retorna True si fue exitoso, False si hubo error.
+        """
+        # Verificar si el nuevo número de bien ya existe (y no es el mismo registro)
+        if str(nro_bien_actual) != str(nuevo_nro_bien):
+            existe = self.execute_query(
+                "SELECT Nro_de_bien FROM Equipo WHERE Nro_de_bien = ?", (nuevo_nro_bien,), fetch_one=True
+            )
+            if existe:
+                print("Ya existe un equipo con ese nuevo número de bien.")
+                return False
+
+        # Actualizar Equipo
+        sql_equipo = "UPDATE Equipo SET Nro_de_bien = ?, Laboratorio = ?, Status = ? WHERE Nro_de_bien = ?"
+        result_equipo = self.execute_query(sql_equipo, (nuevo_nro_bien, laboratorio_id, status, nro_bien_actual), commit=True)
+        if result_equipo is None:
+            print("Error al actualizar Equipo.")
+            return False
+
+        # Actualizar Componente
+        sql_componente = "UPDATE Componente SET Nro_de_bien = ?, Descripcion = ? WHERE Nro_de_bien = ?"
+        result_componente = self.execute_query(sql_componente, (nuevo_nro_bien, descripcion_equipo, nro_bien_actual), commit=True)
+        if result_componente is None:
+            print("Error al actualizar Componente.")
+            return False
+
+        print("Equipo y componente actualizados exitosamente (incluyendo número de bien).")
+        return True
+
+    def existe_equipo(self, nro_bien, descripcion):
+        """
+        Verifica si existe un equipo con el número de bien y la descripción dada.
+        Retorna (True, None) si existe y coincide, (False, mensaje_error) si no.
+        """
+        result = self.execute_query(
+            "SELECT c.Descripcion FROM Equipo e JOIN Componente c ON e.Nro_de_bien = c.Nro_de_bien WHERE e.Nro_de_bien = ?",
+            (nro_bien,), fetch_one=True
+        )
+        if not result:
+            return False, f"No se encuentra {descripcion} con el número de bien {nro_bien} en el sistema."
+        if result[0] != descripcion:
+            return False, f"No se encuentra {descripcion} con el número de bien {nro_bien} en el sistema."
+        return True, None
+
+    def relacionar_equipos(self, computadora, teclado, monitor, raton):
+        """
+        Registra la relación de los equipos en la tabla Asignacion.
+        Cada componente se relaciona con la computadora.
+        Retorna True si todas las asignaciones fueron exitosas, False si hubo error.
+        """
+        # Relacionar cada componente con la computadora
+        componentes = [teclado, monitor, raton]
+        for componente in componentes:
+            # Verifica si ya existe la relación para evitar duplicados
+            existe = self.execute_query(
+                "SELECT 1 FROM Asignacion WHERE Equipo = ? AND Componente = ?", (computadora, componente), fetch_one=True
+            )
+            if not existe:
+                sql = "INSERT INTO Asignacion (Equipo, Componente) VALUES (?, ?)"
+                result = self.execute_query(sql, (computadora, componente), commit=True)
+                if result is None:
+                    return False
+        return True

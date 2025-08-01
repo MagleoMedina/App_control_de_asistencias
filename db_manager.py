@@ -668,3 +668,38 @@ class DBManager:
 
         print("Equipo y componente actualizados exitosamente (incluyendo número de bien).")
         return True
+
+    def existe_equipo(self, nro_bien, descripcion):
+        """
+        Verifica si existe un equipo con el número de bien y la descripción dada.
+        Retorna (True, None) si existe y coincide, (False, mensaje_error) si no.
+        """
+        result = self.execute_query(
+            "SELECT c.Descripcion FROM Equipo e JOIN Componente c ON e.Nro_de_bien = c.Nro_de_bien WHERE e.Nro_de_bien = ?",
+            (nro_bien,), fetch_one=True
+        )
+        if not result:
+            return False, f"No se encuentra {descripcion} con el número de bien {nro_bien} en el sistema."
+        if result[0] != descripcion:
+            return False, f"No se encuentra {descripcion} con el número de bien {nro_bien} en el sistema."
+        return True, None
+
+    def relacionar_equipos(self, computadora, teclado, monitor, raton):
+        """
+        Registra la relación de los equipos en la tabla Asignacion.
+        Cada componente se relaciona con la computadora.
+        Retorna True si todas las asignaciones fueron exitosas, False si hubo error.
+        """
+        # Relacionar cada componente con la computadora
+        componentes = [teclado, monitor, raton]
+        for componente in componentes:
+            # Verifica si ya existe la relación para evitar duplicados
+            existe = self.execute_query(
+                "SELECT 1 FROM Asignacion WHERE Equipo = ? AND Componente = ?", (computadora, componente), fetch_one=True
+            )
+            if not existe:
+                sql = "INSERT INTO Asignacion (Equipo, Componente) VALUES (?, ?)"
+                result = self.execute_query(sql, (computadora, componente), commit=True)
+                if result is None:
+                    return False
+        return True

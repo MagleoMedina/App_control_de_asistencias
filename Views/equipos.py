@@ -219,11 +219,8 @@ class AgregarEquipo(ctk.CTkFrame):
                     break
             self.on_sede_selected()
 
-        # Obtener tipos de equipo desde la base de datos
-        self.tipos_equipo = self.db_manager.obtener_tipos_equipo()
-        # Si no hay tipos en la base de datos, usar valores por defecto
-        if not self.tipos_equipo:
-            self.tipos_equipo = ["Computadora", "Teclado", "Ratón", "Monitor"]
+        #Values para la lista de equipos
+        self.tipos_equipo = ["Computadora", "Teclado", "Ratón", "Monitor"]
 
         # Label and Dropdown for "Equipo"
         self.equipo_label = ctk.CTkLabel(self, text="Equipo")
@@ -533,6 +530,7 @@ class RelacionarEquipos(ctk.CTkFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
+        self.db_manager = DBManager()  # Instanciar DBManager
 
         # Title
         self.title_label = ctk.CTkLabel(self, text="Ingresa los números de bien a relacionar", font=("Arial", 20))
@@ -574,29 +572,40 @@ class RelacionarEquipos(ctk.CTkFrame):
         return char.isdigit()
 
     def relacionar_equipos(self):
-        # Collect data from entries
         computadora = self.computadora_entry.get()
         teclado = self.teclado_entry.get()
         monitor = self.monitor_entry.get()
         raton = self.raton_entry.get()
 
-        # Validate that no fields are empty
+        # Validar que no estén vacíos
         if not computadora.strip() or not teclado.strip() or not monitor.strip() or not raton.strip():
             messagebox.showerror("Error", "Todos los campos deben estar llenos.")
             return
 
-        # Logic to handle the collected data
-        messagebox.showinfo(
-            "Éxito",
-            f"Equipos relacionados:\nComputadora: {computadora}\nTeclado: {teclado}\nMonitor: {monitor}\nRatón: {raton}"
-        )
-        if not computadora.strip() or not teclado.strip() or not monitor.strip() or not raton.strip():
-            messagebox.showerror("Error", "Todos los campos deben estar llenos.")
+        # Verificar existencia y tipo de cada número de bien
+        errores = []
+        checks = [
+            (computadora, "Computadora"),
+            (teclado, "Teclado"),
+            (monitor, "Monitor"),
+            (raton, "Ratón"),
+        ]
+        for nro, tipo in checks:
+            existe, msg = self.db_manager.existe_equipo(nro, tipo)
+            if not existe:
+                errores.append(msg)
+
+        if errores:
+            messagebox.showerror("Error", "\n".join(errores))
             return
 
-        # Logic to handle the collected data
-        messagebox.showinfo(
-            "Éxito",
-            f"Equipos relacionados:\nComputadora: {computadora}\nTeclado: {teclado}\nMonitor: {monitor}\nRatón: {raton}"
-        )
+        # Registrar la relación en la base de datos
+        exito = self.db_manager.relacionar_equipos(computadora, teclado, monitor, raton)
+        if exito:
+            messagebox.showinfo(
+                "Éxito",
+                f"Equipos relacionados:\nComputadora: {computadora}\nTeclado: {teclado}\nMonitor: {monitor}\nRatón: {raton}"
+            )
+        else:
+            messagebox.showerror("Error", "No se pudo registrar la relación de equipos.")
 

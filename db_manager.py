@@ -497,3 +497,32 @@ class DBManager:
         else:
             print("Error al eliminar las credenciales del usuario.")
             return False
+
+    def agregar_sede(self, nombre):
+        """
+        Inserta una nueva sede en la tabla Sede.
+        Retorna True si fue exitoso, False si hubo error.
+        """
+        sql = "INSERT INTO Sede (Nombre) VALUES (?)"
+        result = self.execute_query(sql, (nombre,), commit=True)
+        return result is not None
+
+    def obtener_sedes(self):
+        """
+        Obtiene la lista de sedes (ID y Nombre).
+        Retorna una lista de tuplas (ID, Nombre).
+        """
+        sql = "SELECT ID, Nombre FROM Sede"
+        result = self.execute_query(sql)
+        if result is None:
+            return []
+        return result
+
+    def agregar_laboratorio(self, nombre, sede_id):
+        """
+        Inserta un nuevo laboratorio relacionado con una sede.
+        Retorna True si fue exitoso, False si hubo error.
+        """
+        sql = "INSERT INTO Laboratorio (Sede, Nombre) VALUES (?, ?)"
+        result = self.execute_query(sql, (sede_id, nombre), commit=True)
+        return result is not None

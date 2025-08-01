@@ -113,8 +113,8 @@ class DBManager:
             """
             CREATE TABLE IF NOT EXISTS "Usuario" (
                 "Numero_de_ficha"	INTEGER,
-                "Username"	TEXT NOT NULL UNIQUE,
-                "Password"	TEXT NOT NULL,
+                "Username"	TEXT UNIQUE,
+                "Password"	TEXT,
                 PRIMARY KEY("Numero_de_ficha")
             )
             """,
@@ -134,9 +134,9 @@ class DBManager:
                 "Tipo"	INTEGER NOT NULL,
                 "Usuario"	INTEGER NOT NULL,
                 PRIMARY KEY("Persona"),
-                FOREIGN KEY("Persona") REFERENCES "Persona"("ID"),
-                FOREIGN KEY("Usuario") REFERENCES "Usuario"("Numero_de_ficha"),
-                FOREIGN KEY("Tipo") REFERENCES "Tipo"("ID")
+                FOREIGN KEY("Persona") REFERENCES "Persona"("ID") ON UPDATE CASCADE,
+                FOREIGN KEY("Usuario") REFERENCES "Usuario"("Numero_de_ficha") ON UPDATE CASCADE,
+                FOREIGN KEY("Tipo") REFERENCES "Tipo"("ID") ON UPDATE CASCADE
             )
             """,
             """
@@ -144,7 +144,7 @@ class DBManager:
                 "Persona"	INTEGER,
                 "Nombre_organizacion"	TEXT NOT NULL,
                 PRIMARY KEY("Persona"),
-                FOREIGN KEY("Persona") REFERENCES "Persona"("ID")
+                FOREIGN KEY("Persona") REFERENCES "Persona"("ID") ON UPDATE CASCADE
             )
             """,
             """
@@ -160,7 +160,7 @@ class DBManager:
                 "Sede"	INTEGER NOT NULL,
                 "Nombre"	TEXT NOT NULL,
                 PRIMARY KEY("ID" AUTOINCREMENT),
-                FOREIGN KEY("Sede") REFERENCES "Sede"("ID")
+                FOREIGN KEY("Sede") REFERENCES "Sede"("ID") ON UPDATE CASCADE
             )
             """,
             """
@@ -169,7 +169,7 @@ class DBManager:
                 "Laboratorio"	INTEGER NOT NULL,
                 "Status"	TEXT NOT NULL,
                 PRIMARY KEY("Nro_de_bien"),
-                FOREIGN KEY("Laboratorio") REFERENCES "Laboratorio"("ID")
+                FOREIGN KEY("Laboratorio") REFERENCES "Laboratorio"("ID") ON UPDATE CASCADE
             )
             """,
             """
@@ -177,7 +177,7 @@ class DBManager:
                 "Nro_de_bien"	INTEGER,
                 "Descripcion"	TEXT NOT NULL,
                 PRIMARY KEY("Nro_de_bien"),
-                FOREIGN KEY("Nro_de_bien") REFERENCES "Equipo"("Nro_de_bien")
+                FOREIGN KEY("Nro_de_bien") REFERENCES "Equipo"("Nro_de_bien") ON UPDATE CASCADE
             )
             """,
             """
@@ -193,8 +193,8 @@ class DBManager:
                 "Equipo"	INTEGER,
                 "Componente"	INTEGER,
                 PRIMARY KEY("ID" AUTOINCREMENT),
-                FOREIGN KEY("Equipo") REFERENCES "Equipo"("Nro_de_bien"),
-                FOREIGN KEY("Componente") REFERENCES "Componente"("Nro_de_bien")
+                FOREIGN KEY("Equipo") REFERENCES "Equipo"("Nro_de_bien") ON UPDATE CASCADE,
+                FOREIGN KEY("Componente") REFERENCES "Componente"("Nro_de_bien") ON UPDATE CASCADE
             )
             """,
             """
@@ -207,9 +207,9 @@ class DBManager:
                 "Hora_inicio"	TEXT NOT NULL,
                 "Hora_finalizacion"	TEXT NOT NULL,
                 PRIMARY KEY("ID" AUTOINCREMENT),
-                FOREIGN KEY("Tipo_de_uso") REFERENCES "Tipo_de_uso"("ID"),
-                FOREIGN KEY("Administrador") REFERENCES "Administrador"("Persona"),
-                FOREIGN KEY("Laboratorio") REFERENCES "Laboratorio"("ID")
+                FOREIGN KEY("Tipo_de_uso") REFERENCES "Tipo_de_uso"("ID") ON UPDATE CASCADE,
+                FOREIGN KEY("Administrador") REFERENCES "Administrador"("Persona") ON UPDATE CASCADE,
+                FOREIGN KEY("Laboratorio") REFERENCES "Laboratorio"("ID") ON UPDATE CASCADE
             )
             """,
             """
@@ -219,9 +219,9 @@ class DBManager:
                 "Usuario_laboratorio"	INTEGER NOT NULL,
                 "Equipo"	INTEGER NOT NULL,
                 PRIMARY KEY("ID" AUTOINCREMENT),
-                FOREIGN KEY("Equipo") REFERENCES "Equipo"("Nro_de_bien"),
-                FOREIGN KEY("Usuario_laboratorio") REFERENCES "Usuario_laboratorio"("Persona"),
-                FOREIGN KEY("Uso_laboratorio_usr") REFERENCES "Uso_laboratorio_usr"("ID")
+                FOREIGN KEY("Equipo") REFERENCES "Equipo"("Nro_de_bien") ON UPDATE CASCADE,
+                FOREIGN KEY("Usuario_laboratorio") REFERENCES "Usuario_laboratorio"("Persona") ON UPDATE CASCADE,
+                FOREIGN KEY("Uso_laboratorio_usr") REFERENCES "Uso_laboratorio_usr"("ID") ON UPDATE CASCADE
             )
             """,
             """
@@ -229,7 +229,7 @@ class DBManager:
                 "ID"	INTEGER,
                 "Asistencia_usr"	INTEGER NOT NULL,
                 PRIMARY KEY("ID"),
-                FOREIGN KEY("Asistencia_usr") REFERENCES "Asistencia_usr"("ID")
+                FOREIGN KEY("Asistencia_usr") REFERENCES "Asistencia_usr"("ID") ON UPDATE CASCADE
             )
             """,
             """
@@ -240,8 +240,8 @@ class DBManager:
                 "Fecha"	TEXT NOT NULL,
                 "Cantidad"	INTEGER,
                 PRIMARY KEY("ID" AUTOINCREMENT),
-                FOREIGN KEY("Laboratorio") REFERENCES "Laboratorio"("ID"),
-                FOREIGN KEY("Administrador") REFERENCES "Administrador"("Persona")
+                FOREIGN KEY("Laboratorio") REFERENCES "Laboratorio"("ID") ON UPDATE CASCADE,
+                FOREIGN KEY("Administrador") REFERENCES "Administrador"("Persona") ON UPDATE CASCADE
             )
             """,
             """
@@ -250,8 +250,8 @@ class DBManager:
                 "Equipo"	INTEGER NOT NULL,
                 "Uso_laboratorio_estudiante"	INTEGER NOT NULL,
                 PRIMARY KEY("ID" AUTOINCREMENT),
-                FOREIGN KEY("Equipo") REFERENCES "Equipo"("Nro_de_bien"),
-                FOREIGN KEY("Uso_laboratorio_estudiante") REFERENCES "Uso_laboratorio_estudiante"("ID")
+                FOREIGN KEY("Equipo") REFERENCES "Equipo"("Nro_de_bien") ON UPDATE CASCADE,
+                FOREIGN KEY("Uso_laboratorio_estudiante") REFERENCES "Uso_laboratorio_estudiante"("ID") ON UPDATE CASCADE
             )
             """
         ]

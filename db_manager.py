@@ -518,6 +518,19 @@ class DBManager:
             return []
         return result
 
+    def obtener_laboratorios_por_sede(self, sede_id):
+        """
+        Obtiene la lista de laboratorios (ID y Nombre) para una sede específica.
+        Retorna una lista de tuplas (ID, Nombre).
+        """
+        sql = "SELECT ID, Nombre FROM Laboratorio WHERE Sede = ?"
+        result = self.execute_query(sql, (sede_id,))
+        if result is None:
+            return []
+        print(f"[DEBUG] Laboratorios encontrados para sede_id={sede_id}: {result}")
+        return result
+        
+
     def agregar_laboratorio(self, nombre, sede_id):
         """
         Inserta un nuevo laboratorio relacionado con una sede.

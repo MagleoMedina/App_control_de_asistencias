@@ -527,7 +527,7 @@ class DBManager:
         result = self.execute_query(sql, (sede_id,))
         if result is None:
             return []
-        print(f"[DEBUG] Laboratorios encontrados para sede_id={sede_id}: {result}")
+        #print(f"[DEBUG] Laboratorios encontrados para sede_id={sede_id}: {result}")
         return result
         
 
@@ -580,3 +580,91 @@ class DBManager:
         if result is None:
             return []
         return [r[0] for r in result]
+
+    def buscar_equipo_por_nro_bien(self, nro_bien):
+        """
+        Busca un equipo por su número de bien y retorna toda su información relevante:
+        nro_bien, laboratorio_id, laboratorio_nombre, sede_id, sede_nombre, status, descripcion_equipo.
+        Retorna None si no existe.
+        """
+        query = """
+        SELECT 
+            e.Nro_de_bien,
+            e.Laboratorio,
+            l.Nombre as laboratorio_nombre,
+            s.ID as sede_id,
+            s.Nombre as sede_nombre,
+            e.Status,
+            c.Descripcion
+        FROM Equipo e
+        JOIN Laboratorio l ON e.Laboratorio = l.ID
+        JOIN Sede s ON l.Sede = s.ID
+        JOIN Componente c ON e.Nro_de_bien = c.Nro_de_bien
+        WHERE e.Nro_de_bien = ?
+        """
+        result = self.execute_query(query, (nro_bien,), fetch_one=True)
+        if not result:
+            return None
+        return {
+            "nro_bien": result[0],
+            "laboratorio_id": result[1],
+            "laboratorio_nombre": result[2],
+            "sede_id": result[3],
+            "sede_nombre": result[4],
+            "status": result[5],
+            "descripcion_equipo": result[6]
+        }
+
+    def actualizar_equipo(self, nro_bien, laboratorio_id, status, descripcion_equipo):
+        """
+        Actualiza los datos del equipo y su tipo en la base de datos.
+        Retorna True si fue exitoso, False si hubo error.
+        """
+        # Actualizar Equipo
+        sql_equipo = "UPDATE Equipo SET Laboratorio = ?, Status = ? WHERE Nro_de_bien = ?"
+        result_equipo = self.execute_query(sql_equipo, (laboratorio_id, status, nro_bien), commit=True)
+        if result_equipo is None:
+            print("Error al actualizar Equipo.")
+            return False
+
+        # Actualizar Componente
+        sql_componente = "UPDATE Componente SET Descripcion = ? WHERE Nro_de_bien = ?"
+        result_componente = self.execute_query(sql_componente, (descripcion_equipo, nro_bien), commit=True)
+        if result_componente is None:
+            print("Error al actualizar Componente.")
+            return False
+
+        print("Equipo y componente actualizados exitosamente.")
+        return True
+
+    def actualizar_equipo_con_nuevo_nro_bien(self, nro_bien_actual, nuevo_nro_bien, laboratorio_id, status, descripcion_equipo):
+        """
+        Actualiza los datos del equipo, incluyendo el cambio de número de bien (clave primaria).
+        Actualiza tanto en Equipo como en Componente.
+        Retorna True si fue exitoso, False si hubo error.
+        """
+        # Verificar si el nuevo número de bien ya existe (y no es el mismo registro)
+        if str(nro_bien_actual) != str(nuevo_nro_bien):
+            existe = self.execute_query(
+                "SELECT Nro_de_bien FROM Equipo WHERE Nro_de_bien = ?", (nuevo_nro_bien,), fetch_one=True
+            )
+            if existe:
+                print("Ya existe un equipo con ese nuevo número de bien.")
+                return False
+
+        # Actualizar Equipo
+        sql_equipo = "UPDATE Equipo SET Nro_de_bien = ?, Laboratorio = ?, Status = ? WHERE Nro_de_bien = ?"
+        result_equipo = self.execute_query(sql_equipo, (nuevo_nro_bien, laboratorio_id, status, nro_bien_actual), commit=True)
+        if result_equipo is None:
+            print("Error al actualizar Equipo.")
+            return False
+
+        # Actualizar Componente
+        sql_componente = "UPDATE Componente SET Nro_de_bien = ?, Descripcion = ? WHERE Nro_de_bien = ?"
+        result_componente = self.execute_query(sql_componente, (nuevo_nro_bien, descripcion_equipo, nro_bien_actual), commit=True)
+        if result_componente is None:
+            print("Error al actualizar Componente.")
+            return False
+
+        print("Equipo y componente actualizados exitosamente (incluyendo número de bien).")
+        return True

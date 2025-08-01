@@ -539,3 +539,44 @@ class DBManager:
         sql = "INSERT INTO Laboratorio (Sede, Nombre) VALUES (?, ?)"
         result = self.execute_query(sql, (sede_id, nombre), commit=True)
         return result is not None
+
+    def agregar_equipo(self, nro_bien, laboratorio_id, status, descripcion_equipo):
+        """
+        Inserta un nuevo equipo en la tabla Equipo y su tipo en la tabla Componente.
+        Retorna True si fue exitoso, False si hubo error.
+        """
+        # Verificar si ya existe el equipo
+        existe = self.execute_query(
+            "SELECT Nro_de_bien FROM Equipo WHERE Nro_de_bien = ?", (nro_bien,), fetch_one=True
+        )
+        if existe:
+            print("El equipo ya existe en la base de datos.")
+            return False
+
+        # Insertar en Equipo
+        sql_equipo = "INSERT INTO Equipo (Nro_de_bien, Laboratorio, Status) VALUES (?, ?, ?)"
+        result_equipo = self.execute_query(sql_equipo, (nro_bien, laboratorio_id, status), commit=True)
+        if result_equipo is None:
+            print("Error al insertar en Equipo.")
+            return False
+
+        # Insertar en Componente
+        sql_componente = "INSERT INTO Componente (Nro_de_bien, Descripcion) VALUES (?, ?)"
+        result_componente = self.execute_query(sql_componente, (nro_bien, descripcion_equipo), commit=True)
+        if result_componente is None:
+            print("Error al insertar en Componente.")
+            return False
+
+        print("Equipo y componente registrados exitosamente.")
+        return True
+
+    def obtener_tipos_equipo(self):
+        """
+        Obtiene la lista de tipos de equipo desde la tabla Componente (únicos).
+        Retorna una lista de descripciones.
+        """
+        sql = "SELECT DISTINCT Descripcion FROM Componente"
+        result = self.execute_query(sql)
+        if result is None:
+            return []
+        return [r[0] for r in result]

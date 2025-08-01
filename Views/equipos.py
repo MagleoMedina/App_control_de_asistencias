@@ -219,11 +219,16 @@ class AgregarEquipo(ctk.CTkFrame):
                     break
             self.on_sede_selected()
 
+        # Obtener tipos de equipo desde la base de datos
+        self.tipos_equipo = self.db_manager.obtener_tipos_equipo()
+        # Si no hay tipos en la base de datos, usar valores por defecto
+        if not self.tipos_equipo:
+            self.tipos_equipo = ["Computadora", "Teclado", "Ratón", "Monitor"]
+
         # Label and Dropdown for "Equipo"
         self.equipo_label = ctk.CTkLabel(self, text="Equipo")
         self.equipo_label.grid(row=2, column=0, padx=10, pady=5)
-        values_equipo = ["Computadora", "Teclado", "Ratón", "Monitor"]
-        self.equipo_dropdown = ctk.CTkComboBox(self, values=values_equipo, state="readonly")
+        self.equipo_dropdown = ctk.CTkComboBox(self, values=self.tipos_equipo, state="readonly")
         self.equipo_dropdown.grid(row=2, column=1, padx=10, pady=5)
 
         # Label and Dropdown for "Status"
@@ -262,8 +267,22 @@ class AgregarEquipo(ctk.CTkFrame):
             messagebox.showerror("Error", "Todos los campos deben estar llenos.")
             return
 
-        # Aquí se puede agregar la lógica para guardar los datos
-        messagebox.showinfo("Éxito", "Datos guardados correctamente.")
+        # Obtener el ID del laboratorio seleccionado
+        laboratorio_id = None
+        for l in self.laboratorios:
+            if l[1] == laboratorio:
+                laboratorio_id = l[0]
+                break
+        if laboratorio_id is None:
+            messagebox.showerror("Error", "Laboratorio no válido.")
+            return
+
+        # Guardar en la base de datos
+        exito = self.db_manager.agregar_equipo(nro_bien, laboratorio_id, status, equipo)
+        if exito:
+            messagebox.showinfo("Éxito", "Equipo guardado correctamente.")
+        else:
+            messagebox.showerror("Error", "No se pudo guardar el equipo. Puede que ya exista.")
 
     def update_laboratorios(self):
         selected_sede_name = self.sede_dropdown.get()

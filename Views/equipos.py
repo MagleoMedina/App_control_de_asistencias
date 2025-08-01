@@ -163,9 +163,6 @@ class ConsultarFallaEquipo(ctk.CTkFrame):
         html_content = html_content.replace("{{tabla_equipos}}", tabla_equipos)
         html_content = html_content.replace("{{fecha_actual}}", datetime.now().strftime("%d/%m/%Y"))
 
-
-       
-
         # Generate the PDF with a dynamic filename
         current_datetime = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
         pdf_filename = f"Consulta_Equipo_{current_datetime}.pdf"
@@ -188,14 +185,10 @@ class AgregarEquipo(ctk.CTkFrame):
         sede_names = [s[1] for s in self.sedes] if self.sedes else []
 
         # Label and Dropdown for "Sede"
-        # Label and Dropdown for "Sede"
         self.sede_label = ctk.CTkLabel(self, text="Sede")
         self.sede_label.grid(row=0, column=0, padx=10, pady=5)
-        self.sede_dropdown = ctk.CTkComboBox(self, values=sede_names,
-                                            command=self.on_sede_selected) # <- CAMBIO AQUÍ
+        self.sede_dropdown = ctk.CTkComboBox(self, values=sede_names, command=self.on_sede_selected) 
         self.sede_dropdown.grid(row=0, column=1, padx=10, pady=5)
-        # Elimina la siguiente línea, ya no es necesaria:
-        # self.sede_dropdown.bind("<<ComboboxSelected>>", self.on_sede_selected)
 
         # Inicializar laboratorios según la sede seleccionada (si existe)
         self.laboratorios = []
@@ -214,8 +207,6 @@ class AgregarEquipo(ctk.CTkFrame):
             selected_sede = self.sede_dropdown.get()
             for idx, sede in enumerate(self.sedes):
                 if sede[1] == selected_sede:
-                    # idx es el índice de la sede seleccionada
-                    # sede[0] es el id, sede[1] es el nombre
                     break
             self.on_sede_selected()
 
@@ -278,8 +269,23 @@ class AgregarEquipo(ctk.CTkFrame):
         exito = self.db_manager.agregar_equipo(nro_bien, laboratorio_id, status, equipo)
         if exito:
             messagebox.showinfo("Éxito", "Equipo guardado correctamente.")
+            self.limpiar_campos()
         else:
             messagebox.showerror("Error", "No se pudo guardar el equipo. Puede que ya exista.")
+
+    def limpiar_campos(self):
+        # Limpiar todos los campos de entrada y restablecer los dropdowns
+        if self.sede_dropdown.cget("values"):
+            self.sede_dropdown.set(self.sede_dropdown.cget("values")[0])
+            self.on_sede_selected()
+        if self.lab_names:
+            self.laboratorio_dropdown.set(self.lab_names[0])
+        else:
+            self.laboratorio_dropdown.set("")
+       
+        self.equipo_dropdown.set("")
+        self.status_dropdown.set("")
+        self.nro_bien_entry.delete(0, tk.END)
 
     def update_laboratorios(self):
         selected_sede_name = self.sede_dropdown.get()
@@ -470,7 +476,7 @@ class ModificarEquipo(ctk.CTkFrame):
             messagebox.showerror("Error", "No se pudo actualizar el equipo. Puede que el nuevo número de bien ya exista.")
 
     def limpiar_campos(self):
-        # Limpiar todos los campos y widgets de la interfaz de modificación
+        # Limpiar el campo de búsqueda y destruir widgets dinámicos
         self.nro_bien_entry.delete(0, tk.END)
         for widget in [self.sede_label, self.sede_dropdown, self.laboratorio_label, self.laboratorio_dropdown,
                        self.equipo_label, self.equipo_dropdown, self.status_label, self.status_dropdown,
@@ -606,6 +612,14 @@ class RelacionarEquipos(ctk.CTkFrame):
                 "Éxito",
                 f"Equipos relacionados:\nComputadora: {computadora}\nTeclado: {teclado}\nMonitor: {monitor}\nRatón: {raton}"
             )
+            self.limpiar_campos()
         else:
             messagebox.showerror("Error", "No se pudo registrar la relación de equipos.")
+
+    def limpiar_campos(self):
+        # Limpiar todos los campos de entrada
+        self.computadora_entry.delete(0, tk.END)
+        self.teclado_entry.delete(0, tk.END)
+        self.monitor_entry.delete(0, tk.END)
+        self.raton_entry.delete(0, tk.END)
 

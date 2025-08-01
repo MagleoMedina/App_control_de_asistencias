@@ -145,6 +145,15 @@ class VentanaRegistro(ctk.CTkFrame):
             )
             if resultado:
                 messagebox.showinfo("Registro exitoso", "Usuario registrado exitosamente.")
+                # Limpiar los campos después de registro exitoso
+                self.entry_usuario.delete(0, 'end')
+                self.entry_password.delete(0, 'end')
+                self.entry_nombre.delete(0, 'end')
+                self.entry_apellido.delete(0, 'end')
+                self.entry_cedula.delete(0, 'end')
+                self.entry_telefono.delete(0, 'end')
+                self.entry_ficha.delete(0, 'end')
+                self.combo_tipo_usuario.set('')  # Limpiar selección del combo
             else:
                 messagebox.showerror("Error", "No se pudo registrar el usuario. Verifica los datos o si ya existe.")
 
@@ -378,6 +387,33 @@ class ModificarDatos(ctk.CTkFrame):
         )
         if resultado:
             messagebox.showinfo("Actualización exitosa", "Usuario actualizado exitosamente.")
+            # Limpiar los campos después de actualización exitosa
+            self.entry_usuario.configure(state='normal')
+            self.entry_password.configure(state='normal')
+            self.entry_nombre.configure(state='normal')
+            self.entry_apellido.configure(state='normal')
+            self.entry_cedula.configure(state='normal')
+            self.entry_telefono.configure(state='normal')
+            self.entry_ficha.configure(state='normal')
+            self.combo_tipo_usuario.configure(state='normal')
+            self.entry_usuario.delete(0, 'end')
+            self.entry_password.delete(0, 'end')
+            self.entry_nombre.delete(0, 'end')
+            self.entry_apellido.delete(0, 'end')
+            self.entry_cedula.delete(0, 'end')
+            self.entry_telefono.delete(0, 'end')
+            self.entry_ficha.delete(0, 'end')
+            self.entry_cedula_buscar.delete(0, 'end')
+            self.combo_tipo_usuario.set('')
+            # Opcional: volver a poner los campos en readonly y ocultar elementos
+            self.entry_usuario.configure(state='readonly')
+            self.entry_password.configure(state='readonly')
+            self.entry_nombre.configure(state='readonly')
+            self.entry_apellido.configure(state='readonly')
+            self.entry_cedula.configure(state='readonly')
+            self.entry_telefono.configure(state='readonly')
+            self.entry_ficha.configure(state='readonly')
+            self.combo_tipo_usuario.configure(state='readonly')
         else:
             messagebox.showerror("Error", "No se pudo actualizar el usuario. Verifica los datos.")
 
@@ -416,8 +452,11 @@ class RecuperarDatosApp(ctk.CTkFrame):
         credenciales = self.db.recuperar_credenciales_por_cedula(numero_cedula)
         if credenciales:
             messagebox.showinfo("Resultado", f"Usuario: {credenciales['Username']}\n\nContraseña: {credenciales['Password']}")
+            # Limpiar el campo después de mostrar las credenciales
+            self.entry_cedula.delete(0, 'end')
         else:
             messagebox.showerror("No encontrado", "No se encontró usuario con esa cédula.")
+
 
     def iniciar(self):
         self.ventana.mainloop()
@@ -438,6 +477,8 @@ class EliminarUsuario(RecuperarDatosApp):
             resultado = self.db.eliminar_credenciales_por_cedula(numero_cedula)
             if resultado:
                 messagebox.showinfo("Resultado", "Usuario eliminado exitosamente.")
+                # Limpiar el campo después de mostrar las credenciales
+                self.entry_cedula.delete(0, 'end')
             else:
                 messagebox.showerror("Error", "No se pudo eliminar el usuario. Verifica la cédula.")
         else:

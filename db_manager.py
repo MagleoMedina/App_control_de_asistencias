@@ -4,6 +4,7 @@ import libsql
 import os
 import sys
 from dotenv import load_dotenv
+from concurrent.futures import ThreadPoolExecutor
 
 class DBManager:
     """
@@ -29,6 +30,7 @@ class DBManager:
 
         # Variable para almacenar la conexión a la base de datos (inicialmente None)
         self._connection = None
+        self._executor = ThreadPoolExecutor(max_workers=2)
         print("DBManager inicializado. Credenciales cargadas.")
 
     def get_db_connection(self):
@@ -59,42 +61,46 @@ class DBManager:
 
     def execute_query(self, query, params=None, fetch_one=False, commit=False):
         """
-        Ejecuta una consulta SQL en la base de datos.
+        Ejecuta una consulta SQL en la base de datos en un hilo aparte.
         :param query: La cadena de consulta SQL a ejecutar.
         :param params: Una tupla o lista de parámetros para la consulta (opcional).
         :param fetch_one: Si es True, retorna solo la primera fila del resultado.
         :param commit: Si es True, realiza un commit y sincroniza los cambios.
         :return: El resultado de la consulta (fila/s o True/False para commit), o None en caso de error.
         """
-        conn = self.get_db_connection()
-        if conn is None:
-            print("No hay conexión a la base de datos disponible.")
-            return None
+        def _run_query():
+            conn = self.get_db_connection()
+            if conn is None:
+                print("No hay conexión a la base de datos disponible.")
+                return None
 
-        cursor = conn.cursor()
-        try:
-            if params:
-                cursor.execute(query, params)
-            else:
-                cursor.execute(query)
-
-            if commit:
-                conn.commit()
-                conn.sync() # Sincroniza después de un commit para enviar los cambios a Turso
-                return True
-            else:
-                if fetch_one:
-                    return cursor.fetchone()
+            cursor = conn.cursor()
+            try:
+                if params:
+                    cursor.execute(query, params)
                 else:
-                    return cursor.fetchall()
-        except Exception as e:
-            print(f"Error al ejecutar la consulta '{query}': {e}")
-            if conn:
-                conn.rollback() # Revierte la transacción en caso de error
-            return None
-        finally:
-            # El cursor se gestiona automáticamente por libsql, no es necesario cerrarlo explícitamente aquí.
-            pass
+                    cursor.execute(query)
+
+                if commit:
+                    conn.commit()
+                    conn.sync() # Sincroniza después de un commit para enviar los cambios a Turso
+                    return True
+                else:
+                    if fetch_one:
+                        return cursor.fetchone()
+                    else:
+                        return cursor.fetchall()
+            except Exception as e:
+                print(f"Error al ejecutar la consulta '{query}': {e}")
+                if conn:
+                    conn.rollback() # Revierte la transacción en caso de error
+                return None
+            finally:
+                # El cursor se gestiona automáticamente por libsql, no es necesario cerrarlo explícitamente aquí.
+                pass
+
+        future = self._executor.submit(_run_query)
+        return future.result()  # Espera el resultado pero no bloquea la interfaz principal
 
     def init_database(self):
         """

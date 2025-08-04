@@ -29,7 +29,7 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
         # Fecha
         self.label_fecha = ctk.CTkLabel(self, text="Fecha")
         self.label_fecha.grid(row=1, column=5, padx=10, pady=10)
-        self.entry_fecha = DateEntry(self, date_pattern='dd/mm/y')
+        self.entry_fecha = DateEntry(self, date_pattern='dd/mm/y',font=("Arial", 11, "bold"), foreground='#1abc9c', background='#34495e', borderwidth=2, relief='sunken', width=20)
         self.entry_fecha.grid(row=1, column=6, padx=10, pady=10)
         
         # Cantidad de usuarios atendidos

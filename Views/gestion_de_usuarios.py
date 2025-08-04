@@ -1,5 +1,6 @@
 import customtkinter as ctk
 from tkinter import messagebox
+from db_manager import DBManager
 
 #Clase encargada de registrar nuevos usuarios
 class GestionUsuarios(ctk.CTkFrame):
@@ -54,6 +55,7 @@ class VentanaRegistro(ctk.CTkFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
+        self.db = DBManager()
 
         # Nombre de usuario
         self.label_usuario = ctk.CTkLabel(self, text="Nombre de Usuario:")
@@ -104,8 +106,8 @@ class VentanaRegistro(ctk.CTkFrame):
         # Tipo de usuario
         self.label_tipo_usuario = ctk.CTkLabel(self, text="Tipo de Usuario:")
         self.label_tipo_usuario.grid(row=7, column=0, sticky='w', pady=5)
-        values = ["Administrador", "Asistente"]# Esta data debe de recuperarse de la BD de la tabla Tipo
-        self.combo_tipo_usuario = ctk.CTkComboBox(self, values=values)
+        values = self.db.obtener_tipos_usuario() # Extrae los tipos desde la BD
+        self.combo_tipo_usuario = ctk.CTkComboBox(self, values=values, state='readonly') 
         self.combo_tipo_usuario.grid(row=7, column=1, pady=5)
 
         # Botón de registro
@@ -130,9 +132,31 @@ class VentanaRegistro(ctk.CTkFrame):
         if campos_vacios:
             messagebox.showwarning("Error", "Por favor, completa todos los campos.")
         else:
-            # Mostrar un mensaje de confirmación con los datos ingresados
-            messagebox.showinfo("Registro exitoso", "Usuario registrado exitosamente.")
-        
+            # Lógica de registro en la base de datos
+            resultado = self.db.registrar_usuario(
+                datos["Nombre de usuario"],
+                datos["Contraseña"],
+                datos["Nombre"],
+                datos["Apellido"],
+                datos["Cédula"],
+                datos["Teléfono"],
+                datos["Número de ficha"],
+                datos["Tipo de usuario"]
+            )
+            if resultado:
+                messagebox.showinfo("Registro exitoso", "Usuario registrado exitosamente.")
+                # Limpiar los campos después de registro exitoso
+                self.entry_usuario.delete(0, 'end')
+                self.entry_password.delete(0, 'end')
+                self.entry_nombre.delete(0, 'end')
+                self.entry_apellido.delete(0, 'end')
+                self.entry_cedula.delete(0, 'end')
+                self.entry_telefono.delete(0, 'end')
+                self.entry_ficha.delete(0, 'end')
+                self.combo_tipo_usuario.set('')  # Limpiar selección del combo
+            else:
+                messagebox.showerror("Error", "No se pudo registrar el usuario. Verifica los datos o si ya existe.")
+
     def solo_numeros(self, char):
         """Validación para aceptar solo caracteres numéricos."""
         return char.isdigit()   
@@ -146,6 +170,7 @@ class ModificarDatos(ctk.CTkFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
+        self.db = DBManager()  # Agregado para acceso a la base de datos
 
         # Label for numero de cedula
         self.label_cedula = ctk.CTkLabel(self, text="Ingrese el número de cédula del usuario:")
@@ -155,6 +180,8 @@ class ModificarDatos(ctk.CTkFrame):
         vcmd = (self.register(self.validate_numeric), '%S')
         self.entry_cedula = ctk.CTkEntry(self, validate='key', validatecommand=vcmd)
         self.entry_cedula.grid(row=0, column=1, padx=10, pady=10)
+        # Guardar referencia para búsqueda
+        self.entry_cedula_buscar = self.entry_cedula
 
         # Botón Buscar
         self.boton_buscar = ctk.CTkButton(self, text="Buscar", command=self.buscar_click)
@@ -235,15 +262,56 @@ class ModificarDatos(ctk.CTkFrame):
             return False
 
     def buscar_click(self):
-        # Validar si el campo de cédula está vacío
-        #if not self.entry_cedula.get():
-        #    messagebox.showwarning("Error", "Por favor, ingrese el número de cédula.")
-        #    return
+        cedula = self.entry_cedula_buscar.get()
+        if not cedula:
+            messagebox.showwarning("Error", "Por favor, ingrese el número de cédula.")
+            return
 
-        # Aquí se debe buscar el usuario en la base de datos
-        # Si el usuario es encontrado, mostrar el botón Habilitar
+        # Buscar usuario en la base de datos
+        usuario_data = self.db.buscar_usuario_por_cedula(cedula)
+        if not usuario_data:
+            messagebox.showerror("No encontrado", "No se encontró usuario con esa cédula.")
+            return
+
+        # Mostrar el botón Habilitar y los campos
         self.boton_habilitar.grid()
         self.mostrar_elementos()
+
+        # Llenar los campos con los datos obtenidos
+        self.entry_usuario.configure(state='normal')
+        self.entry_password.configure(state='normal')
+        self.entry_nombre.configure(state='normal')
+        self.entry_apellido.configure(state='normal')
+        self.entry_cedula.configure(state='normal')
+        self.entry_telefono.configure(state='normal')
+        self.entry_ficha.configure(state='normal')
+        self.combo_tipo_usuario.configure(state='normal')
+
+        self.entry_usuario.delete(0, 'end')
+        self.entry_usuario.insert(0, usuario_data['Username'])
+        self.entry_password.delete(0, 'end')
+        self.entry_password.insert(0, usuario_data['Password'])
+        self.entry_nombre.delete(0, 'end')
+        self.entry_nombre.insert(0, usuario_data['Nombre'])
+        self.entry_apellido.delete(0, 'end')
+        self.entry_apellido.insert(0, usuario_data['Apellido'])
+        self.entry_cedula.delete(0, 'end')
+        self.entry_cedula.insert(0, usuario_data['Cedula'])
+        self.entry_telefono.delete(0, 'end')
+        self.entry_telefono.insert(0, usuario_data['Nro_telefono'])
+        self.entry_ficha.delete(0, 'end')
+        self.entry_ficha.insert(0, usuario_data['Numero_de_ficha'])
+        self.combo_tipo_usuario.set(usuario_data['Tipo_usuario'])
+
+        # Volver a poner los campos en readonly
+        self.entry_usuario.configure(state='readonly')
+        self.entry_password.configure(state='readonly')
+        self.entry_nombre.configure(state='readonly')
+        self.entry_apellido.configure(state='readonly')
+        self.entry_cedula.configure(state='readonly')
+        self.entry_telefono.configure(state='readonly')
+        self.entry_ficha.configure(state='readonly')
+        self.combo_tipo_usuario.configure(state='readonly')
 
     def mostrar_elementos(self):
         # Mostrar los campos de datos del usuario y el botón Actualizar
@@ -294,14 +362,67 @@ class ModificarDatos(ctk.CTkFrame):
             messagebox.showwarning("Error", "Por favor, completa todos los campos.")
             return
 
-        # Aquí se debe agregar la lógica para actualizar los datos del usuario
-        pass
+        # Obtener los datos actualizados de los campos
+        datos_actualizados = {
+            "Username": self.entry_usuario.get(),
+            "Password": self.entry_password.get(),
+            "Nombre": self.entry_nombre.get(),
+            "Apellido": self.entry_apellido.get(),
+            "Cedula": self.entry_cedula.get(),
+            "Nro_telefono": self.entry_telefono.get(),
+            "Numero_de_ficha": self.entry_ficha.get(),
+            "Tipo_usuario": self.combo_tipo_usuario.get()
+        }
+
+        # Llamar al método de actualización en DBManager
+        resultado = self.db.actualizar_usuario_por_cedula(
+            datos_actualizados["Cedula"],
+            datos_actualizados["Username"],
+            datos_actualizados["Password"],
+            datos_actualizados["Nombre"],
+            datos_actualizados["Apellido"],
+            datos_actualizados["Nro_telefono"],
+            datos_actualizados["Numero_de_ficha"],
+            datos_actualizados["Tipo_usuario"]
+        )
+        if resultado:
+            messagebox.showinfo("Actualización exitosa", "Usuario actualizado exitosamente.")
+            # Limpiar los campos después de actualización exitosa
+            self.entry_usuario.configure(state='normal')
+            self.entry_password.configure(state='normal')
+            self.entry_nombre.configure(state='normal')
+            self.entry_apellido.configure(state='normal')
+            self.entry_cedula.configure(state='normal')
+            self.entry_telefono.configure(state='normal')
+            self.entry_ficha.configure(state='normal')
+            self.combo_tipo_usuario.configure(state='normal')
+            self.entry_usuario.delete(0, 'end')
+            self.entry_password.delete(0, 'end')
+            self.entry_nombre.delete(0, 'end')
+            self.entry_apellido.delete(0, 'end')
+            self.entry_cedula.delete(0, 'end')
+            self.entry_telefono.delete(0, 'end')
+            self.entry_ficha.delete(0, 'end')
+            self.entry_cedula_buscar.delete(0, 'end')
+            self.combo_tipo_usuario.set('')
+            # Opcional: volver a poner los campos en readonly y ocultar elementos
+            self.entry_usuario.configure(state='readonly')
+            self.entry_password.configure(state='readonly')
+            self.entry_nombre.configure(state='readonly')
+            self.entry_apellido.configure(state='readonly')
+            self.entry_cedula.configure(state='readonly')
+            self.entry_telefono.configure(state='readonly')
+            self.entry_ficha.configure(state='readonly')
+            self.combo_tipo_usuario.configure(state='readonly')
+        else:
+            messagebox.showerror("Error", "No se pudo actualizar el usuario. Verifica los datos.")
 
 #Clase encargada de recuperar los datos de un usuario
 class RecuperarDatosApp(ctk.CTkFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
+        self.db = DBManager()  # Agrega la instancia de DBManager
 
         # Label for numero de cedula
         self.label_cedula = ctk.CTkLabel(self, text="Ingrese el número de cédula del usuario:")
@@ -327,12 +448,15 @@ class RecuperarDatosApp(ctk.CTkFrame):
         if not numero_cedula:
             messagebox.showwarning("Error", "Por favor, ingrese el número de cédula.")
             return
-            
-        # Aquí se debe buscar el usuario en la base de datos
-        # y mostrar su usuario y contraseña en un messagebox
-        usernarme = "Magleo"
-        password = "1234"
-        messagebox.showinfo(f"Resultado", "Usuario: "+usernarme+"\n\nContraseña: "+password)
+
+        credenciales = self.db.recuperar_credenciales_por_cedula(numero_cedula)
+        if credenciales:
+            messagebox.showinfo("Resultado", f"Usuario: {credenciales['Username']}\n\nContraseña: {credenciales['Password']}")
+            # Limpiar el campo después de mostrar las credenciales
+            self.entry_cedula.delete(0, 'end')
+        else:
+            messagebox.showerror("No encontrado", "No se encontró usuario con esa cédula.")
+
 
     def iniciar(self):
         self.ventana.mainloop()
@@ -349,7 +473,13 @@ class EliminarUsuario(RecuperarDatosApp):
 
         respuesta = messagebox.askyesno("Confirmación", f"¿Estás seguro que deseas eliminar a {numero_cedula}?")
         if respuesta:
-            # Aquí se debe eliminar el usuario en la base de datos
-            messagebox.showinfo("Resultado", "Usuario eliminado exitosamente.")
+            # Elimina solo el registro de Usuario en la base de datos
+            resultado = self.db.eliminar_credenciales_por_cedula(numero_cedula)
+            if resultado:
+                messagebox.showinfo("Resultado", "Usuario eliminado exitosamente.")
+                # Limpiar el campo después de mostrar las credenciales
+                self.entry_cedula.delete(0, 'end')
+            else:
+                messagebox.showerror("Error", "No se pudo eliminar el usuario. Verifica la cédula.")
         else:
             messagebox.showinfo("Resultado", "Eliminación cancelada.")

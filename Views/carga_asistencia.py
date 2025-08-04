@@ -65,7 +65,8 @@ class CargaAsistencia(ctk.CTkFrame):
         self.label_sede.grid(row=1, column=0, padx=10, pady=10)
         
         # DateEntry y Label para "Fecha"
-        self.entry_fecha = DateEntry(self.scrollable_frame,date_pattern="dd/mm/yyyy")
+        self.entry_fecha = DateEntry(self.scrollable_frame,date_pattern="dd/mm/yyyy",font=("Arial", 11, "bold"), foreground='#1abc9c', background='#34495e', borderwidth=2, relief='sunken', width=20)
+        #self.entry_fecha.configure(font=("Arial", 11, "bold"), foreground='#1abc9c', background='#34495e', borderwidth=2, relief='sunken', width=20)
         self.entry_fecha.grid(row=1, column=5, padx=10, pady=10)
         
         self.label_fecha = ctk.CTkLabel(self.scrollable_frame, text="Fecha")

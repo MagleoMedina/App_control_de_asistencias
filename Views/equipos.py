@@ -5,12 +5,14 @@ import tkinter as tk  # Importar tkinter para la validación
 from Pdf.pdf import PDFGenerator
 import os
 from datetime import datetime  # Importar datetime para la fecha y hora actual
+from db_manager import DBManager
 
 
 class Equipos(ctk.CTkFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
+        self.db_manager = DBManager()  # Instancia de DBManager
         
         # Título centrado
         self.title_label = ctk.CTkLabel(self, text="Gestion de Equipos", font=("Arial", 20))
@@ -56,12 +58,12 @@ class Equipos(ctk.CTkFrame):
 
     def agregar_equipo(self):
         self.clear_frame()
-        agregar_equipo_frame = AgregarEquipo(self)
+        agregar_equipo_frame = AgregarEquipo(self, self.db_manager)
         agregar_equipo_frame.grid(row=2, column=0, columnspan=4, pady=10)
 
     def modificar_equipo(self):
         self.clear_frame()
-        modificar_equipo_frame = ModificarEquipo(self)
+        modificar_equipo_frame = ModificarEquipo(self, self.db_manager)
         modificar_equipo_frame.grid(row=2, column=0, columnspan=4, pady=10)
 
     def eliminar_equipo(self):
@@ -161,9 +163,6 @@ class ConsultarFallaEquipo(ctk.CTkFrame):
         html_content = html_content.replace("{{tabla_equipos}}", tabla_equipos)
         html_content = html_content.replace("{{fecha_actual}}", datetime.now().strftime("%d/%m/%Y"))
 
-
-       
-
         # Generate the PDF with a dynamic filename
         current_datetime = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
         pdf_filename = f"Consulta_Equipo_{current_datetime}.pdf"
@@ -176,29 +175,48 @@ class ConsultarFallaEquipo(ctk.CTkFrame):
             messagebox.showerror("Error", "No se pudo generar el reporte")
 
 class AgregarEquipo(ctk.CTkFrame):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, db_manager=None):
         super().__init__(parent)
         self.parent = parent
+        self.db_manager = db_manager
+
+        # Obtener sedes de la base de datos
+        self.sedes = self.db_manager.obtener_sedes()
+        sede_names = [s[1] for s in self.sedes] if self.sedes else []
 
         # Label and Dropdown for "Sede"
         self.sede_label = ctk.CTkLabel(self, text="Sede")
         self.sede_label.grid(row=0, column=0, padx=10, pady=5)
-        values_sede = ["a", "b", "c"]
-        self.sede_dropdown = ctk.CTkComboBox(self, values=values_sede, state="readonly")
+        self.sede_dropdown = ctk.CTkComboBox(self, values=sede_names, command=self.on_sede_selected) 
         self.sede_dropdown.grid(row=0, column=1, padx=10, pady=5)
 
-        # Label and Dropdown for "Laboratorio"
+        # Inicializar laboratorios según la sede seleccionada (si existe)
+        self.laboratorios = []
+
+        # Crear el ComboBox de laboratorio con valores vacíos
         self.laboratorio_label = ctk.CTkLabel(self, text="Laboratorio")
         self.laboratorio_label.grid(row=1, column=0, padx=10, pady=5)
-        values_lab = ["a", "b", "c"]
-        self.laboratorio_dropdown = ctk.CTkComboBox(self, values=values_lab, state="readonly")
+        self.laboratorio_dropdown = ctk.CTkComboBox(self, values=[], state="readonly")
         self.laboratorio_dropdown.grid(row=1, column=1, padx=10, pady=5)
+
+        # Si hay sedes, selecciona la primera y actualiza laboratorios
+        if sede_names:
+            # Selecciona la primera sede por defecto
+            self.sede_dropdown.set(sede_names[0])
+            # Busca el índice de la sede seleccionada
+            selected_sede = self.sede_dropdown.get()
+            for idx, sede in enumerate(self.sedes):
+                if sede[1] == selected_sede:
+                    break
+            self.on_sede_selected()
+
+        #Values para la lista de equipos
+        self.tipos_equipo = ["Computadora", "Teclado", "Ratón", "Monitor"]
 
         # Label and Dropdown for "Equipo"
         self.equipo_label = ctk.CTkLabel(self, text="Equipo")
         self.equipo_label.grid(row=2, column=0, padx=10, pady=5)
-        values_equipo = ["Computadora", "Teclado", "Ratón", "Monitor"]
-        self.equipo_dropdown = ctk.CTkComboBox(self, values=values_equipo, state="readonly")
+        self.equipo_dropdown = ctk.CTkComboBox(self, values=self.tipos_equipo, state="readonly")
         self.equipo_dropdown.grid(row=2, column=1, padx=10, pady=5)
 
         # Label and Dropdown for "Status"
@@ -237,13 +255,65 @@ class AgregarEquipo(ctk.CTkFrame):
             messagebox.showerror("Error", "Todos los campos deben estar llenos.")
             return
 
-        # Aquí se puede agregar la lógica para guardar los datos
-        messagebox.showinfo("Éxito", "Datos guardados correctamente.")
+        # Obtener el ID del laboratorio seleccionado
+        laboratorio_id = None
+        for l in self.laboratorios:
+            if l[1] == laboratorio:
+                laboratorio_id = l[0]
+                break
+        if laboratorio_id is None:
+            messagebox.showerror("Error", "Laboratorio no válido.")
+            return
+
+        # Guardar en la base de datos
+        exito = self.db_manager.agregar_equipo(nro_bien, laboratorio_id, status, equipo)
+        if exito:
+            messagebox.showinfo("Éxito", "Equipo guardado correctamente.")
+            self.limpiar_campos()
+        else:
+            messagebox.showerror("Error", "No se pudo guardar el equipo. Puede que ya exista.")
+
+    def limpiar_campos(self):
+        # Limpiar todos los campos de entrada y restablecer los dropdowns
+        if self.sede_dropdown.cget("values"):
+            self.sede_dropdown.set(self.sede_dropdown.cget("values")[0])
+            self.on_sede_selected()
+        if self.lab_names:
+            self.laboratorio_dropdown.set(self.lab_names[0])
+        else:
+            self.laboratorio_dropdown.set("")
+       
+        self.equipo_dropdown.set("")
+        self.status_dropdown.set("")
+        self.nro_bien_entry.delete(0, tk.END)
+
+    def update_laboratorios(self):
+        selected_sede_name = self.sede_dropdown.get()
+        sede_id = None
+        for s in self.sedes:
+            if s[1] == selected_sede_name:
+                sede_id = s[0]
+                break
+        if sede_id is not None:
+            self.laboratorios = self.db_manager.obtener_laboratorios_por_sede(sede_id)
+        else:
+            self.laboratorios = []
+        self.lab_names = [l[1] for l in self.laboratorios] if self.laboratorios else []
+
+    def on_sede_selected(self, event=None):
+        self.update_laboratorios()
+        self.laboratorio_dropdown.set("")
+        self.laboratorio_dropdown.configure(values=self.lab_names)
+        if self.lab_names:
+            self.laboratorio_dropdown.set(self.lab_names[0])
+        else:
+            self.laboratorio_dropdown.set("")
 
 class ModificarEquipo(ctk.CTkFrame):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, db_manager=None):
         super().__init__(parent)
         self.parent = parent
+        self.db_manager = db_manager
 
         # Label "Número de bien del equipo"
         self.nro_bien_label = ctk.CTkLabel(self, text="Número de bien del equipo")
@@ -260,7 +330,17 @@ class ModificarEquipo(ctk.CTkFrame):
         self.buscar_button = ctk.CTkButton(self, text="Buscar", command=self.buscar_equipo)
         self.buscar_button.grid(row=0, column=2, padx=10, pady=5)
 
-        # Placeholder for "Actualizar" button
+        # Placeholders for dynamic widgets
+        self.sede_label = None
+        self.sede_dropdown = None
+        self.laboratorio_label = None
+        self.laboratorio_dropdown = None
+        self.equipo_label = None
+        self.equipo_dropdown = None
+        self.status_label = None
+        self.status_dropdown = None
+        self.nuevo_nro_bien_label = None
+        self.nuevo_nro_bien_entry = None
         self.actualizar_button = None
 
     def validate_numeric(self, char):
@@ -270,67 +350,150 @@ class ModificarEquipo(ctk.CTkFrame):
         nro_bien = self.nro_bien_entry.get()
         if not nro_bien.strip():
             messagebox.showerror("Error", "El campo 'Número de bien del equipo' no puede estar vacío.")
-        else:
-            # Display additional elements
-            self.display_fields()
+            return
 
-    def display_fields(self):
-        # Label and Dropdown for "Sede"
+        equipo_data = self.db_manager.buscar_equipo_por_nro_bien(nro_bien)
+        if not equipo_data:
+            messagebox.showerror("Error", "No se encontró un equipo con ese número de bien.")
+            return
+
+        self.display_fields(equipo_data)
+
+    def display_fields(self, equipo_data):
+        # Limpiar widgets previos si existen
+        for widget in [self.sede_label, self.sede_dropdown, self.laboratorio_label, self.laboratorio_dropdown,
+                       self.equipo_label, self.equipo_dropdown, self.status_label, self.status_dropdown,
+                       self.nuevo_nro_bien_label, self.nuevo_nro_bien_entry, self.actualizar_button]:
+            if widget:
+                widget.destroy()
+
+        # Obtener sedes y laboratorios
+        self.sedes = self.db_manager.obtener_sedes()
+        sede_names = [s[1] for s in self.sedes] if self.sedes else []
+
+        # Sede
         self.sede_label = ctk.CTkLabel(self, text="Sede")
         self.sede_label.grid(row=1, column=0, padx=10, pady=5)
-        values_sede = ["a", "b", "c"]
-        self.sede_dropdown = ctk.CTkComboBox(self, values=values_sede, state="readonly")
+        self.sede_dropdown = ctk.CTkComboBox(self, values=sede_names, state="readonly", command=self.on_sede_selected)
         self.sede_dropdown.grid(row=1, column=1, padx=10, pady=5)
+        self.sede_dropdown.set(equipo_data["sede_nombre"])
 
-        # Label and Dropdown for "Laboratorio"
+        # Laboratorios para la sede seleccionada
+        self.update_laboratorios()
         self.laboratorio_label = ctk.CTkLabel(self, text="Laboratorio")
         self.laboratorio_label.grid(row=2, column=0, padx=10, pady=5)
-        values_lab = ["a", "b", "c"]
-        self.laboratorio_dropdown = ctk.CTkComboBox(self, values=values_lab, state="readonly")
+        self.laboratorio_dropdown = ctk.CTkComboBox(self, values=self.lab_names, state="readonly")
         self.laboratorio_dropdown.grid(row=2, column=1, padx=10, pady=5)
+        self.laboratorio_dropdown.set(equipo_data["laboratorio_nombre"])
 
-        # Label and Dropdown for "Equipo"
+        # Tipos de equipo
+        tipos_por_defecto = ["Computadora", "Teclado", "Ratón", "Monitor"]
+        self.tipos_equipo = self.db_manager.obtener_tipos_equipo()
+        # Unir los tipos de la base de datos con los por defecto, sin duplicados
+        tipos_set = set(self.tipos_equipo) | set(tipos_por_defecto)
+        self.tipos_equipo = list(tipos_set)
+
         self.equipo_label = ctk.CTkLabel(self, text="Equipo")
         self.equipo_label.grid(row=3, column=0, padx=10, pady=5)
-        values_equipo = ["Computadora", "Teclado", "Ratón", "Monitor"]
-        self.equipo_dropdown = ctk.CTkComboBox(self, values=values_equipo, state="readonly")
+        self.equipo_dropdown = ctk.CTkComboBox(self, values=self.tipos_equipo, state="readonly")
         self.equipo_dropdown.grid(row=3, column=1, padx=10, pady=5)
+        self.equipo_dropdown.set(equipo_data["descripcion_equipo"])
 
-        # Label and Dropdown for "Status"
+        # Status
         self.status_label = ctk.CTkLabel(self, text="Status")
         self.status_label.grid(row=4, column=0, padx=10, pady=5)
         values_status = ["Operativo", "No operativo"]
         self.status_dropdown = ctk.CTkComboBox(self, values=values_status, state="readonly")
         self.status_dropdown.grid(row=4, column=1, padx=10, pady=5)
+        self.status_dropdown.set(equipo_data["status"])
 
-        # Label and Entry for "Número de bien"
-        self.nro_bien_label = ctk.CTkLabel(self, text="Nuevo número de bien")
-        self.nro_bien_label.grid(row=5, column=0, padx=10, pady=5)
-        self.nro_bien_entry = ctk.CTkEntry(self)
-        self.nro_bien_entry.grid(row=5, column=1, padx=10, pady=5)
+        # Número de bien
+        self.nuevo_nro_bien_label = ctk.CTkLabel(self, text="Nuevo número de bien")
+        self.nuevo_nro_bien_label.grid(row=5, column=0, padx=10, pady=5)
+        self.nuevo_nro_bien_entry = ctk.CTkEntry(self)
+        self.nuevo_nro_bien_entry.grid(row=5, column=1, padx=10, pady=5)
+        self.nuevo_nro_bien_entry.insert(0, str(equipo_data["nro_bien"]))
+        
 
-        self.nro_bien_entry.configure(validate="key", validatecommand=(self.register(self.validate_numeric), "%S"))
-
-        # Button "Actualizar"
+        # Botón Actualizar
         if not self.actualizar_button:
             self.actualizar_button = ctk.CTkButton(self, text="Actualizar", command=self.actualizar_datos)
             self.actualizar_button.grid(row=6, column=0, columnspan=2, pady=10)
 
+    def update_laboratorios(self):
+        selected_sede_name = self.sede_dropdown.get()
+        sede_id = None
+        for s in self.sedes:
+            if s[1] == selected_sede_name:
+                sede_id = s[0]
+                break
+        if sede_id is not None:
+            self.laboratorios = self.db_manager.obtener_laboratorios_por_sede(sede_id)
+        else:
+            self.laboratorios = []
+        self.lab_names = [l[1] for l in self.laboratorios] if self.laboratorios else []
+
+    def on_sede_selected(self, event=None):
+        self.update_laboratorios()
+        self.laboratorio_dropdown.configure(values=self.lab_names)
+        if self.lab_names:
+            self.laboratorio_dropdown.set(self.lab_names[0])
+        else:
+            self.laboratorio_dropdown.set("")
+
     def actualizar_datos(self):
-        # Collect data from fields
+        # Recoger datos de los campos
+        nro_bien_actual = self.nro_bien_entry.get()
         sede = self.sede_dropdown.get()
         laboratorio = self.laboratorio_dropdown.get()
         equipo = self.equipo_dropdown.get()
         status = self.status_dropdown.get()
-        nro_bien = self.nro_bien_entry.get()
+        nuevo_nro_bien = self.nuevo_nro_bien_entry.get()
 
-        # Validate that no fields are empty
-        if not sede or not laboratorio or not equipo or not status or not nro_bien.strip():
+        # Validar que no estén vacíos
+        if not sede or not laboratorio or not equipo or not status or not nro_bien_actual.strip() or not nuevo_nro_bien.strip():
             messagebox.showerror("Error", "Todos los campos deben estar llenos.")
             return
 
-        # Logic to handle the updated data
-        messagebox.showinfo("Éxito", f"Datos actualizados:\nSede: {sede}\nLaboratorio: {laboratorio}\nEquipo: {equipo}\nStatus: {status}\nNúmero de bien: {nro_bien}")
+        # Obtener el ID del laboratorio seleccionado
+        laboratorio_id = None
+        for l in self.laboratorios:
+            if l[1] == laboratorio:
+                laboratorio_id = l[0]
+                break
+        if laboratorio_id is None:
+            messagebox.showerror("Error", "Laboratorio no válido.")
+            return
+
+        # Actualizar en la base de datos (incluyendo posible cambio de nro de bien)
+        exito = self.db_manager.actualizar_equipo_con_nuevo_nro_bien(
+            nro_bien_actual, nuevo_nro_bien, laboratorio_id, status, equipo
+        )
+        if exito:
+            messagebox.showinfo("Éxito", "Datos del equipo actualizados correctamente.")
+            self.limpiar_campos()
+        else:
+            messagebox.showerror("Error", "No se pudo actualizar el equipo. Puede que el nuevo número de bien ya exista.")
+
+    def limpiar_campos(self):
+        # Limpiar el campo de búsqueda y destruir widgets dinámicos
+        self.nro_bien_entry.delete(0, tk.END)
+        for widget in [self.sede_label, self.sede_dropdown, self.laboratorio_label, self.laboratorio_dropdown,
+                       self.equipo_label, self.equipo_dropdown, self.status_label, self.status_dropdown,
+                       self.nuevo_nro_bien_label, self.nuevo_nro_bien_entry, self.actualizar_button]:
+            if widget:
+                widget.destroy()
+        self.sede_label = None
+        self.sede_dropdown = None
+        self.laboratorio_label = None
+        self.laboratorio_dropdown = None
+        self.equipo_label = None
+        self.equipo_dropdown = None
+        self.status_label = None
+        self.status_dropdown = None
+        self.nuevo_nro_bien_label = None
+        self.nuevo_nro_bien_entry = None
+        self.actualizar_button = None
 
 class EliminarEquipo(ctk.CTkFrame):
     
@@ -373,6 +536,7 @@ class RelacionarEquipos(ctk.CTkFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
+        self.db_manager = DBManager()  # Instanciar DBManager
 
         # Title
         self.title_label = ctk.CTkLabel(self, text="Ingresa los números de bien a relacionar", font=("Arial", 20))
@@ -414,20 +578,48 @@ class RelacionarEquipos(ctk.CTkFrame):
         return char.isdigit()
 
     def relacionar_equipos(self):
-        # Collect data from entries
         computadora = self.computadora_entry.get()
         teclado = self.teclado_entry.get()
         monitor = self.monitor_entry.get()
         raton = self.raton_entry.get()
 
-        # Validate that no fields are empty
+        # Validar que no estén vacíos
         if not computadora.strip() or not teclado.strip() or not monitor.strip() or not raton.strip():
             messagebox.showerror("Error", "Todos los campos deben estar llenos.")
             return
 
-        # Logic to handle the collected data
-        messagebox.showinfo(
-            "Éxito",
-            f"Equipos relacionados:\nComputadora: {computadora}\nTeclado: {teclado}\nMonitor: {monitor}\nRatón: {raton}"
-        )
+        # Verificar existencia y tipo de cada número de bien
+        errores = []
+        checks = [
+            (computadora, "Computadora"),
+            (teclado, "Teclado"),
+            (monitor, "Monitor"),
+            (raton, "Ratón"),
+        ]
+        for nro, tipo in checks:
+            existe, msg = self.db_manager.existe_equipo(nro, tipo)
+            if not existe:
+                errores.append(msg)
+
+        if errores:
+            messagebox.showerror("Error", "\n".join(errores))
+            return
+
+        # Registrar la relación en la base de datos
+        exito = self.db_manager.relacionar_equipos(computadora, teclado, monitor, raton)
+        if exito:
+            messagebox.showinfo(
+                "Éxito",
+                f"Equipos relacionados:\nComputadora: {computadora}\nTeclado: {teclado}\nMonitor: {monitor}\nRatón: {raton}"
+            )
+            self.limpiar_campos()
+        else:
+            messagebox.showerror("Error", "No se pudo registrar la relación de equipos.")
+
+    def limpiar_campos(self):
+        # Limpiar todos los campos de entrada
+        self.computadora_entry.delete(0, tk.END)
+        self.teclado_entry.delete(0, tk.END)
+        self.monitor_entry.delete(0, tk.END)
+        self.raton_entry.delete(0, tk.END)
 

@@ -29,12 +29,12 @@ class ModuloEstadistico(ctk.CTkFrame):
         
         self.fecha_inicio_label = ctk.CTkLabel(self, text="Fecha de inicio")
         self.fecha_inicio_label.grid(row=2, column=4, padx=10, pady=5, sticky="e")
-        self.fecha_inicio_entry = DateEntry(self, date_pattern="dd/mm/yyyy")
+        self.fecha_inicio_entry = DateEntry(self, date_pattern="dd/mm/yyyy",font=("Arial", 11, "bold"), foreground='#1abc9c', background='#34495e', borderwidth=2, relief='sunken', width=20)
         self.fecha_inicio_entry.grid(row=2, column=5, padx=10, pady=5, sticky="w")
         
         self.fecha_finalizacion_label = ctk.CTkLabel(self, text="Fecha de finalización")
         self.fecha_finalizacion_label.grid(row=2, column=6, padx=10, pady=5, sticky="e")
-        self.fecha_finalizacion_entry = DateEntry(self, date_pattern="dd/mm/yyyy")
+        self.fecha_finalizacion_entry = DateEntry(self, date_pattern="dd/mm/yyyy",font=("Arial", 11, "bold"), foreground='#1abc9c', background='#34495e', borderwidth=2, relief='sunken', width=20)
         self.fecha_finalizacion_entry.grid(row=2, column=7, padx=10, pady=5, sticky="w")
         
         # Botón Generar Reporte

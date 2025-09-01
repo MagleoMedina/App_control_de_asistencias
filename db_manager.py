@@ -30,7 +30,7 @@ class DBManager:
 
         # Variable para almacenar la conexión a la base de datos (inicialmente None)
         self._connection = None
-        self._executor = ThreadPoolExecutor(max_workers=2)
+        self._executor = ThreadPoolExecutor(max_workers=4)
         print("DBManager inicializado. Credenciales cargadas.")
 
     def get_db_connection(self):

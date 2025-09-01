@@ -1,6 +1,6 @@
 import customtkinter as ctk
 from tkcalendar import DateEntry
-from tkinter import ttk, Canvas, Scrollbar
+from tkinter import ttk, Canvas, Scrollbar, messagebox
 from db_manager import DBManager  # Importar DBManager
 import datetime
 
@@ -122,10 +122,11 @@ class CargaAsistencia(ctk.CTkFrame):
         # Add labels and entries for personal data
         self.label_tipo_usuario = ctk.CTkLabel(self.scrollable_frame, text="Tipo de uso")
         self.label_tipo_usuario.grid(row=6, column=0, padx=10, pady=10)
+        
         # Recuperar tipos de uso de la BD
         tipos_uso = self.db_manager.obtener_tipos_uso()
-        self.entry_tipo_usuario = ctk.CTkComboBox(self.scrollable_frame, values=tipos_uso)
-        self.entry_tipo_usuario.grid(row=6, column=1, padx=10, pady=10)
+        self.entry_tipo_uso = ctk.CTkComboBox(self.scrollable_frame, values=tipos_uso)
+        self.entry_tipo_uso.grid(row=6, column=1, padx=10, pady=10)
         
         self.label_nombre = ctk.CTkLabel(self.scrollable_frame, text="Nombre")
         self.label_nombre.grid(row=6, column=2, padx=10, pady=10)
@@ -139,7 +140,8 @@ class CargaAsistencia(ctk.CTkFrame):
         
         self.label_cedula = ctk.CTkLabel(self.scrollable_frame, text="Cedula")
         self.label_cedula.grid(row=9, column=0, padx=10, pady=10)
-        self.entry_cedula = ctk.CTkEntry(self.scrollable_frame)
+        vcmd = (self.register(self._validate_numeric), '%P')
+        self.entry_cedula = ctk.CTkEntry(self.scrollable_frame, validate="key", validatecommand=vcmd)
         self.entry_cedula.grid(row=9, column=1, padx=10, pady=10)
 
         # Entry y Label para "Organización"
@@ -150,12 +152,12 @@ class CargaAsistencia(ctk.CTkFrame):
         
         self.label_telefono = ctk.CTkLabel(self.scrollable_frame, text="Telefono")
         self.label_telefono.grid(row=9, column=4, padx=10, pady=10)
-        self.entry_telefono = ctk.CTkEntry(self.scrollable_frame)
+        self.entry_telefono = ctk.CTkEntry(self.scrollable_frame, validate="key", validatecommand=vcmd)
         self.entry_telefono.grid(row=9, column=5, padx=10, pady=10)
-        
+
         self.label_numero_bien = ctk.CTkLabel(self.scrollable_frame, text="Numero de bien")
         self.label_numero_bien.grid(row=10, column=2, padx=10, pady=10)
-        self.entry_numero_bien = ctk.CTkEntry(self.scrollable_frame)
+        self.entry_numero_bien = ctk.CTkEntry(self.scrollable_frame, validate="key", validatecommand=vcmd)
         self.entry_numero_bien.grid(row=10, column=3, padx=10, pady=10)
         
         self.button_añadir_persona = ctk.CTkButton(self.scrollable_frame, text="Añadir persona", command=self.añadir_persona)
@@ -274,13 +276,12 @@ class CargaAsistencia(ctk.CTkFrame):
     def on_cantidad_equipos_change(self, event):
         self.clear_equipos_entries()
         cantidad = int(self.combo_cantidad_equipos.get())
+        vcmd = (self.register(self._validate_numeric), '%P')
         for i in range(cantidad):
             label_nro_bien = ctk.CTkLabel(self.scrollable_frame, text=f"Nro de bien del equipo {i+1}")
-            entry_nro_bien = ctk.CTkEntry(self.scrollable_frame)
+            entry_nro_bien = ctk.CTkEntry(self.scrollable_frame, validate="key", validatecommand=vcmd)
             label_descripcion = ctk.CTkLabel(self.scrollable_frame, text=f"Descripcion {i+1}")
             entry_descripcion = ctk.CTkEntry(self.scrollable_frame)
-            
-            # Reemplaza los ComboBox de hora/minuto por TimeInput
             label_hora_falla = ctk.CTkLabel(self.scrollable_frame, text=f"Hora de la falla {i+1}")
             time_falla = TimeInput(self.scrollable_frame)
 
@@ -329,7 +330,7 @@ class CargaAsistencia(ctk.CTkFrame):
             self.entry_laboratorio.set("")
 
     def añadir_persona(self):
-        tipo_usuario = self.entry_tipo_usuario.get()
+        tipo_usuario = self.entry_tipo_uso.get()
         nombre = self.entry_nombre.get()
         apellido = self.entry_apellido.get()
         cedula = self.entry_cedula.get()
@@ -344,7 +345,6 @@ class CargaAsistencia(ctk.CTkFrame):
         self.counter += 1
         
         # Clear the entries
-        self.entry_tipo_usuario.set('')
         self.entry_nombre.delete(0, 'end')
         self.entry_apellido.delete(0, 'end')
         self.entry_cedula.delete(0, 'end')
@@ -360,7 +360,6 @@ class CargaAsistencia(ctk.CTkFrame):
             self.clear_equipos_entries()
 
     def submit(self):
-        print("Boton presionado")
         # Recopilar datos generales
         laboratorio_nombre = self.entry_laboratorio.get()
         laboratorio_id = None
@@ -368,7 +367,7 @@ class CargaAsistencia(ctk.CTkFrame):
             if l[1] == laboratorio_nombre:
                 laboratorio_id = l[0]
                 break
-        tipo_uso = self.entry_tipo_usuario.get()
+        tipo_uso = self.entry_tipo_uso.get()
         fecha = self.entry_fecha.get()
         hora_inicio = self.time_inicio.get_time()
         hora_finalizacion = self.time_finalizacion.get_time()
@@ -389,16 +388,38 @@ class CargaAsistencia(ctk.CTkFrame):
 
         # Validación de datos antes de enviar
         if not laboratorio_id:
-            print("Error: laboratorio_id no seleccionado o inválido.")
+            messagebox.showerror("Error", "laboratorio_id no seleccionado o inválido.")
             return
         if not tipo_uso:
-            print("Error: tipo_uso no seleccionado o inválido.")
+            messagebox.showerror("Error: tipo_uso no seleccionado o inválido.")
             return
         if not fecha or not hora_inicio or not hora_finalizacion:
-            print("Error: fecha u hora no válidas.")
+            messagebox.showerror("Error: fecha u hora no válidas.")
             return
         if not personas:
-            print("Error: no hay personas para registrar asistencia.")
+            messagebox.showerror("Error: no hay personas para registrar asistencia.")
+            return
+
+        # Validar que todos los números de bien existan en la base de datos
+        for persona in personas:
+            nro_bien = persona["numero_bien"]
+            if not nro_bien:
+                messagebox.showerror("Error", "El campo 'Numero de bien' no puede estar vacío.")
+                return
+            equipo = self.db_manager.buscar_equipo_por_nro_bien(nro_bien)
+            if equipo is None:
+                messagebox.showerror("Error", f"El equipo con número de bien '{nro_bien}' no se encuentra registrado.")
+                return
+
+        # Validación de hora de inicio < hora de finalización
+        try:
+            h_ini = datetime.datetime.strptime(hora_inicio, "%H:%M")
+            h_fin = datetime.datetime.strptime(hora_finalizacion, "%H:%M")
+            if h_ini >= h_fin:
+                messagebox.showerror("Error", "La hora de inicio debe ser menor que la hora de finalización.")
+                return
+        except Exception:
+            messagebox.showerror("Error", "Formato de hora inválido.")
             return
 
         # Registrar asistencia en la base de datos
@@ -408,7 +429,7 @@ class CargaAsistencia(ctk.CTkFrame):
         )
         print(f"Resultado registrar_asistencia_laboratorio_usr: {resultado}")
         if not resultado:
-            print("Error al registrar asistencia en la base de datos.")
+            messagebox.showerror("Error al registrar asistencia en la base de datos.")
             return
 
         # Si hubo fallas, registrar fallas con descripción y hora
@@ -422,7 +443,7 @@ class CargaAsistencia(ctk.CTkFrame):
             if last_ids:
                 asistencias = [row[0] for row in last_ids]
             for idx, widgets in enumerate(self.equipos_entries):
-                nro_bien = widgets[1].get()
+                #nro_bien = widgets[1].get()
                 descripcion = widgets[3].get()
                 hora_falla = widgets[5].get_time()
                 asistencia_id = asistencias[idx] if idx < len(asistencias) else None
@@ -432,7 +453,7 @@ class CargaAsistencia(ctk.CTkFrame):
                     )
                     print(f"Resultado registrar_falla_equipo_completa: {resultado_falla}")
                     if not resultado_falla:
-                        print("Error al registrar la falla completa del equipo.")
+                        messagebox.showerror("Error al registrar la falla completa del equipo.")
 
         # Limpiar todos los campos
         self.entry_sede.set('')
@@ -442,7 +463,7 @@ class CargaAsistencia(ctk.CTkFrame):
         self.time_inicio.minute_var.set("00")
         self.time_finalizacion.hour_var.set("00")
         self.time_finalizacion.minute_var.set("00")
-        self.entry_tipo_usuario.set('')
+        self.entry_tipo_uso.set('')
         self.entry_nombre.delete(0, 'end')
         self.entry_apellido.delete(0, 'end')
         self.entry_cedula.delete(0, 'end')
@@ -459,3 +480,7 @@ class CargaAsistencia(ctk.CTkFrame):
         self.clear_equipos_entries()
         self.radio_var.set("")
         self.clear_equipos_entries()
+
+    def _validate_numeric(self, value):
+        """Permite solo valores numéricos en los campos."""
+        return value.isdigit() or value == ""

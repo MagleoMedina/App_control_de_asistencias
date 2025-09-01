@@ -1,13 +1,19 @@
 import customtkinter as ctk
 from tkcalendar import DateEntry
 from tkinter import ttk, Canvas, Scrollbar
-
-# ...existing code...
+from db_manager import DBManager  # Importar DBManager
 
 class CargaAsistencia(ctk.CTkFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
+
+        # Instanciar DBManager
+        self.db_manager = DBManager()
+
+        # Obtener sedes de la base de datos
+        self.sedes = self.db_manager.obtener_sedes()
+        sede_names = [s[1] for s in self.sedes] if self.sedes else []
 
         # Color para el canvas y el scrollBar_frame
         color= "#333333"
@@ -46,24 +52,34 @@ class CargaAsistencia(ctk.CTkFrame):
         self.label_titulo = ctk.CTkLabel(self.scrollable_frame, text="Carga de asistencia", font=("Arial", 24))
         self.label_titulo.grid(row=0, column=0, columnspan=6, pady=20)
         
-        # ...existing code...
-        
-        # Dropdown list and Label for "Nombre de laboratorio"
-        values_lab=["Laboratorio 1", "Laboratorio 2"]#recuperar de la BD
-        self.entry_laboratorio = ctk.CTkComboBox(self.scrollable_frame, values=values_lab, state="readonly")
-        self.entry_laboratorio.grid(row=1, column=3, padx=10, pady=10)
-        
-        self.label_laboratorio = ctk.CTkLabel(self.scrollable_frame, text="Laboratorio")
-        self.label_laboratorio.grid(row=1, column=2, padx=10, pady=10)
-
         # Dropdown list and Label for "Sede"
-        values_sede=["Villa asia", "Atlantico"]#recuperar de la BD  
-        self.entry_sede = ctk.CTkComboBox(self.scrollable_frame, values=values_sede, state="readonly")
+        self.entry_sede = ctk.CTkComboBox(self.scrollable_frame, values= sede_names,command=self.on_sede_selected)
         self.entry_sede.grid(row=1, column=1, padx=10, pady=10)
-        
         self.label_sede = ctk.CTkLabel(self.scrollable_frame, text="Sede")
         self.label_sede.grid(row=1, column=0, padx=10, pady=10)
-        
+
+        # Inicializar laboratorios según la sede seleccionada
+        self.laboratorios = []
+        self.lab_names = []
+
+        # Crear el ComboBox de laboratorio con valores vacíos
+        self.label_laboratorio = ctk.CTkLabel(self.scrollable_frame, text="Laboratorio")
+        self.label_laboratorio.grid(row=1, column=2, padx=10, pady=10)
+        self.entry_laboratorio = ctk.CTkComboBox(self.scrollable_frame, values=[], state="readonly")
+        self.entry_laboratorio.grid(row=1, column=3, padx=10, pady=10)
+
+        # Si hay sedes, selecciona la primera y actualiza laboratorios
+        if sede_names:
+            # Selecciona la primera sede por defecto
+            self.entry_sede.set(sede_names[0])
+            # Busca el índice de la sede seleccionada
+            selected_sede = self.entry_sede.get()
+            for idx, sede in enumerate(self.sedes):
+                if sede[1] == selected_sede:
+                    break
+            self.on_sede_selected()
+
+
         # DateEntry y Label para "Fecha"
         self.entry_fecha = DateEntry(self.scrollable_frame,date_pattern="dd/mm/yyyy")
         self.entry_fecha.grid(row=1, column=5, padx=10, pady=10)
@@ -287,6 +303,28 @@ class CargaAsistencia(ctk.CTkFrame):
         self.entry_numero_bien_falla.grid_forget()
         self.label_descripcion_falla.grid_forget()
         self.entry_descripcion_falla.grid_forget()
+
+    def update_laboratorios(self):
+        selected_sede_name = self.entry_sede.get()
+        sede_id = None
+        for s in self.sedes:
+            if s[1] == selected_sede_name:
+                sede_id = s[0]
+                break
+        if sede_id is not None:
+            self.laboratorios = self.db_manager.obtener_laboratorios_por_sede(sede_id)
+        else:
+            self.laboratorios = []
+        self.lab_names = [l[1] for l in self.laboratorios] if self.laboratorios else []
+
+    def on_sede_selected(self, event=None):
+        self.update_laboratorios()
+        self.entry_laboratorio.set("")
+        self.entry_laboratorio.configure(values=self.lab_names)
+        if self.lab_names:
+            self.entry_laboratorio.set(self.lab_names[0])
+        else:
+            self.entry_laboratorio.set("")
 
     def añadir_persona(self):
         tipo_usuario = self.entry_tipo_usuario.get()

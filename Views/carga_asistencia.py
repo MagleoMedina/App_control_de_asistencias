@@ -94,7 +94,6 @@ class CargaAsistencia(ctk.CTkFrame):
                     break
             self.on_sede_selected()
 
-
         # DateEntry y Label para "Fecha"
         self.entry_fecha = DateEntry(self.scrollable_frame,date_pattern="dd/mm/yyyy",font=("Arial", 11, "bold"), foreground='#1abc9c', background='#34495e', borderwidth=2, relief='sunken', width=20)
         #self.entry_fecha.configure(font=("Arial", 11, "bold"), foreground='#1abc9c', background='#34495e', borderwidth=2, relief='sunken', width=20)

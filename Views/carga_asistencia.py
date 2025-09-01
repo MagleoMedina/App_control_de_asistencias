@@ -2,6 +2,21 @@ import customtkinter as ctk
 from tkcalendar import DateEntry
 from tkinter import ttk, Canvas, Scrollbar
 from db_manager import DBManager  # Importar DBManager
+import datetime
+
+class TimeInput(ctk.CTkFrame):
+    def __init__(self, master=None):
+        super().__init__(master)
+        self.hour_var = ctk.StringVar(value="00")
+        self.hour_entry = ctk.CTkEntry(self, width=40, textvariable=self.hour_var, justify="center")
+        self.hour_entry.pack(side="left", padx=2)
+        ctk.CTkLabel(self, text=":").pack(side="left")
+        self.minute_var = ctk.StringVar(value="00")
+        self.minute_entry = ctk.CTkEntry(self, width=40, textvariable=self.minute_var, justify="center")
+        self.minute_entry.pack(side="left", padx=2)
+
+    def get_time(self):
+        return f"{self.hour_var.get()}:{self.minute_var.get()}"
 
 class CargaAsistencia(ctk.CTkFrame):
     def __init__(self, parent=None):
@@ -91,22 +106,14 @@ class CargaAsistencia(ctk.CTkFrame):
         # Dropdown lists for "Hora de inicio"
         self.label_hora_inicio = ctk.CTkLabel(self.scrollable_frame, text="Hora de inicio")
         self.label_hora_inicio.grid(row=3, column=0, padx=10, pady=10)
-
-        self.entry_hora_inicio_horas = ctk.CTkComboBox(self.scrollable_frame, values=[str(i) for i in range(24)], width=60)
-        self.entry_hora_inicio_horas.grid(row=3, column=1, padx=5, pady=10)
-
-        self.entry_hora_inicio_minutos = ctk.CTkComboBox(self.scrollable_frame, values=[str(i) for i in range(60)], width=60)
-        self.entry_hora_inicio_minutos.grid(row=3, column=2, padx=5, pady=10)
+        self.time_inicio = TimeInput(self.scrollable_frame)
+        self.time_inicio.grid(row=3, column=1, columnspan=2, padx=5, pady=10)
 
         # Dropdown lists for "Hora de finalización"
         self.label_hora_finalizacion = ctk.CTkLabel(self.scrollable_frame, text="Hora de finalización")
         self.label_hora_finalizacion.grid(row=3, column=3, padx=10, pady=10)
-
-        self.entry_hora_finalizacion_horas = ctk.CTkComboBox(self.scrollable_frame, values=[str(i) for i in range(24)], width=60)
-        self.entry_hora_finalizacion_horas.grid(row=3, column=4, padx=5, pady=10)
-
-        self.entry_hora_finalizacion_minutos = ctk.CTkComboBox(self.scrollable_frame, values=[str(i) for i in range(60)], width=60)
-        self.entry_hora_finalizacion_minutos.grid(row=3, column=5, padx=5, pady=10)
+        self.time_finalizacion = TimeInput(self.scrollable_frame)
+        self.time_finalizacion.grid(row=3, column=4, columnspan=2, padx=5, pady=10)
 
         # Add title
         self.label_titulo = ctk.CTkLabel(self.scrollable_frame, text="Datos de persona", font=("Arial", 24))
@@ -115,11 +122,9 @@ class CargaAsistencia(ctk.CTkFrame):
         # Add labels and entries for personal data
         self.label_tipo_usuario = ctk.CTkLabel(self.scrollable_frame, text="Tipo de uso")
         self.label_tipo_usuario.grid(row=6, column=0, padx=10, pady=10)
-        values = ["Servicios de internet", "Atención al usuario", 
-                  "Apoyo al estudiante en asesorías con sus equipos, profesores, preparadores",
-                  "Talleres de capacitacion al personal administrativo y docente", 
-                  "Apoyo en actividades a otras instituciones"] #Recuperar de la BD
-        self.entry_tipo_usuario = ctk.CTkComboBox(self.scrollable_frame, values=values)
+        # Recuperar tipos de uso de la BD
+        tipos_uso = self.db_manager.obtener_tipos_uso()
+        self.entry_tipo_usuario = ctk.CTkComboBox(self.scrollable_frame, values=tipos_uso)
         self.entry_tipo_usuario.grid(row=6, column=1, padx=10, pady=10)
         
         self.label_nombre = ctk.CTkLabel(self.scrollable_frame, text="Nombre")
@@ -275,22 +280,18 @@ class CargaAsistencia(ctk.CTkFrame):
             label_descripcion = ctk.CTkLabel(self.scrollable_frame, text=f"Descripcion {i+1}")
             entry_descripcion = ctk.CTkEntry(self.scrollable_frame)
             
-            # Add labels and entries for registering the time of the failure
+            # Reemplaza los ComboBox de hora/minuto por TimeInput
             label_hora_falla = ctk.CTkLabel(self.scrollable_frame, text=f"Hora de la falla {i+1}")
-            entry_hora_falla_horas = ctk.CTkComboBox(self.scrollable_frame, values=[str(h) for h in range(24)], width=60)
-            entry_hora_falla_minutos = ctk.CTkComboBox(self.scrollable_frame, values=[str(m) for m in range(60)], width=60)
+            time_falla = TimeInput(self.scrollable_frame)
 
             label_nro_bien.grid(row=16+i, column=0, padx=10, pady=10)
             entry_nro_bien.grid(row=16+i, column=1, padx=10, pady=10)
             label_descripcion.grid(row=16+i, column=2, padx=10, pady=10)
             entry_descripcion.grid(row=16+i, column=3, padx=10, pady=10)
-            
-            # Place the time of failure widgets
             label_hora_falla.grid(row=16+i, column=4, padx=10, pady=10)
-            entry_hora_falla_horas.grid(row=16+i, column=5, padx=5, pady=10)
-            entry_hora_falla_minutos.grid(row=16+i, column=6, padx=5, pady=10)
+            time_falla.grid(row=16+i, column=5, columnspan=2, padx=5, pady=10)
 
-            self.equipos_entries.append((label_nro_bien, entry_nro_bien, label_descripcion, entry_descripcion, label_hora_falla, entry_hora_falla_horas, entry_hora_falla_minutos))
+            self.equipos_entries.append((label_nro_bien, entry_nro_bien, label_descripcion, entry_descripcion, label_hora_falla, time_falla))
         self.btn_submit.grid(row=16+cantidad, column=4, padx=10, pady=10)
 
     def clear_equipos_entries(self):
@@ -359,5 +360,102 @@ class CargaAsistencia(ctk.CTkFrame):
             self.clear_equipos_entries()
 
     def submit(self):
-        # Add your submit logic here
-        pass
+        print("Boton presionado")
+        # Recopilar datos generales
+        laboratorio_nombre = self.entry_laboratorio.get()
+        laboratorio_id = None
+        for l in self.laboratorios:
+            if l[1] == laboratorio_nombre:
+                laboratorio_id = l[0]
+                break
+        tipo_uso = self.entry_tipo_usuario.get()
+        fecha = self.entry_fecha.get()
+        hora_inicio = self.time_inicio.get_time()
+        hora_finalizacion = self.time_finalizacion.get_time()
+
+        # Recopilar personas de la tabla
+        personas = []
+        for item in self.tree.get_children():
+            vals = self.tree.item(item, "values")
+            personas.append({
+                "tipo_usuario": vals[1],
+                "nombre": vals[2],
+                "apellido": vals[3],
+                "cedula": vals[4],
+                "organizacion": vals[5],
+                "telefono": vals[6],
+                "numero_bien": vals[7]
+            })
+
+        # Validación de datos antes de enviar
+        if not laboratorio_id:
+            print("Error: laboratorio_id no seleccionado o inválido.")
+            return
+        if not tipo_uso:
+            print("Error: tipo_uso no seleccionado o inválido.")
+            return
+        if not fecha or not hora_inicio or not hora_finalizacion:
+            print("Error: fecha u hora no válidas.")
+            return
+        if not personas:
+            print("Error: no hay personas para registrar asistencia.")
+            return
+
+        # Registrar asistencia en la base de datos
+        print("Enviando datos a la base de datos...")
+        resultado = self.db_manager.registrar_asistencia_laboratorio_usr(
+            laboratorio_id, tipo_uso, fecha, hora_inicio, hora_finalizacion, personas
+        )
+        print(f"Resultado registrar_asistencia_laboratorio_usr: {resultado}")
+        if not resultado:
+            print("Error al registrar asistencia en la base de datos.")
+            return
+
+        # Si hubo fallas, registrar fallas con descripción y hora
+        if self.radio_var.get() == "si" and self.equipos_entries:
+            # Obtener IDs de asistencia (últimos N registros)
+            asistencias = []
+            num_asistencias = len(self.equipos_entries)
+            last_ids = self.db_manager.execute_query(
+                "SELECT ID FROM Asistencia_usr ORDER BY ID DESC LIMIT ?", (num_asistencias,)
+            )
+            if last_ids:
+                asistencias = [row[0] for row in last_ids]
+            for idx, widgets in enumerate(self.equipos_entries):
+                nro_bien = widgets[1].get()
+                descripcion = widgets[3].get()
+                hora_falla = widgets[5].get_time()
+                asistencia_id = asistencias[idx] if idx < len(asistencias) else None
+                if asistencia_id:
+                    resultado_falla = self.db_manager.registrar_falla_equipo_completa(
+                        asistencia_id, descripcion, hora_falla
+                    )
+                    print(f"Resultado registrar_falla_equipo_completa: {resultado_falla}")
+                    if not resultado_falla:
+                        print("Error al registrar la falla completa del equipo.")
+
+        # Limpiar todos los campos
+        self.entry_sede.set('')
+        self.entry_laboratorio.set('')
+        self.entry_fecha.set_date(datetime.date.today())
+        self.time_inicio.hour_var.set("00")
+        self.time_inicio.minute_var.set("00")
+        self.time_finalizacion.hour_var.set("00")
+        self.time_finalizacion.minute_var.set("00")
+        self.entry_tipo_usuario.set('')
+        self.entry_nombre.delete(0, 'end')
+        self.entry_apellido.delete(0, 'end')
+        self.entry_cedula.delete(0, 'end')
+        self.entry_organizacion.delete(0, 'end')
+        self.entry_telefono.delete(0, 'end')
+        self.entry_numero_bien.delete(0, 'end')
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+        self.counter = 1
+        self.radio_var.set("")
+        self.clear_equipos_entries()
+        self.radio_var.set("")
+        self.clear_equipos_entries()
+        self.clear_equipos_entries()
+        self.radio_var.set("")
+        self.clear_equipos_entries()

@@ -231,10 +231,19 @@ class DBManager:
             )
             """,
             """
+        CREATE TABLE IF NOT EXISTS "Falla_equipo"(
+            "ID" INTEGER,
+            "Descripcion_falla" TEXT,
+            "Hora_de_la_falla" TEXT,
+            PRIMARY KEY ("ID" AUTOINCREMENT)
+            )
+            """,
+            """
             CREATE TABLE IF NOT EXISTS "Falla_equipo_usr" (
                 "ID"	INTEGER,
                 "Asistencia_usr"	INTEGER NOT NULL,
                 PRIMARY KEY("ID"),
+                FOREIGN KEY("ID") REFERENCES "Falla_equipo"("ID") ON UPDATE CASCADE,
                 FOREIGN KEY("Asistencia_usr") REFERENCES "Asistencia_usr"("ID") ON UPDATE CASCADE
             )
             """,
@@ -255,7 +264,8 @@ class DBManager:
                 "ID"	INTEGER,
                 "Equipo"	INTEGER NOT NULL,
                 "Uso_laboratorio_estudiante"	INTEGER NOT NULL,
-                PRIMARY KEY("ID" AUTOINCREMENT),
+                PRIMARY KEY("ID"),
+                FOREIGN KEY("ID") REFERENCES "Falla_equipo"("ID") ON UPDATE CASCADE,
                 FOREIGN KEY("Equipo") REFERENCES "Equipo"("Nro_de_bien") ON UPDATE CASCADE,
                 FOREIGN KEY("Uso_laboratorio_estudiante") REFERENCES "Uso_laboratorio_estudiante"("ID") ON UPDATE CASCADE
             )
@@ -709,3 +719,147 @@ class DBManager:
                 if result is None:
                     return False
         return True
+
+    def registrar_asistencia_laboratorio_usr(self, laboratorio_id, tipo_uso, fecha, hora_inicio, hora_finalizacion, personas):
+        """
+        Registra el uso del laboratorio y la asistencia de usuarios.
+        - laboratorio_id: ID del laboratorio
+        - tipo_uso: descripción del tipo de uso
+        - fecha, hora_inicio, hora_finalizacion: strings
+        - personas: lista de dicts con datos de cada persona
+        """
+        # Obtener el ID del tipo de uso
+        tipo_uso_id = self.execute_query(
+            "SELECT ID FROM Tipo_de_uso WHERE Descripcion = ?", (tipo_uso,), fetch_one=True
+        )
+        if not tipo_uso_id:
+            print("Tipo de uso no encontrado.")
+            return False
+        tipo_uso_id = tipo_uso_id[0]
+
+        # Insertar el uso del laboratorio
+        uso_sql = """
+            INSERT INTO Uso_laboratorio_usr (Laboratorio, Administrador, Tipo_de_uso, Fecha, Hora_inicio, Hora_finalizacion)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """
+        # Para este ejemplo, Administrador se pone como NULL (o puedes pasar el ID si lo tienes)
+        uso_result = self.execute_query(
+            uso_sql, (laboratorio_id, 1, tipo_uso_id, fecha, hora_inicio, hora_finalizacion), commit=True
+        )
+        if uso_result is None:
+            print("Error al registrar uso de laboratorio.")
+            return False
+
+        # Obtener el ID del uso recién creado
+        uso_id = self.execute_query(
+            "SELECT MAX(ID) FROM Uso_laboratorio_usr", fetch_one=True
+        )[0]
+
+        # Registrar cada persona en Usuario_laboratorio y Asistencia_usr
+        for persona in personas:
+            # Insertar en Persona si no existe
+            persona_id = self.execute_query(
+                "SELECT ID FROM Persona WHERE Cedula = ?", (persona['cedula'],), fetch_one=True
+            )
+            if not persona_id:
+                persona_sql = """
+                    INSERT INTO Persona (Nombre, Apellido, Cedula, Nro_telefono)
+                    VALUES (?, ?, ?, ?)
+                """
+                self.execute_query(
+                    persona_sql, (persona['nombre'], persona['apellido'], persona['cedula'], persona['telefono']), commit=True
+                )
+                persona_id = self.execute_query(
+                    "SELECT ID FROM Persona WHERE Cedula = ?", (persona['cedula'],), fetch_one=True
+                )
+            persona_id = persona_id[0]
+
+            # Insertar en Usuario_laboratorio si no existe
+            usuario_lab_id = self.execute_query(
+                "SELECT Persona FROM Usuario_laboratorio WHERE Persona = ?", (persona_id,), fetch_one=True
+            )
+            if not usuario_lab_id:
+                usuario_lab_sql = """
+                    INSERT INTO Usuario_laboratorio (Persona, Nombre_organizacion)
+                    VALUES (?, ?)
+                """
+                self.execute_query(
+                    usuario_lab_sql, (persona_id, persona['organizacion']), commit=True
+                )
+
+            # Insertar en Asistencia_usr
+            asistencia_sql = """
+                INSERT INTO Asistencia_usr (Uso_laboratorio_usr, Usuario_laboratorio, Equipo)
+                VALUES (?, ?, ?)
+            """
+            self.execute_query(
+                asistencia_sql, (uso_id, persona_id, persona['numero_bien']), commit=True
+            )
+        print("Asistencia registrada correctamente.")
+        return True
+
+    def registrar_falla_equipo_usr(self, asistencias, fallas):
+        """
+        Registra las fallas de equipos para las asistencias dadas.
+        - asistencias: lista de IDs de Asistencia_usr
+        - fallas: lista de dicts con datos de la falla (nro_bien, descripcion, hora_falla)
+        """
+        for asistencia_id, falla in zip(asistencias, fallas):
+            falla_sql = """
+                INSERT INTO Falla_equipo_usr (Asistencia_usr)
+                VALUES (?)
+            """
+            self.execute_query(falla_sql, (asistencia_id,), commit=True)
+            # Puedes agregar más campos si la tabla tiene más columnas
+        print("Fallas de equipos registradas correctamente.")
+        return True
+
+    def registrar_falla_equipo_completa(self, asistencia_id, descripcion_falla, hora_falla):
+        """
+        Registra una falla de equipo con descripción y hora en Falla_equipo,
+        y la relaciona con la asistencia en Falla_equipo_usr.
+        Retorna True si ambas inserciones fueron exitosas, False si hubo error.
+        """
+        # Insertar en Falla_equipo
+        falla_sql = """
+            INSERT INTO Falla_equipo (Descripcion_falla, Hora_de_la_falla)
+            VALUES (?, ?)
+        """
+        result_falla = self.execute_query(falla_sql, (descripcion_falla, hora_falla), commit=True)
+        if result_falla is None:
+            print("Error al insertar en Falla_equipo.")
+            return False
+
+        # Obtener el ID recién creado de Falla_equipo
+        falla_id = self.execute_query(
+            "SELECT MAX(ID) FROM Falla_equipo", fetch_one=True
+        )
+        if not falla_id:
+            print("No se pudo obtener el ID de la falla.")
+            return False
+        falla_id = falla_id[0]
+
+        # Relacionar con Falla_equipo_usr
+        relacion_sql = """
+            INSERT INTO Falla_equipo_usr (ID, Asistencia_usr)
+            VALUES (?, ?)
+        """
+        result_relacion = self.execute_query(relacion_sql, (falla_id, asistencia_id), commit=True)
+        if result_relacion is None:
+            print("Error al relacionar Falla_equipo con Falla_equipo_usr.")
+            return False
+
+        print("Falla registrada y relacionada correctamente.")
+        return True
+
+    def obtener_tipos_uso(self):
+        """
+        Obtiene la lista de tipos de uso desde la tabla Tipo_de_uso.
+        Retorna una lista de descripciones.
+        """
+        tipos = self.execute_query(
+            "SELECT Descripcion FROM Tipo_de_uso", fetch_one=False
+        )
+        if tipos is None:
+            return []
+        return [t[0] for t in tipos]

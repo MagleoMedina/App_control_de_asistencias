@@ -4,3 +4,4 @@ pyinstaller
 xhtml2pdf
 libsql
 python-dotenv
+reportlab

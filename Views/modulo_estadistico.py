@@ -4,6 +4,7 @@ from tkinter import ttk, messagebox
 from Pdf.pdf import PDFGenerator
 import os
 from datetime import datetime  
+from db_manager import DBManager
 
 class ModuloEstadistico(ctk.CTkFrame):
     def __init__(self, parent=None):
@@ -13,19 +14,39 @@ class ModuloEstadistico(ctk.CTkFrame):
         # Título centrado
         self.title_label = ctk.CTkLabel(self, text="Generar Reporte estádistico", font=("Arial", 20))
         self.title_label.grid(row=1, column=3, columnspan=2, pady=10)
+
+        # Instanciar DBManager
+        self.db_manager = DBManager()
+
+         # Obtener sedes de la base de datos
+        self.sedes = self.db_manager.obtener_sedes()
+        sede_names = [s[1] for s in self.sedes] if self.sedes else []
         
         # Labels y Entries
         self.sede_label = ctk.CTkLabel(self, text="Sede")
         self.sede_label.grid(row=2, column=0, padx=10, pady=5, sticky="e")
-        values_sede = ["Villa asia", "Atlantico"]#recuperar de la bd
-        self.sede_entry =ctk.CTkComboBox(self, values=values_sede, state="readonly")
+        self.sede_entry =ctk.CTkComboBox(self, values=sede_names, state="readonly", command=self.on_sede_selected)
         self.sede_entry.grid(row=2, column=1, padx=10, pady=5, sticky="w")
+
+        # Inicializar laboratorios según la sede seleccionada
+        self.laboratorios = []
+        self.lab_names = []
         
         self.laboratorio_label = ctk.CTkLabel(self, text="Laboratorio")
         self.laboratorio_label.grid(row=2, column=2, padx=10, pady=5, sticky="e")
-        values_lab= ["Villa asia", "Atlantico"]#recuperar de la bd
-        self.laboratorio_entry = ctk.CTkComboBox(self, values=values_lab, state="readonly")
+        self.laboratorio_entry = ctk.CTkComboBox(self, values=[], state="readonly")
         self.laboratorio_entry.grid(row=2, column=3, padx=10, pady=5, sticky="w")
+
+        # Si hay sedes, selecciona la primera y actualiza laboratorios
+        if sede_names:
+            # Selecciona la primera sede por defecto
+            self.sede_entry.set(sede_names[0])
+            # Busca el índice de la sede seleccionada
+            selected_sede = self.sede_entry.get()
+            for idx, sede in enumerate(self.sedes):
+                if sede[1] == selected_sede:
+                    break
+            self.on_sede_selected()
         
         self.fecha_inicio_label = ctk.CTkLabel(self, text="Fecha de inicio")
         self.fecha_inicio_label.grid(row=2, column=4, padx=10, pady=5, sticky="e")
@@ -41,6 +62,28 @@ class ModuloEstadistico(ctk.CTkFrame):
         self.generar_reporte_button = ctk.CTkButton(self, text="Generar reporte", command=self.generar_reporte)
         self.generar_reporte_button.grid(row=3, column=3, columnspan=2, pady=20)
 
+    def update_laboratorios(self):
+        selected_sede_name = self.sede_entry.get()
+        sede_id = None
+        for s in self.sedes:
+            if s[1] == selected_sede_name:
+                sede_id = s[0]
+                break
+        if sede_id is not None:
+            self.laboratorios = self.db_manager.obtener_laboratorios_por_sede(sede_id)
+        else:
+            self.laboratorios = []
+        self.lab_names = [l[1] for l in self.laboratorios] if self.laboratorios else []
+
+    def on_sede_selected(self, event=None):
+        self.update_laboratorios()
+        self.laboratorio_entry.set("")
+        self.laboratorio_entry.configure(values=self.lab_names)
+        if self.lab_names:
+            self.laboratorio_entry.set(self.lab_names[0])
+        else:
+            self.laboratorio_entry.set("")
+            
     def crear_pdf(self):
         # Read the HTML template
         html_template_path = os.path.join(os.path.dirname(__file__), "..", "Pdf", "modulo_estadistico.html")

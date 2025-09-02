@@ -931,3 +931,72 @@ class DBManager:
                 "personas": personas
             })
         return bloques
+
+    def consultar_equipo_con_componentes(self, nro_bien):
+        """
+        Consulta la relación de un equipo con sus componentes, incluyendo descripción, número de bien,
+        sede, laboratorio y status.
+        Retorna una lista de dicts con los datos.
+        """
+        query = """
+        SELECT
+            c.Descripcion,
+            e.Nro_de_bien,
+            s.Nombre as sede,
+            l.Nombre as laboratorio,
+            e.Status
+        FROM Equipo e
+        JOIN Laboratorio l ON e.Laboratorio = l.ID
+        JOIN Sede s ON l.Sede = s.ID
+        JOIN Componente c ON e.Nro_de_bien = c.Nro_de_bien
+        WHERE e.Nro_de_bien = ?
+        UNION
+        SELECT
+            c.Descripcion,
+            c.Nro_de_bien,
+            s.Nombre as sede,
+            l.Nombre as laboratorio,
+            e.Status
+        FROM Asignacion a
+        JOIN Equipo e ON a.Equipo = e.Nro_de_bien
+        JOIN Laboratorio l ON e.Laboratorio = l.ID
+        JOIN Sede s ON l.Sede = s.ID
+        JOIN Componente c ON a.Componente = c.Nro_de_bien
+        WHERE a.Equipo = ?
+        """
+        result = self.execute_query(query, (nro_bien, nro_bien))
+        if not result:
+            return []
+        equipos = []
+        for row in result:
+            equipos.append({
+                "Descripcion": row[0],
+                "Nro_de_bien": row[1],
+                "Sede": row[2],
+                "Laboratorio": row[3],
+                "Status": row[4]
+            })
+        return equipos
+
+    def consultar_fallas_por_equipo(self, nro_bien):
+        """
+        Consulta las fallas registradas para un equipo por su número de bien.
+        Retorna una lista de dicts con fecha, hora y descripción.
+        """
+        query = """
+        SELECT Fecha_falla, Hora_de_la_falla, Descripcion_falla
+        FROM Falla_equipo
+        WHERE Equipo = ?
+        ORDER BY Fecha_falla DESC, Hora_de_la_falla DESC
+        """
+        result = self.execute_query(query, (nro_bien,))
+        if not result:
+            return []
+        fallas = []
+        for row in result:
+            fallas.append({
+                "FechaHora": f"{row[0]} {row[1]}",
+                "Descripcion": row[2],
+                "Equipo": nro_bien
+            })
+        return fallas

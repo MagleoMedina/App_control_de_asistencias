@@ -80,7 +80,8 @@ class ConsultarFallaEquipo(ctk.CTkFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
-        
+        self.db_manager = DBManager()  # Instanciar DBManager
+
         # Título centrado
         self.title_label = ctk.CTkLabel(self, text="Consultar equipo", font=("Arial", 20))
         self.title_label.grid(row=0, column=1, columnspan=2, pady=10)
@@ -107,42 +108,31 @@ class ConsultarFallaEquipo(ctk.CTkFrame):
         nro_bien = self.nro_bien_entry.get()
         if not nro_bien.strip():
             messagebox.showerror("Error", "El campo 'Nro de bien' no puede estar vacío.")
-       
-        #elif de que si el nro de bien no existe en la base de datos
-        #     messagebox.showerror("Error", "El nro de bien no existe.")
-       
-        else:
-            self.crear_pdf()
-    
-    def crear_pdf(self):
+            return
+
+        # Verifica si el equipo existe
+        equipo_data = self.db_manager.buscar_equipo_por_nro_bien(nro_bien)
+        if not equipo_data:
+            messagebox.showerror("Error", "El nro de bien no existe.")
+            return
+
+        self.crear_pdf(nro_bien)
+
+    def crear_pdf(self, nro_bien=None):
         # Read the HTML template
         html_template_path = os.path.join(os.path.dirname(__file__), "..", "Pdf", "consultar_falla_equipo.html")
         with open(html_template_path, "r", encoding="utf-8") as file:
             html_content = file.read()
 
-        # Ensure CSS file exists
         css_path = os.path.join(os.path.dirname(__file__), "..", "Pdf", "estilos.css")
 
-        # Variables para el html
-        nro_bien = self.nro_bien_entry.get()
-
-        # Lista de equipos con datos
-        equipos = [
-            {"Equipo": "Computadora", "Número de bien": "12345", "Sede": "Sede Central", "Laboratorio": "Lab 101", "Status": "Operativo"},
-            {"Equipo": "Teclado", "Número de bien": "67890", "Sede": "Sede Central", "Laboratorio": "Lab 102", "Status": "En reparación"},
-            {"Equipo": "Ratón", "Número de bien": "54321", "Sede": "Sede Norte", "Laboratorio": "Lab 103", "Status": "Operativo"},
-            {"Equipo": "Monitor", "Número de bien": "98765", "Sede": "Sede Sur", "Laboratorio": "Lab 104", "Status": "Dañado"},
-        ]
-
-        # Lista de fallos registrados
-        fallos = [
-            {"Equipo": "12345", "FechaHora": "2025-03-31 14:30", "Descripción": "Fallo en el disco duro"},
-            {"Equipo": "98765", "FechaHora": "2025-03-30 10:15", "Descripción": "Pantalla rota"},
-        ]
+        # Recuperar datos reales de la base de datos
+        equipos = self.db_manager.consultar_equipo_con_componentes(nro_bien)
+        fallos = self.db_manager.consultar_fallas_por_equipo(nro_bien)
 
         # Generar la tabla en HTML
         tabla_equipos = "".join(
-            f"<tr><td>{e['Equipo']}</td><td>{e['Número de bien']}</td><td>{e['Sede']}</td>"
+            f"<tr><td>{e['Descripcion']}</td><td>{e['Nro_de_bien']}</td><td>{e['Sede']}</td>"
             f"<td>{e['Laboratorio']}</td><td>{e['Status']}</td></tr>"
             for e in equipos
         )
@@ -151,7 +141,7 @@ class ConsultarFallaEquipo(ctk.CTkFrame):
         if fallos:
             lista_fallos = "".join(
                 f"<p>El equipo <strong>{f['Equipo']}</strong> falló el <strong>{f['FechaHora']}</strong>. "
-                f"Descripción de la falla: <strong>{f['Descripción']}</strong></p>"
+                f"Descripción de la falla: <strong>{f['Descripcion']}</strong></p>"
                 for f in fallos
             )
         else:
@@ -616,6 +606,14 @@ class RelacionarEquipos(ctk.CTkFrame):
         else:
             messagebox.showerror("Error", "No se pudo registrar la relación de equipos.")
 
+    def limpiar_campos(self):
+        # Limpiar todos los campos de entrada
+        self.computadora_entry.delete(0, tk.END)
+        self.teclado_entry.delete(0, tk.END)
+        self.monitor_entry.delete(0, tk.END)
+        self.raton_entry.delete(0, tk.END)
+        self.limpiar_campos()
+        
     def limpiar_campos(self):
         # Limpiar todos los campos de entrada
         self.computadora_entry.delete(0, tk.END)

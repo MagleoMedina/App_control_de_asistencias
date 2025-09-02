@@ -174,9 +174,35 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
                     if isinstance(widget, ctk.CTkEntry) and not widget.get():
                         messagebox.showerror("Error", "Todos los campos deben estar llenos.")
                         return
-        
-        # If all validations pass, proceed with the submit action
-        messagebox.showinfo("Success", "Formulario enviado correctamente.")
-        # Add your submit logic here
+
+        # Obtener IDs necesarios
+        sede_nombre = self.entry_sede.get()
+        laboratorio_nombre = self.entry_laboratorio.get()
+        fecha = self.entry_fecha.get()
+        cantidad = self.entry_cantidad_usuarios.get()
+
+        # Buscar el ID de la sede
+        sede_id = None
+        for s in self.sedes:
+            if s[1] == sede_nombre:
+                sede_id = s[0]
+                break
+        if sede_id is None:
+            messagebox.showerror("Error", "Sede no encontrada.")
+            return
+
+        # Buscar el ID del laboratorio
+        laboratorio_id = self.db_manager.obtener_laboratorio_id_por_nombre_y_sede(laboratorio_nombre, sede_id)
+        if laboratorio_id is None:
+            messagebox.showerror("Error", "Laboratorio no encontrado.")
+            return
+
+        # Registrar en la base de datos
+        administrador_id = 1  # Por ahora fijo
+        ok = self.db_manager.registrar_asistencia_estudiantes(administrador_id, laboratorio_id, fecha, cantidad)
+        if ok:
+            messagebox.showinfo("Success", "Asistencia de estudiantes registrada correctamente.")
+        else:
+            messagebox.showerror("Error", "No se pudo registrar la asistencia de estudiantes.")
 
 

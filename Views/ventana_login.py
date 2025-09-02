@@ -83,8 +83,7 @@ class VentanaLogin:
         password = self.entry_password.get()
 
         if usuario and password:
-            self.ventana.withdraw()  # Terminate the mainloop  
-            self.ventana.quit()         
+            self.ventana.destroy()  # Properly destroy the login window
             from Views.ventana_main import VentanaMain
             main = VentanaMain()
             main.iniciar()

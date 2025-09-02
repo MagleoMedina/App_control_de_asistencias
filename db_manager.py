@@ -1000,3 +1000,29 @@ class DBManager:
                 "Equipo": nro_bien
             })
         return fallas
+
+    def obtener_laboratorio_id_por_nombre_y_sede(self, laboratorio_nombre, sede_id):
+        """
+        Obtiene el ID del laboratorio dado su nombre y el ID de la sede.
+        Retorna el ID o None si no existe.
+        """
+        result = self.execute_query(
+            "SELECT ID FROM Laboratorio WHERE Nombre = ? AND Sede = ?",
+            (laboratorio_nombre, sede_id),
+            fetch_one=True
+        )
+        if result:
+            return result[0]
+        return None
+
+    def registrar_asistencia_estudiantes(self, administrador_id, laboratorio_id, fecha, cantidad):
+        """
+        Registra la asistencia de estudiantes en la tabla Uso_laboratorio_estudiante.
+        Retorna True si fue exitoso, False si hubo error.
+        """
+        sql = """
+            INSERT INTO Uso_laboratorio_estudiante (Administrador, Laboratorio, Fecha, Cantidad)
+            VALUES (?, ?, ?, ?)
+        """
+        result = self.execute_query(sql, (administrador_id, laboratorio_id, fecha, cantidad), commit=True)
+        return result is not None

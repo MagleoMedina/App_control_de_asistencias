@@ -200,10 +200,12 @@ class VentanaMain:
         # Disable all buttons to prevent further clicks
         for boton in self.botones_nav:
             boton.configure(state="disabled")
+
+        # Cancelar todos los eventos after del canvas
+        self.canvas.after_cancel(self.canvas.after_id) if hasattr(self.canvas, 'after_id') else None
         
         # Cerrar la ventana y volver al login 
-        self.ventana.withdraw()  # Hide the main window
-        self.ventana.quit()  # Ensure the main loop is stopped
+        self.ventana.destroy()  # Properly destroy the main window
         from Views.ventana_login import VentanaLogin
         app = VentanaLogin()
         app.iniciar()
@@ -223,4 +225,5 @@ class VentanaMainAdmin(VentanaMain):
     def gestion_usuarios(self):
         self.limpiar_frame()
         app = GestionUsuarios(self.main_frame)
+        app.pack(fill="both", expand=True)
         app.pack(fill="both", expand=True)

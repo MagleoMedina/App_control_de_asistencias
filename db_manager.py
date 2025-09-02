@@ -4,6 +4,7 @@ import libsql
 import os
 import sys
 from dotenv import load_dotenv
+from concurrent.futures import ThreadPoolExecutor
 
 class DBManager:
     """
@@ -29,6 +30,7 @@ class DBManager:
 
         # Variable para almacenar la conexión a la base de datos (inicialmente None)
         self._connection = None
+        self._executor = ThreadPoolExecutor(max_workers=4)
         print("DBManager inicializado. Credenciales cargadas.")
 
     def get_db_connection(self):
@@ -59,42 +61,46 @@ class DBManager:
 
     def execute_query(self, query, params=None, fetch_one=False, commit=False):
         """
-        Ejecuta una consulta SQL en la base de datos.
+        Ejecuta una consulta SQL en la base de datos en un hilo aparte.
         :param query: La cadena de consulta SQL a ejecutar.
         :param params: Una tupla o lista de parámetros para la consulta (opcional).
         :param fetch_one: Si es True, retorna solo la primera fila del resultado.
         :param commit: Si es True, realiza un commit y sincroniza los cambios.
         :return: El resultado de la consulta (fila/s o True/False para commit), o None en caso de error.
         """
-        conn = self.get_db_connection()
-        if conn is None:
-            print("No hay conexión a la base de datos disponible.")
-            return None
+        def _run_query():
+            conn = self.get_db_connection()
+            if conn is None:
+                print("No hay conexión a la base de datos disponible.")
+                return None
 
-        cursor = conn.cursor()
-        try:
-            if params:
-                cursor.execute(query, params)
-            else:
-                cursor.execute(query)
-
-            if commit:
-                conn.commit()
-                conn.sync() # Sincroniza después de un commit para enviar los cambios a Turso
-                return True
-            else:
-                if fetch_one:
-                    return cursor.fetchone()
+            cursor = conn.cursor()
+            try:
+                if params:
+                    cursor.execute(query, params)
                 else:
-                    return cursor.fetchall()
-        except Exception as e:
-            print(f"Error al ejecutar la consulta '{query}': {e}")
-            if conn:
-                conn.rollback() # Revierte la transacción en caso de error
-            return None
-        finally:
-            # El cursor se gestiona automáticamente por libsql, no es necesario cerrarlo explícitamente aquí.
-            pass
+                    cursor.execute(query)
+
+                if commit:
+                    conn.commit()
+                    conn.sync() # Sincroniza después de un commit para enviar los cambios a Turso
+                    return True
+                else:
+                    if fetch_one:
+                        return cursor.fetchone()
+                    else:
+                        return cursor.fetchall()
+            except Exception as e:
+                print(f"Error al ejecutar la consulta '{query}': {e}")
+                if conn:
+                    conn.rollback() # Revierte la transacción en caso de error
+                return None
+            finally:
+                # El cursor se gestiona automáticamente por libsql, no es necesario cerrarlo explícitamente aquí.
+                pass
+
+        future = self._executor.submit(_run_query)
+        return future.result()  # Espera el resultado pero no bloquea la interfaz principal
 
     def init_database(self):
         """
@@ -225,10 +231,22 @@ class DBManager:
             )
             """,
             """
+            CREATE TABLE IF NOT EXISTS "Falla_equipo"(
+                "ID" INTEGER,
+                "Equipo" INTEGER,
+                "Fecha_falla" TEXT,
+                "Descripcion_falla" TEXT,
+                "Hora_de_la_falla" TEXT,
+                PRIMARY KEY ("ID" AUTOINCREMENT),
+                FOREIGN KEY("Equipo") REFERENCES "Equipo"("Nro_de_bien") ON UPDATE CASCADE
+            )
+            """,
+            """
             CREATE TABLE IF NOT EXISTS "Falla_equipo_usr" (
                 "ID"	INTEGER,
                 "Asistencia_usr"	INTEGER NOT NULL,
                 PRIMARY KEY("ID"),
+                FOREIGN KEY("ID") REFERENCES "Falla_equipo"("ID") ON UPDATE CASCADE,
                 FOREIGN KEY("Asistencia_usr") REFERENCES "Asistencia_usr"("ID") ON UPDATE CASCADE
             )
             """,
@@ -247,10 +265,9 @@ class DBManager:
             """
             CREATE TABLE IF NOT EXISTS "Falla_equipo_estudiante" (
                 "ID"	INTEGER,
-                "Equipo"	INTEGER NOT NULL,
                 "Uso_laboratorio_estudiante"	INTEGER NOT NULL,
-                PRIMARY KEY("ID" AUTOINCREMENT),
-                FOREIGN KEY("Equipo") REFERENCES "Equipo"("Nro_de_bien") ON UPDATE CASCADE,
+                PRIMARY KEY("ID"),
+                FOREIGN KEY("ID") REFERENCES "Falla_equipo"("ID") ON UPDATE CASCADE,
                 FOREIGN KEY("Uso_laboratorio_estudiante") REFERENCES "Uso_laboratorio_estudiante"("ID") ON UPDATE CASCADE
             )
             """
@@ -703,3 +720,283 @@ class DBManager:
                 if result is None:
                     return False
         return True
+
+    def registrar_asistencia_laboratorio_usr(self, laboratorio_id, tipo_uso, fecha, hora_inicio, hora_finalizacion, personas):
+        """
+        Registra el uso del laboratorio y la asistencia de usuarios.
+        - laboratorio_id: ID del laboratorio
+        - tipo_uso: descripción del tipo de uso
+        - fecha, hora_inicio, hora_finalizacion: strings
+        - personas: lista de dicts con datos de cada persona
+        """
+        # Obtener el ID del tipo de uso
+        tipo_uso_id = self.execute_query(
+            "SELECT ID FROM Tipo_de_uso WHERE Descripcion = ?", (tipo_uso,), fetch_one=True
+        )
+        if not tipo_uso_id:
+            print("Tipo de uso no encontrado.")
+            return False
+        tipo_uso_id = tipo_uso_id[0]
+
+        # Insertar el uso del laboratorio
+        uso_sql = """
+            INSERT INTO Uso_laboratorio_usr (Laboratorio, Administrador, Tipo_de_uso, Fecha, Hora_inicio, Hora_finalizacion)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """
+        # Para este ejemplo, Administrador se pone como NULL (o puedes pasar el ID si lo tienes)
+        uso_result = self.execute_query(
+            uso_sql, (laboratorio_id, 1, tipo_uso_id, fecha, hora_inicio, hora_finalizacion), commit=True
+        )
+        if uso_result is None:
+            print("Error al registrar uso de laboratorio.")
+            return False
+
+        # Obtener el ID del uso recién creado
+        uso_id = self.execute_query(
+            "SELECT MAX(ID) FROM Uso_laboratorio_usr", fetch_one=True
+        )[0]
+
+        # Registrar cada persona en Usuario_laboratorio y Asistencia_usr
+        for persona in personas:
+            # Insertar en Persona si no existe
+            persona_id = self.execute_query(
+                "SELECT ID FROM Persona WHERE Cedula = ?", (persona['cedula'],), fetch_one=True
+            )
+            if not persona_id:
+                persona_sql = """
+                    INSERT INTO Persona (Nombre, Apellido, Cedula, Nro_telefono)
+                    VALUES (?, ?, ?, ?)
+                """
+                self.execute_query(
+                    persona_sql, (persona['nombre'], persona['apellido'], persona['cedula'], persona['telefono']), commit=True
+                )
+                persona_id = self.execute_query(
+                    "SELECT ID FROM Persona WHERE Cedula = ?", (persona['cedula'],), fetch_one=True
+                )
+            persona_id = persona_id[0]
+
+            # Insertar en Usuario_laboratorio si no existe
+            usuario_lab_id = self.execute_query(
+                "SELECT Persona FROM Usuario_laboratorio WHERE Persona = ?", (persona_id,), fetch_one=True
+            )
+            if not usuario_lab_id:
+                usuario_lab_sql = """
+                    INSERT INTO Usuario_laboratorio (Persona, Nombre_organizacion)
+                    VALUES (?, ?)
+                """
+                self.execute_query(
+                    usuario_lab_sql, (persona_id, persona['organizacion']), commit=True
+                )
+
+            # Insertar en Asistencia_usr
+            asistencia_sql = """
+                INSERT INTO Asistencia_usr (Uso_laboratorio_usr, Usuario_laboratorio, Equipo)
+                VALUES (?, ?, ?)
+            """
+            self.execute_query(
+                asistencia_sql, (uso_id, persona_id, persona['numero_bien']), commit=True
+            )
+        print("Asistencia registrada correctamente.")
+        return True
+
+    def registrar_falla_equipo_usr(self, asistencias, fallas):
+        """
+        Registra las fallas de equipos para las asistencias dadas.
+        - asistencias: lista de IDs de Asistencia_usr
+        - fallas: lista de dicts con datos de la falla (nro_bien, descripcion, hora_falla)
+        """
+        for asistencia_id, falla in zip(asistencias, fallas):
+            falla_sql = """
+                INSERT INTO Falla_equipo_usr (Asistencia_usr)
+                VALUES (?)
+            """
+            self.execute_query(falla_sql, (asistencia_id,), commit=True)
+            # Puedes agregar más campos si la tabla tiene más columnas
+        print("Fallas de equipos registradas correctamente.")
+        return True
+
+    def registrar_falla_equipo_completa(self, asistencia_id, equipo_id, descripcion_falla, fecha_falla, hora_falla):
+        """
+        Registra una falla de equipo con descripción, fecha y hora en Falla_equipo,
+        y la relaciona con la asistencia en Falla_equipo_usr.
+        Retorna True si ambas inserciones fueron exitosas, False si hubo error.
+        """
+        # Insertar en Falla_equipo
+        falla_sql = """
+            INSERT INTO Falla_equipo (Equipo, Fecha_falla, Descripcion_falla, Hora_de_la_falla)
+            VALUES (?, ?, ?, ?)
+        """
+        result_falla = self.execute_query(falla_sql, (equipo_id, fecha_falla, descripcion_falla, hora_falla), commit=True)
+        if result_falla is None:
+            print("Error al insertar en Falla_equipo.")
+            return False
+
+        # Obtener el ID recién creado de Falla_equipo
+        falla_id = self.execute_query(
+            "SELECT MAX(ID) FROM Falla_equipo", fetch_one=True
+        )
+        if not falla_id:
+            print("No se pudo obtener el ID de la falla.")
+            return False
+        falla_id = falla_id[0]
+
+        # Relacionar con Falla_equipo_usr
+        relacion_sql = """
+            INSERT INTO Falla_equipo_usr (ID, Asistencia_usr)
+            VALUES (?, ?)
+        """
+        result_relacion = self.execute_query(relacion_sql, (falla_id, asistencia_id), commit=True)
+        if result_relacion is None:
+            print("Error al relacionar Falla_equipo con Falla_equipo_usr.")
+            return False
+
+        print("Falla registrada y relacionada correctamente.")
+        return True
+
+    def obtener_tipos_uso(self):
+        """
+        Obtiene la lista de tipos de uso desde la tabla Tipo_de_uso.
+        Retorna una lista de descripciones.
+        """
+        tipos = self.execute_query(
+            "SELECT Descripcion FROM Tipo_de_uso", fetch_one=False
+        )
+        if tipos is None:
+            return []
+        return [t[0] for t in tipos]
+
+    def consultar_asistencias_por_fecha(self, sede_nombre, laboratorio_nombre, fecha):
+        """
+        Consulta todas las asistencias para una sede, laboratorio y fecha específica.
+        Retorna una lista de dicts, cada uno con hora_inicio, hora_finalizacion y lista de personas.
+        El orden es de menor a mayor según la hora de inicio.
+        """
+        # Obtener IDs de sede y laboratorio
+        sede = self.execute_query("SELECT ID FROM Sede WHERE Nombre = ?", (sede_nombre,), fetch_one=True)
+        if not sede:
+            return []
+        sede_id = sede[0]
+        lab = self.execute_query("SELECT ID FROM Laboratorio WHERE Nombre = ? AND Sede = ?", (laboratorio_nombre, sede_id), fetch_one=True)
+        if not lab:
+            return []
+        lab_id = lab[0]
+
+        # Obtener todos los usos de laboratorio para esa fecha, ordenados por hora_inicio ASC
+        usos = self.execute_query(
+            "SELECT ID, Tipo_de_uso, Hora_inicio, Hora_finalizacion FROM Uso_laboratorio_usr WHERE Laboratorio = ? AND Fecha = ? ORDER BY Hora_inicio ASC",
+            (lab_id, fecha)
+        )
+        if not usos:
+            return []
+
+        bloques = []
+        for uso in usos:
+            uso_id, tipo_uso_id, hora_inicio, hora_finalizacion = uso
+            tipo_uso = self.execute_query("SELECT Descripcion FROM Tipo_de_uso WHERE ID = ?", (tipo_uso_id,), fetch_one=True)
+            tipo_uso = tipo_uso[0] if tipo_uso else ""
+
+            # Obtener todas las asistencias asociadas a este uso
+            asistencias = self.execute_query(
+                """
+                SELECT
+                    p.Nombre,
+                    p.Apellido,
+                    p.Cedula,
+                    p.Nro_telefono,
+                    ul.Nombre_organizacion,
+                    e.Nro_de_bien
+                FROM Asistencia_usr a
+                JOIN Usuario_laboratorio ul ON a.Usuario_laboratorio = ul.Persona
+                JOIN Persona p ON ul.Persona = p.ID
+                JOIN Equipo e ON a.Equipo = e.Nro_de_bien
+                WHERE a.Uso_laboratorio_usr = ?
+                """,
+                (uso_id,)
+            )
+            personas = []
+            for fila in asistencias:
+                personas.append({
+                    "Tipo de uso": tipo_uso,
+                    "Nombre": fila[0],
+                    "Apellido": fila[1],
+                    "Cédula": fila[2],
+                    "Organización": fila[4],
+                    "Teléfono": fila[3],
+                    "Número de bien": fila[5]
+                })
+            bloques.append({
+                "hora_inicio": hora_inicio,
+                "hora_finalizacion": hora_finalizacion,
+                "tipo_uso": tipo_uso,
+                "personas": personas
+            })
+        return bloques
+
+    def consultar_equipo_con_componentes(self, nro_bien):
+        """
+        Consulta la relación de un equipo con sus componentes, incluyendo descripción, número de bien,
+        sede, laboratorio y status.
+        Retorna una lista de dicts con los datos.
+        """
+        query = """
+        SELECT
+            c.Descripcion,
+            e.Nro_de_bien,
+            s.Nombre as sede,
+            l.Nombre as laboratorio,
+            e.Status
+        FROM Equipo e
+        JOIN Laboratorio l ON e.Laboratorio = l.ID
+        JOIN Sede s ON l.Sede = s.ID
+        JOIN Componente c ON e.Nro_de_bien = c.Nro_de_bien
+        WHERE e.Nro_de_bien = ?
+        UNION
+        SELECT
+            c.Descripcion,
+            c.Nro_de_bien,
+            s.Nombre as sede,
+            l.Nombre as laboratorio,
+            e.Status
+        FROM Asignacion a
+        JOIN Equipo e ON a.Equipo = e.Nro_de_bien
+        JOIN Laboratorio l ON e.Laboratorio = l.ID
+        JOIN Sede s ON l.Sede = s.ID
+        JOIN Componente c ON a.Componente = c.Nro_de_bien
+        WHERE a.Equipo = ?
+        """
+        result = self.execute_query(query, (nro_bien, nro_bien))
+        if not result:
+            return []
+        equipos = []
+        for row in result:
+            equipos.append({
+                "Descripcion": row[0],
+                "Nro_de_bien": row[1],
+                "Sede": row[2],
+                "Laboratorio": row[3],
+                "Status": row[4]
+            })
+        return equipos
+
+    def consultar_fallas_por_equipo(self, nro_bien):
+        """
+        Consulta las fallas registradas para un equipo por su número de bien.
+        Retorna una lista de dicts con fecha, hora y descripción.
+        """
+        query = """
+        SELECT Fecha_falla, Hora_de_la_falla, Descripcion_falla
+        FROM Falla_equipo
+        WHERE Equipo = ?
+        ORDER BY Fecha_falla DESC, Hora_de_la_falla DESC
+        """
+        result = self.execute_query(query, (nro_bien,))
+        if not result:
+            return []
+        fallas = []
+        for row in result:
+            fallas.append({
+                "FechaHora": f"{row[0]} {row[1]}",
+                "Descripcion": row[2],
+                "Equipo": nro_bien
+            })
+        return fallas

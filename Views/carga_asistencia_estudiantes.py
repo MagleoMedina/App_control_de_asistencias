@@ -1,4 +1,5 @@
 import customtkinter as ctk
+from db_manager import DBManager
 from tkcalendar import DateEntry
 from tkinter import ttk  # Import ttk for Combobox
 from tkinter import messagebox  # Import messagebox for validation alerts
@@ -7,6 +8,13 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
     def __init__(self, parent):
         super().__init__(parent)
         self.parent = parent
+
+        # Instanciar DBManager
+        self.db_manager = DBManager()
+
+        # Obtener sedes de la base de datos
+        self.sedes = self.db_manager.obtener_sedes()
+        sede_names = [s[1] for s in self.sedes] if self.sedes else []
         
         # Title
         self.label_title = ctk.CTkLabel(self, text="Carga de asistencia estudiantes", font=("Arial", 20))
@@ -15,21 +23,35 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
         # Sede
         self.label_sede = ctk.CTkLabel(self, text="Sede")
         self.label_sede.grid(row=1, column=1, padx=10, pady=10)
-        values_sede = ["Villa asia", "Atlantico"]#recuperar de la bd
-        self.entry_sede = ctk.CTkComboBox(self, values=values_sede, state="readonly")
+        self.entry_sede = ctk.CTkComboBox(self, values=sede_names, state="readonly", command=self.on_sede_selected)
         self.entry_sede.grid(row=1, column=2, padx=10, pady=10)
+
+        
+        # Inicializar laboratorios según la sede seleccionada
+        self.laboratorios = []
+        self.lab_names = []
         
         # Laboratorio
         self.label_laboratorio = ctk.CTkLabel(self, text="Laboratorio")
         self.label_laboratorio.grid(row=1, column=3, padx=10, pady=10)
-        values_lab= ["Villa asia", "Atlantico"]#recuperar de la bd
-        self.entry_laboratorio = ctk.CTkComboBox(self, values=values_lab, state="readonly")
+        self.entry_laboratorio = ctk.CTkComboBox(self, values=[], state="readonly")
         self.entry_laboratorio.grid(row=1, column=4, padx=10, pady=10)
+
+        # Si hay sedes, selecciona la primera y actualiza laboratorios
+        if sede_names:
+            # Selecciona la primera sede por defecto
+            self.entry_sede.set(sede_names[0])
+            # Busca el índice de la sede seleccionada
+            selected_sede = self.entry_sede.get()
+            for idx, sede in enumerate(self.sedes):
+                if sede[1] == selected_sede:
+                    break
+            self.on_sede_selected()
         
         # Fecha
         self.label_fecha = ctk.CTkLabel(self, text="Fecha")
         self.label_fecha.grid(row=1, column=5, padx=10, pady=10)
-        self.entry_fecha = DateEntry(self, date_pattern='dd/mm/y')
+        self.entry_fecha = DateEntry(self, date_pattern='dd/mm/y',font=("Arial", 11, "bold"), foreground='#1abc9c', background='#34495e', borderwidth=2, relief='sunken', width=20)
         self.entry_fecha.grid(row=1, column=6, padx=10, pady=10)
         
         # Cantidad de usuarios atendidos
@@ -62,6 +84,28 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
         self.label_cantidad_equipos = ctk.CTkLabel(self, text="Cantidad de equipos")
         self.combo_cantidad_equipos = ttk.Combobox(self, values=[1, 2, 3, 4, 5], state="readonly")
         self.equipos_entries = []
+
+    def update_laboratorios(self):
+        selected_sede_name = self.entry_sede.get()
+        sede_id = None
+        for s in self.sedes:
+            if s[1] == selected_sede_name:
+                sede_id = s[0]
+                break
+        if sede_id is not None:
+            self.laboratorios = self.db_manager.obtener_laboratorios_por_sede(sede_id)
+        else:
+            self.laboratorios = []
+        self.lab_names = [l[1] for l in self.laboratorios] if self.laboratorios else []
+    
+    def on_sede_selected(self, event=None):
+        self.update_laboratorios()
+        self.entry_laboratorio.set("")
+        self.entry_laboratorio.configure(values=self.lab_names)
+        if self.lab_names:
+            self.entry_laboratorio.set(self.lab_names[0])
+        else:
+            self.entry_laboratorio.set("")
 
     def on_radio_change(self):
         if self.radio_var.get() == "Si":

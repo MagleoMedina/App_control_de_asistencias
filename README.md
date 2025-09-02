@@ -55,10 +55,6 @@ La estructura del proyecto es la siguiente:
 ├── 🐍 db_manager.py
 ├── 🐍 main.py
 ├── 📄 requirements.txt
-├── 🗄️ salu-db.db
-├── 📄 salu-db.db-info
-├── 📄 salu-db.db-shm
-├── 📄 salu-db.db-wal
 └── 🐍 sede.py
 ```
 

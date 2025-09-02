@@ -442,13 +442,15 @@ class CargaAsistencia(ctk.CTkFrame):
             if last_ids:
                 asistencias = [row[0] for row in last_ids]
             for idx, widgets in enumerate(self.equipos_entries):
-                #nro_bien = widgets[1].get()
+                nro_bien = widgets[1].get()
                 descripcion = widgets[3].get()
                 hora_falla = widgets[5].get_time()
                 asistencia_id = asistencias[idx] if idx < len(asistencias) else None
+                fecha_falla = self.entry_fecha.get()  # Usar la fecha seleccionada
+                equipo_id = nro_bien  # El número de bien es el ID del equipo
                 if asistencia_id:
                     resultado_falla = self.db_manager.registrar_falla_equipo_completa(
-                        asistencia_id, descripcion, hora_falla
+                        asistencia_id, equipo_id, descripcion, fecha_falla, hora_falla
                     )
                     print(f"Resultado registrar_falla_equipo_completa: {resultado_falla}")
                     if not resultado_falla:

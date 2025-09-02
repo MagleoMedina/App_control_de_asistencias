@@ -231,11 +231,14 @@ class DBManager:
             )
             """,
             """
-        CREATE TABLE IF NOT EXISTS "Falla_equipo"(
-            "ID" INTEGER,
-            "Descripcion_falla" TEXT,
-            "Hora_de_la_falla" TEXT,
-            PRIMARY KEY ("ID" AUTOINCREMENT)
+            CREATE TABLE IF NOT EXISTS "Falla_equipo"(
+                "ID" INTEGER,
+                "Equipo" INTEGER,
+                "Fecha_falla" TEXT,
+                "Descripcion_falla" TEXT,
+                "Hora_de_la_falla" TEXT,
+                PRIMARY KEY ("ID" AUTOINCREMENT),
+                FOREIGN KEY("Equipo") REFERENCES "Equipo"("Nro_de_bien") ON UPDATE CASCADE
             )
             """,
             """
@@ -262,11 +265,9 @@ class DBManager:
             """
             CREATE TABLE IF NOT EXISTS "Falla_equipo_estudiante" (
                 "ID"	INTEGER,
-                "Equipo"	INTEGER NOT NULL,
                 "Uso_laboratorio_estudiante"	INTEGER NOT NULL,
                 PRIMARY KEY("ID"),
                 FOREIGN KEY("ID") REFERENCES "Falla_equipo"("ID") ON UPDATE CASCADE,
-                FOREIGN KEY("Equipo") REFERENCES "Equipo"("Nro_de_bien") ON UPDATE CASCADE,
                 FOREIGN KEY("Uso_laboratorio_estudiante") REFERENCES "Uso_laboratorio_estudiante"("ID") ON UPDATE CASCADE
             )
             """
@@ -814,18 +815,18 @@ class DBManager:
         print("Fallas de equipos registradas correctamente.")
         return True
 
-    def registrar_falla_equipo_completa(self, asistencia_id, descripcion_falla, hora_falla):
+    def registrar_falla_equipo_completa(self, asistencia_id, equipo_id, descripcion_falla, fecha_falla, hora_falla):
         """
-        Registra una falla de equipo con descripción y hora en Falla_equipo,
+        Registra una falla de equipo con descripción, fecha y hora en Falla_equipo,
         y la relaciona con la asistencia en Falla_equipo_usr.
         Retorna True si ambas inserciones fueron exitosas, False si hubo error.
         """
         # Insertar en Falla_equipo
         falla_sql = """
-            INSERT INTO Falla_equipo (Descripcion_falla, Hora_de_la_falla)
-            VALUES (?, ?)
+            INSERT INTO Falla_equipo (Equipo, Fecha_falla, Descripcion_falla, Hora_de_la_falla)
+            VALUES (?, ?, ?, ?)
         """
-        result_falla = self.execute_query(falla_sql, (descripcion_falla, hora_falla), commit=True)
+        result_falla = self.execute_query(falla_sql, (equipo_id, fecha_falla, descripcion_falla, hora_falla), commit=True)
         if result_falla is None:
             print("Error al insertar en Falla_equipo.")
             return False

@@ -863,3 +863,70 @@ class DBManager:
         if tipos is None:
             return []
         return [t[0] for t in tipos]
+
+    def consultar_asistencias_por_fecha(self, sede_nombre, laboratorio_nombre, fecha):
+        """
+        Consulta todas las asistencias para una sede, laboratorio y fecha específica.
+        Retorna una lista de dicts, cada uno con hora_inicio, hora_finalizacion y lista de personas.
+        El orden es de menor a mayor según la hora de inicio.
+        """
+        # Obtener IDs de sede y laboratorio
+        sede = self.execute_query("SELECT ID FROM Sede WHERE Nombre = ?", (sede_nombre,), fetch_one=True)
+        if not sede:
+            return []
+        sede_id = sede[0]
+        lab = self.execute_query("SELECT ID FROM Laboratorio WHERE Nombre = ? AND Sede = ?", (laboratorio_nombre, sede_id), fetch_one=True)
+        if not lab:
+            return []
+        lab_id = lab[0]
+
+        # Obtener todos los usos de laboratorio para esa fecha, ordenados por hora_inicio ASC
+        usos = self.execute_query(
+            "SELECT ID, Tipo_de_uso, Hora_inicio, Hora_finalizacion FROM Uso_laboratorio_usr WHERE Laboratorio = ? AND Fecha = ? ORDER BY Hora_inicio ASC",
+            (lab_id, fecha)
+        )
+        if not usos:
+            return []
+
+        bloques = []
+        for uso in usos:
+            uso_id, tipo_uso_id, hora_inicio, hora_finalizacion = uso
+            tipo_uso = self.execute_query("SELECT Descripcion FROM Tipo_de_uso WHERE ID = ?", (tipo_uso_id,), fetch_one=True)
+            tipo_uso = tipo_uso[0] if tipo_uso else ""
+
+            # Obtener todas las asistencias asociadas a este uso
+            asistencias = self.execute_query(
+                """
+                SELECT
+                    p.Nombre,
+                    p.Apellido,
+                    p.Cedula,
+                    p.Nro_telefono,
+                    ul.Nombre_organizacion,
+                    e.Nro_de_bien
+                FROM Asistencia_usr a
+                JOIN Usuario_laboratorio ul ON a.Usuario_laboratorio = ul.Persona
+                JOIN Persona p ON ul.Persona = p.ID
+                JOIN Equipo e ON a.Equipo = e.Nro_de_bien
+                WHERE a.Uso_laboratorio_usr = ?
+                """,
+                (uso_id,)
+            )
+            personas = []
+            for fila in asistencias:
+                personas.append({
+                    "Tipo de uso": tipo_uso,
+                    "Nombre": fila[0],
+                    "Apellido": fila[1],
+                    "Cédula": fila[2],
+                    "Organización": fila[4],
+                    "Teléfono": fila[3],
+                    "Número de bien": fila[5]
+                })
+            bloques.append({
+                "hora_inicio": hora_inicio,
+                "hora_finalizacion": hora_finalizacion,
+                "tipo_uso": tipo_uso,
+                "personas": personas
+            })
+        return bloques

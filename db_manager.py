@@ -676,12 +676,12 @@ class DBManager:
             print("Error al actualizar Equipo.")
             return False
 
-        # Actualizar SOLO el componente seleccionado
-       # sql_componente = "UPDATE Componente SET Nro_de_bien = ?, Descripcion = ? WHERE Nro_de_bien = ?"
-        #result_componente = self.execute_query(sql_componente, (nuevo_nro_bien, descripcion_equipo, nro_bien_actual), commit=True)
-        #if result_componente is None:
-        #    print("Error al actualizar Componente.")
-        #    return False
+        #Actualizar SOLO el componente seleccionado
+        sql_componente = "UPDATE Componente SET Nro_de_bien = ?, Descripcion = ? WHERE Nro_de_bien = ?"
+        result_componente = self.execute_query(sql_componente, (nuevo_nro_bien, descripcion_equipo, nro_bien_actual), commit=True)
+        if result_componente is None:
+            print("Error al actualizar Componente.")
+            return False
 
         print("Equipo y componente actualizados exitosamente (incluyendo número de bien).")
         return True
@@ -993,12 +993,12 @@ class DBManager:
             c.Nro_de_bien,
             s.Nombre as sede,
             l.Nombre as laboratorio,
-            e.Status
+            eq.Status
         FROM Asignacion a
-        JOIN Equipo e ON a.Equipo = e.Nro_de_bien
-        JOIN Laboratorio l ON e.Laboratorio = l.ID
-        JOIN Sede s ON l.Sede = s.ID
         JOIN Componente c ON a.Componente = c.Nro_de_bien
+        JOIN Equipo eq ON c.Nro_de_bien = eq.Nro_de_bien
+        JOIN Laboratorio l ON eq.Laboratorio = l.ID
+        JOIN Sede s ON l.Sede = s.ID
         WHERE a.Equipo = ?
         """
         result = self.execute_query(query, (nro_bien, nro_bien))
@@ -1014,6 +1014,7 @@ class DBManager:
                 "Status": row[4]
             })
         return equipos
+       
 
     def consultar_fallas_por_equipo(self, nro_bien):
         """
@@ -1063,3 +1064,44 @@ class DBManager:
         """
         result = self.execute_query(sql, (administrador_id, laboratorio_id, fecha, cantidad), commit=True)
         return result is not None
+
+    def obtener_estadisticas_actividades(self, sede_nombre, laboratorio_nombre, fecha_inicio, fecha_finalizacion):
+        """
+        Obtiene las estadísticas de actividades (tipos de uso) y la cantidad de personas atendidas
+        en un intervalo de fechas para una sede y laboratorio específicos.
+        Retorna una lista de dicts: {"nombre": actividad, "cantidad": cantidad}
+        """
+        # Obtener IDs de sede y laboratorio
+        sede = self.execute_query("SELECT ID FROM Sede WHERE Nombre = ?", (sede_nombre,), fetch_one=True)
+        if not sede:
+            return [], 0
+        sede_id = sede[0]
+        lab = self.execute_query("SELECT ID FROM Laboratorio WHERE Nombre = ? AND Sede = ?", (laboratorio_nombre, sede_id), fetch_one=True)
+        if not lab:
+            return [], 0
+        lab_id = lab[0]
+
+        # Obtener todos los tipos de uso
+        tipos_uso = self.execute_query("SELECT ID, Descripcion FROM Tipo_de_uso", fetch_one=False)
+        if not tipos_uso:
+            return [], 0
+
+        estadisticas = []
+        total_personas = 0
+
+        for tipo_id, descripcion in tipos_uso:
+            # Contar la cantidad de personas atendidas para este tipo de uso en el intervalo de fechas
+            query = """
+                SELECT COUNT(a.ID)
+                FROM Uso_laboratorio_usr u
+                LEFT JOIN Asistencia_usr a ON a.Uso_laboratorio_usr = u.ID
+                WHERE u.Laboratorio = ?
+                AND u.Tipo_de_uso = ?
+                AND u.Fecha >= ? AND u.Fecha <= ?
+            """
+            result = self.execute_query(query, (lab_id, tipo_id, fecha_inicio, fecha_finalizacion), fetch_one=True)
+            cantidad = result[0] if result else 0
+            estadisticas.append({"nombre": descripcion, "cantidad": cantidad})
+            total_personas += cantidad
+
+        return estadisticas, total_personas

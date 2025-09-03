@@ -8,6 +8,7 @@ from datetime import datetime  # Importar datetime para la fecha y hora actual
 from db_manager import DBManager
 
 #probando, magleo mira lo probe y servia, si quieres pruebalo aun tengo que mejorar un poco el diseño
+#posdata aun no
 class Equipos(ctk.CTkFrame):
     def __init__(self, parent=None):
         super().__init__(parent)

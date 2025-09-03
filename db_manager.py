@@ -676,12 +676,12 @@ class DBManager:
             print("Error al actualizar Equipo.")
             return False
 
-        # Actualizar SOLO el componente seleccionado
-       # sql_componente = "UPDATE Componente SET Nro_de_bien = ?, Descripcion = ? WHERE Nro_de_bien = ?"
-        #result_componente = self.execute_query(sql_componente, (nuevo_nro_bien, descripcion_equipo, nro_bien_actual), commit=True)
-        #if result_componente is None:
-        #    print("Error al actualizar Componente.")
-        #    return False
+        #Actualizar SOLO el componente seleccionado
+        sql_componente = "UPDATE Componente SET Nro_de_bien = ?, Descripcion = ? WHERE Nro_de_bien = ?"
+        result_componente = self.execute_query(sql_componente, (nuevo_nro_bien, descripcion_equipo, nro_bien_actual), commit=True)
+        if result_componente is None:
+            print("Error al actualizar Componente.")
+            return False
 
         print("Equipo y componente actualizados exitosamente (incluyendo número de bien).")
         return True
@@ -993,12 +993,12 @@ class DBManager:
             c.Nro_de_bien,
             s.Nombre as sede,
             l.Nombre as laboratorio,
-            e.Status
+            eq.Status
         FROM Asignacion a
-        JOIN Equipo e ON a.Equipo = e.Nro_de_bien
-        JOIN Laboratorio l ON e.Laboratorio = l.ID
-        JOIN Sede s ON l.Sede = s.ID
         JOIN Componente c ON a.Componente = c.Nro_de_bien
+        JOIN Equipo eq ON c.Nro_de_bien = eq.Nro_de_bien
+        JOIN Laboratorio l ON eq.Laboratorio = l.ID
+        JOIN Sede s ON l.Sede = s.ID
         WHERE a.Equipo = ?
         """
         result = self.execute_query(query, (nro_bien, nro_bien))
@@ -1014,6 +1014,7 @@ class DBManager:
                 "Status": row[4]
             })
         return equipos
+       
 
     def consultar_fallas_por_equipo(self, nro_bien):
         """

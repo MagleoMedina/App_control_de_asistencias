@@ -3,6 +3,7 @@ from db_manager import DBManager
 from tkcalendar import DateEntry
 from tkinter import ttk  # Import ttk for Combobox
 from tkinter import messagebox  # Import messagebox for validation alerts
+from Views.carga_asistencia import TimeInput  # Importar TimeInput
 
 class CargaAsistenciaEstudiantes(ctk.CTkFrame):
     def __init__(self, parent):
@@ -133,18 +134,16 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
             label_descripcion = ctk.CTkLabel(self, text=f"Descripcion {i+1}")
             entry_descripcion = ctk.CTkEntry(self)
             label_hora_falla = ctk.CTkLabel(self, text=f"Hora de la falla {i+1}")
-            combo_hora =  ctk.CTkComboBox(self, values=[f"{h:02}" for h in range(24)], state="readonly", width=60)
-            combo_minutos =  ctk.CTkComboBox(self, values=[f"{m:02}" for m in range(60)], state="readonly", width=60)
+            time_falla = TimeInput(self)  # Usar TimeInput en vez de combo_hora y combo_minutos
 
             label_nro_bien.grid(row=5+i, column=1, padx=10, pady=10)
             entry_nro_bien.grid(row=5+i, column=2, padx=10, pady=10)
             label_descripcion.grid(row=5+i, column=3, padx=10, pady=10)
             entry_descripcion.grid(row=5+i, column=4, padx=10, pady=10)
             label_hora_falla.grid(row=5+i, column=5, padx=10, pady=10)
-            combo_hora.grid(row=5+i, column=6, padx=5, pady=10)
-            combo_minutos.grid(row=5+i, column=7, padx=5, pady=10)
+            time_falla.grid(row=5+i, column=6, columnspan=2, padx=5, pady=10)
 
-            self.equipos_entries.append((label_nro_bien, entry_nro_bien, label_descripcion, entry_descripcion, label_hora_falla, combo_hora, combo_minutos))
+            self.equipos_entries.append((label_nro_bien, entry_nro_bien, label_descripcion, entry_descripcion, label_hora_falla, time_falla))
         self.btn_submit.grid(row=5+cantidad, column=4, padx=10, pady=10)
 
     def clear_equipos_entries(self):
@@ -174,9 +173,57 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
                     if isinstance(widget, ctk.CTkEntry) and not widget.get():
                         messagebox.showerror("Error", "Todos los campos deben estar llenos.")
                         return
-        
-        # If all validations pass, proceed with the submit action
-        messagebox.showinfo("Success", "Formulario enviado correctamente.")
-        # Add your submit logic here
+
+        # Obtener IDs necesarios
+        sede_nombre = self.entry_sede.get()
+        laboratorio_nombre = self.entry_laboratorio.get()
+        fecha = self.entry_fecha.get()
+        cantidad = self.entry_cantidad_usuarios.get()
+
+        # Buscar el ID de la sede
+        sede_id = None
+        for s in self.sedes:
+            if s[1] == sede_nombre:
+                sede_id = s[0]
+                break
+        if sede_id is None:
+            messagebox.showerror("Error", "Sede no encontrada.")
+            return
+
+        # Buscar el ID del laboratorio
+        laboratorio_id = self.db_manager.obtener_laboratorio_id_por_nombre_y_sede(laboratorio_nombre, sede_id)
+        if laboratorio_id is None:
+            messagebox.showerror("Error", "Laboratorio no encontrado.")
+            return
+
+        # Registrar en la base de datos
+        administrador_id = 1  # Por ahora fijo
+        ok = self.db_manager.registrar_asistencia_estudiantes(administrador_id, laboratorio_id, fecha, cantidad)
+        if ok:
+            # Si hay fallas de equipos, registrar cada una
+            if self.radio_var.get() == "Si" and self.equipos_entries:
+                # Obtener el ID recién creado de Uso_laboratorio_estudiante
+                uso_lab_est_id = self.db_manager.execute_query(
+                    "SELECT MAX(ID) FROM Uso_laboratorio_estudiante", fetch_one=True
+                )
+                if uso_lab_est_id:
+                    uso_lab_est_id = uso_lab_est_id[0]
+                    for widgets in self.equipos_entries:
+                        nro_bien = widgets[1].get()
+                        descripcion = widgets[3].get()
+                        hora_falla = widgets[5].get_time()
+                        # Validar campos
+                        if not nro_bien or not descripcion or not hora_falla:
+                            messagebox.showerror("Error", "Todos los campos de falla deben estar llenos.")
+                            return
+                        resultado_falla = self.db_manager.registrar_falla_equipo_estudiante(
+                            uso_lab_est_id, nro_bien, descripcion, fecha, hora_falla
+                        )
+                        if not resultado_falla:
+                            messagebox.showerror("Error", "No se pudo registrar la falla de equipo.")
+                            return
+            messagebox.showinfo("Success", "Asistencia de estudiantes registrada correctamente.")
+        else:
+            messagebox.showerror("Error", "No se pudo registrar la asistencia de estudiantes.")
 
 

@@ -30,13 +30,9 @@ class Equipos(ctk.CTkFrame):
         self.modificar_equipo_button = ctk.CTkButton(self, text="Modificar Equipo", command=self.modificar_equipo)
         self.modificar_equipo_button.grid(row=1, column=2, padx=10, pady=10)
 
-        # Botón "Eliminar Equipo"
-        self.eliminar_equipo_button = ctk.CTkButton(self, text="Eliminar Equipo", command=self.eliminar_equipo)
-        self.eliminar_equipo_button.grid(row=1, column=3, padx=10, pady=10)
-
         # Botón "Relacionar Equipos"
         self.relacionar_equipos_button = ctk.CTkButton(self, text="Relacionar Equipos", command=self.relacionar_equipos)
-        self.relacionar_equipos_button.grid(row=1, column=4, padx=10, pady=10)
+        self.relacionar_equipos_button.grid(row=1, column=3, padx=10, pady=10)
 
     def clear_frame(self):
         # Remove all widgets except the buttons
@@ -46,7 +42,6 @@ class Equipos(ctk.CTkFrame):
                 self.consultar_falla_button,
                 self.agregar_equipo_button,
                 self.modificar_equipo_button,
-                self.eliminar_equipo_button,
                 self.relacionar_equipos_button,
             ]:
                 widget.destroy()
@@ -65,11 +60,6 @@ class Equipos(ctk.CTkFrame):
         self.clear_frame()
         modificar_equipo_frame = ModificarEquipo(self, self.db_manager)
         modificar_equipo_frame.grid(row=2, column=0, columnspan=4, pady=10)
-
-    def eliminar_equipo(self):
-        self.clear_frame()
-        eliminar_equipo_frame = EliminarEquipo(self)
-        eliminar_equipo_frame.grid(row=2, column=0, columnspan=4, pady=10)
 
     def relacionar_equipos(self):
         self.clear_frame()
@@ -484,43 +474,6 @@ class ModificarEquipo(ctk.CTkFrame):
         self.nuevo_nro_bien_label = None
         self.nuevo_nro_bien_entry = None
         self.actualizar_button = None
-
-class EliminarEquipo(ctk.CTkFrame):
-    
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.parent = parent
-
-        # Label "Ingrese el número de bien del equipo"
-        self.nro_bien_label = ctk.CTkLabel(self, text="Ingrese el número de bien del equipo")
-        self.nro_bien_label.grid(row=0, column=0, padx=10, pady=5)
-
-        # Entry for "Número de bien"
-        self.nro_bien_entry = ctk.CTkEntry(self)
-        self.nro_bien_entry.grid(row=0, column=1, padx=10, pady=5)
-
-        # Add validation for numeric input
-        self.nro_bien_entry.configure(validate="key", validatecommand=(self.register(self.validate_numeric), "%S"))
-
-        # Button "Eliminar"
-        self.eliminar_button = ctk.CTkButton(self, text="Eliminar", command=self.eliminar_equipo)
-        self.eliminar_button.grid(row=0, column=2, padx=10, pady=5)
-
-    def validate_numeric(self, char):
-        return char.isdigit()
-
-    def eliminar_equipo(self):
-        nro_bien = self.nro_bien_entry.get()
-        if not nro_bien.strip():
-            messagebox.showerror("Error", "El campo 'Número de bien del equipo' no puede estar vacío.")
-        else:
-            # Confirmation dialog
-            confirm = messagebox.askyesno("Confirmación", f"¿Está seguro que desea eliminar el equipo {nro_bien}?")
-            if confirm:
-                # Success message
-                messagebox.showinfo("Éxito", f"El equipo con número de bien {nro_bien} se ha eliminado exitosamente.")
-            else:
-                messagebox.showinfo("Cancelado", "Operación cancelada.") 
 
 class RelacionarEquipos(ctk.CTkFrame):
     def __init__(self, parent=None):

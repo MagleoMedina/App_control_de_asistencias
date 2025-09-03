@@ -98,18 +98,11 @@ class ModuloEstadistico(ctk.CTkFrame):
         laboratorio = self.laboratorio_entry.get()  
         fecha_inicio = self.fecha_inicio_entry.get()
         fecha_finalizacion = self.fecha_finalizacion_entry.get()
-        # Simulación de actividades
-        actividades = [
-            {"nombre": "Servicios de Internet", "cantidad": 5},
-            {"nombre": "Atencion al usuario", "cantidad": 3},
-            {"nombre": "Apoyo al estudiante en asesoría, con sus equipos, profesores, preparadores", "cantidad": 10},
-            {"nombre": "Talleres de capacitación al personal administrativo y docente", "cantidad": 2},
-            {"nombre": "Apoyo en actividades a otras instituciones", "cantidad": 3},
-            {"nombre": "Atencion al usuario", "cantidad": 3},
-            {"nombre": "Apoyo a instituciones externas", "cantidad": 5},
-            {"nombre": "Apoyo a personas de la comunidad", "cantidad": 3},
-            {"nombre": "Otro", "cantidad": 3},
-        ]
+
+        # Obtener actividades reales desde la base de datos
+        actividades, total_cantidad = self.db_manager.obtener_estadisticas_actividades(
+            sede, laboratorio, fecha_inicio, fecha_finalizacion
+        )
 
         # Convertir la lista en filas HTML
         actividades_html = "".join(
@@ -118,7 +111,7 @@ class ModuloEstadistico(ctk.CTkFrame):
         )
         
         # Calcular el total
-        total_cantidad = sum(actividad['cantidad'] for actividad in actividades)
+        #total_cantidad = sum(actividad['cantidad'] for actividad in actividades)
 
         # Agregar la fila de total
         actividades_html += f"<tr><td><strong>Total</strong></td><td><strong>{total_cantidad}</strong></td></tr>"
@@ -153,4 +146,4 @@ class ModuloEstadistico(ctk.CTkFrame):
         # colocar un elif no existe reportes para esa fecha
         else:
             # Lógica para generar el reporte
-            self.crear_pdf()
+            self.crear_pdf() 

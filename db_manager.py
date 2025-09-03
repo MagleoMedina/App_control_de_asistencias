@@ -669,19 +669,19 @@ class DBManager:
                 print("Ya existe un equipo con ese nuevo número de bien.")
                 return False
 
-        # Actualizar Equipo
+        # Actualizar SOLO el equipo seleccionado
         sql_equipo = "UPDATE Equipo SET Nro_de_bien = ?, Laboratorio = ?, Status = ? WHERE Nro_de_bien = ?"
         result_equipo = self.execute_query(sql_equipo, (nuevo_nro_bien, laboratorio_id, status, nro_bien_actual), commit=True)
         if result_equipo is None:
             print("Error al actualizar Equipo.")
             return False
 
-        # Actualizar Componente
-        sql_componente = "UPDATE Componente SET Nro_de_bien = ?, Descripcion = ? WHERE Nro_de_bien = ?"
-        result_componente = self.execute_query(sql_componente, (nuevo_nro_bien, descripcion_equipo, nro_bien_actual), commit=True)
-        if result_componente is None:
-            print("Error al actualizar Componente.")
-            return False
+        # Actualizar SOLO el componente seleccionado
+       # sql_componente = "UPDATE Componente SET Nro_de_bien = ?, Descripcion = ? WHERE Nro_de_bien = ?"
+        #result_componente = self.execute_query(sql_componente, (nuevo_nro_bien, descripcion_equipo, nro_bien_actual), commit=True)
+        #if result_componente is None:
+        #    print("Error al actualizar Componente.")
+        #    return False
 
         print("Equipo y componente actualizados exitosamente (incluyendo número de bien).")
         return True
@@ -853,6 +853,43 @@ class DBManager:
         print("Falla registrada y relacionada correctamente.")
         return True
 
+    def registrar_falla_equipo_estudiante(self, uso_laboratorio_estudiante_id, equipo_id, descripcion_falla, fecha_falla, hora_falla):
+        """
+        Registra una falla de equipo en Falla_equipo y la relaciona con Uso_laboratorio_estudiante en Falla_equipo_estudiante.
+        Retorna True si ambas inserciones fueron exitosas, False si hubo error.
+        """
+        # Insertar en Falla_equipo
+        falla_sql = """
+            INSERT INTO Falla_equipo (Equipo, Fecha_falla, Descripcion_falla, Hora_de_la_falla)
+            VALUES (?, ?, ?, ?)
+        """
+        result_falla = self.execute_query(falla_sql, (equipo_id, fecha_falla, descripcion_falla, hora_falla), commit=True)
+        if result_falla is None:
+            print("Error al insertar en Falla_equipo.")
+            return False
+
+        # Obtener el ID recién creado de Falla_equipo
+        falla_id = self.execute_query(
+            "SELECT MAX(ID) FROM Falla_equipo", fetch_one=True
+        )
+        if not falla_id:
+            print("No se pudo obtener el ID de la falla.")
+            return False
+        falla_id = falla_id[0]
+
+        # Relacionar con Falla_equipo_estudiante
+        relacion_sql = """
+            INSERT INTO Falla_equipo_estudiante (ID, Uso_laboratorio_estudiante)
+            VALUES (?, ?)
+        """
+        result_relacion = self.execute_query(relacion_sql, (falla_id, uso_laboratorio_estudiante_id), commit=True)
+        if result_relacion is None:
+            print("Error al relacionar Falla_equipo con Falla_equipo_estudiante.")
+            return False
+
+        print("Falla de equipo de estudiante registrada y relacionada correctamente.")
+        return True
+
     def obtener_tipos_uso(self):
         """
         Obtiene la lista de tipos de uso desde la tabla Tipo_de_uso.
@@ -1000,3 +1037,29 @@ class DBManager:
                 "Equipo": nro_bien
             })
         return fallas
+
+    def obtener_laboratorio_id_por_nombre_y_sede(self, laboratorio_nombre, sede_id):
+        """
+        Obtiene el ID del laboratorio dado su nombre y el ID de la sede.
+        Retorna el ID o None si no existe.
+        """
+        result = self.execute_query(
+            "SELECT ID FROM Laboratorio WHERE Nombre = ? AND Sede = ?",
+            (laboratorio_nombre, sede_id),
+            fetch_one=True
+        )
+        if result:
+            return result[0]
+        return None
+
+    def registrar_asistencia_estudiantes(self, administrador_id, laboratorio_id, fecha, cantidad):
+        """
+        Registra la asistencia de estudiantes en la tabla Uso_laboratorio_estudiante.
+        Retorna True si fue exitoso, False si hubo error.
+        """
+        sql = """
+            INSERT INTO Uso_laboratorio_estudiante (Administrador, Laboratorio, Fecha, Cantidad)
+            VALUES (?, ?, ?, ?)
+        """
+        result = self.execute_query(sql, (administrador_id, laboratorio_id, fecha, cantidad), commit=True)
+        return result is not None

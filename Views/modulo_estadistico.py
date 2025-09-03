@@ -104,20 +104,50 @@ class ModuloEstadistico(ctk.CTkFrame):
             sede, laboratorio, fecha_inicio, fecha_finalizacion
         )
 
-        # Convertir la lista en filas HTML
+         # Obtener cantidad de estudiantes atendidos en el rango de fechas
+        # Sede y laboratorio ya validados arriba
+        sede_id = None
+        lab_id = None
+        for s in self.sedes:
+            if s[1] == sede:
+                sede_id = s[0]
+                break
+        if sede_id is not None:
+            for l in self.laboratorios:
+                if l[1] == laboratorio:
+                    lab_id = l[0]
+                    break
+
+        estudiantes_atendidos = 0
+        if sede_id is not None and lab_id is not None:
+            query = """
+                SELECT SUM(Cantidad)
+                FROM Uso_laboratorio_estudiante
+                WHERE Laboratorio = ?
+                AND Fecha >= ? AND Fecha <= ?
+            """
+            result = self.db_manager.execute_query(query, (lab_id, fecha_inicio, fecha_finalizacion), fetch_one=True)
+            estudiantes_atendidos = result[0] if result and result[0] is not None else 0
+
+        # Insertar "Estudiantes atendidos" antes de "Otro"
+        actividades_mod = []
+        otro_idx = None
+        for idx, actividad in enumerate(actividades):
+            if actividad["nombre"].strip().lower() == "otro":
+                otro_idx = idx
+                break
+        if otro_idx is not None:
+            actividades_mod = actividades[:otro_idx] + [{"nombre": "Estudiantes atendidos", "cantidad": estudiantes_atendidos}] + actividades[otro_idx:]
+        else:
+            actividades_mod = actividades + [{"nombre": "Estudiantes atendidos", "cantidad": estudiantes_atendidos}]
+
+        # Convertir la lista en filas HTML (solo una vez)
         actividades_html = "".join(
             f"<tr><td>{actividad['nombre']}</td><td>{actividad['cantidad']}</td></tr>"
-            for actividad in actividades
+            for actividad in actividades_mod
         )
-        
-        # Calcular el total
-        #total_cantidad = sum(actividad['cantidad'] for actividad in actividades)
+        actividades_html += f"<tr><td><strong>Total</strong></td><td><strong>{total_cantidad + estudiantes_atendidos}</strong></td></tr>"
 
-        # Agregar la fila de total
-        actividades_html += f"<tr><td><strong>Total</strong></td><td><strong>{total_cantidad}</strong></td></tr>"
-
-
-        # Reemplazar en el html
         html_content = html_content.replace("{{sede}}", sede)
         html_content = html_content.replace("{{laboratorio}}", laboratorio)
         html_content = html_content.replace("{{fecha_inicio}}", fecha_inicio)
@@ -146,4 +176,4 @@ class ModuloEstadistico(ctk.CTkFrame):
         # colocar un elif no existe reportes para esa fecha
         else:
             # Lógica para generar el reporte
-            self.crear_pdf() 
+            self.crear_pdf()

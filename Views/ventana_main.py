@@ -58,14 +58,19 @@ class VentanaMain:
         self.header_frame.grid_columnconfigure(4, weight=0)  # Logo CL 
 
 
-        # Cargar la imagen LOGO DE LA UNEG 
-        imagen_logo = Image.open("./Views/Imagen/logoUNEG.png") 
-        tamaño_imagen = (42, 42)  
+        # Cargar la imagen LOGO DE LA UNEG usando una ruta compatible con PyInstaller
+        import os, sys
+        if hasattr(sys, '_MEIPASS'):
+            img_path = os.path.join(sys._MEIPASS, 'Views', 'Imagen', 'logoUNEG.png')
+        else:
+            img_path = os.path.join('Views', 'Imagen', 'logoUNEG.png')
+        imagen_logo = Image.open(img_path)
+        tamaño_imagen = (42, 42)
         imagen_redimensionada = imagen_logo.resize(tamaño_imagen)
 
         self.logo_ctk = ctk.CTkImage(
             light_image=imagen_redimensionada,
-            dark_image=imagen_redimensionada,  
+            dark_image=imagen_redimensionada,
             size=tamaño_imagen
         )
 
@@ -93,8 +98,13 @@ class VentanaMain:
         self.nombre_sistema.grid(row=0, column=2)  
 
 
-        imagen_logo2 = Image.open("./Views/Imagen/CL.png") 
-        tamaño_imagen2 = (43, 43)  
+        # Cargar la imagen LOGO CL usando una ruta compatible con PyInstaller
+        if hasattr(sys, '_MEIPASS'):
+            img_path2 = os.path.join(sys._MEIPASS, 'Views', 'Imagen', 'CL.png')
+        else:
+            img_path2 = os.path.join('Views', 'Imagen', 'CL.png')
+        imagen_logo2 = Image.open(img_path2)
+        tamaño_imagen2 = (43, 43)
         imagen_redimensionada2 = imagen_logo2.resize(tamaño_imagen2)
 
         self.logo2_ctk = ctk.CTkImage(

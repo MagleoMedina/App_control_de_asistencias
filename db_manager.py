@@ -32,6 +32,12 @@ class DBManager:
         self._connection = None
         self._executor = ThreadPoolExecutor(max_workers=4)
         print("DBManager inicializado. Credenciales cargadas.")
+        
+        self.default_parent = None 
+    
+    def set_parent(self, parent):
+        """Define el parent por defecto para mostrar la pantalla de carga."""
+        self.default_parent = parent
 
     def get_db_connection(self):
         """
@@ -59,15 +65,41 @@ class DBManager:
             self._connection = None
             print("Conexión a la base de datos cerrada.")
 
-    def execute_query(self, query, params=None, fetch_one=False, commit=False):
+    def execute_query(self, query, params=None, fetch_one=False, commit=False, parent=None):
         """
         Ejecuta una consulta SQL en la base de datos en un hilo aparte.
+        mostrando una pantalla de carga si se pasa un parent.
         :param query: La cadena de consulta SQL a ejecutar.
         :param params: Una tupla o lista de parámetros para la consulta (opcional).
         :param fetch_one: Si es True, retorna solo la primera fila del resultado.
         :param commit: Si es True, realiza un commit y sincroniza los cambios.
         :return: El resultado de la consulta (fila/s o True/False para commit), o None en caso de error.
         """
+        
+        if parent is None:
+            parent = self.default_parent  # usa el parent global por defecto
+        
+        loading = None
+        if parent is not None:
+            import customtkinter as ctk
+            loading = ctk.CTkToplevel(parent)
+            loading.title("Cargando...")
+            # Tamaño de la ventana
+            ancho, alto = 250, 100
+            # Dimensiones de la pantalla
+            screen_width = parent.winfo_screenwidth()
+            screen_height = parent.winfo_screenheight()
+            # Coordenadas para centrar
+            x = (screen_width // 2) - (ancho // 2)
+            y = (screen_height // 2) - (alto // 2)
+
+            loading.geometry(f"{ancho}x{alto}+{x}+{y}")
+            loading.transient(parent)   # Mantener sobre la ventana padre
+            loading.grab_set()          # Bloquea interacción con la principal
+            label = ctk.CTkLabel(loading, text="Procesando, por favor espere...")
+            label.pack(expand=True, padx=20, pady=20)
+            loading.update()
+        
         def _run_query():
             conn = self.get_db_connection()
             if conn is None:
@@ -100,6 +132,10 @@ class DBManager:
                 pass
 
         future = self._executor.submit(_run_query)
+        
+        if loading:
+            loading.destroy()
+        
         return future.result()  # Espera el resultado pero no bloquea la interfaz principal
 
     def init_database(self):
@@ -1105,3 +1141,27 @@ class DBManager:
             total_personas += cantidad
 
         return estadisticas, total_personas
+    
+    def autenticar_usuario(self, username, password):
+        """
+        Verifica si existe un usuario con username y password.
+        Retorna un diccionario con los datos si existe, o None si no.
+        """
+        query = """
+        SELECT u.Username, u.Password, p.Nombre, p.Apellido, t.Descripcion as Tipo_usuario
+        FROM Usuario u
+        JOIN Administrador a ON a.Usuario = u.Numero_de_ficha
+        JOIN Persona p ON a.Persona = p.ID
+        JOIN Tipo t ON a.Tipo = t.ID
+        WHERE u.Username = ? AND u.Password = ?
+        """
+        result = self.execute_query(query, (username, password), fetch_one=True)
+        if result:
+            return {
+                "Username": result[0],
+                "Password": result[1],
+                "Nombre": result[2],
+                "Apellido": result[3],
+                "Tipo_usuario": result[4],
+            }
+        return None

@@ -13,6 +13,7 @@ class ConsultarAsistencia(ctk.CTkFrame):
 
          # Instanciar DBManager
         self.db_manager = DBManager()
+        self.db_manager.set_parent(self.parent)
 
         # Obtener sedes de la base de datos
         self.sedes = self.db_manager.obtener_sedes()
@@ -143,5 +144,3 @@ class ConsultarAsistencia(ctk.CTkFrame):
         else:
             # Lógica para generar el reporte
             self.crear_pdf()
-
-

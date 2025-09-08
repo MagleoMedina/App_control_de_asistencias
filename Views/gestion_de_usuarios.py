@@ -56,6 +56,7 @@ class VentanaRegistro(ctk.CTkFrame):
         super().__init__(parent)
         self.parent = parent
         self.db = DBManager()
+        self.db.set_parent(self.parent) 
 
         # Nombre de usuario
         self.label_usuario = ctk.CTkLabel(self, text="Nombre de Usuario:")
@@ -171,6 +172,7 @@ class ModificarDatos(ctk.CTkFrame):
         super().__init__(parent)
         self.parent = parent
         self.db = DBManager()  # Agregado para acceso a la base de datos
+        self.db.set_parent(self.parent)
 
         # Label for numero de cedula
         self.label_cedula = ctk.CTkLabel(self, text="Ingrese el número de cédula del usuario:")
@@ -423,6 +425,7 @@ class RecuperarDatosApp(ctk.CTkFrame):
         super().__init__(parent)
         self.parent = parent
         self.db = DBManager()  # Agrega la instancia de DBManager
+        self.db.set_parent(self.parent)
 
         # Label for numero de cedula
         self.label_cedula = ctk.CTkLabel(self, text="Ingrese el número de cédula del usuario:")

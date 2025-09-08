@@ -12,6 +12,7 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
 
         # Instanciar DBManager
         self.db_manager = DBManager()
+        self.db_manager.set_parent(self.parent)
 
         # Obtener sedes de la base de datos
         self.sedes = self.db_manager.obtener_sedes()
@@ -225,5 +226,3 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
             messagebox.showinfo("Success", "Asistencia de estudiantes registrada correctamente.")
         else:
             messagebox.showerror("Error", "No se pudo registrar la asistencia de estudiantes.")
-
-

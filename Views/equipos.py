@@ -13,6 +13,7 @@ class Equipos(ctk.CTkFrame):
         super().__init__(parent)
         self.parent = parent
         self.db_manager = DBManager()  # Instancia de DBManager
+        self.db_manager.set_parent(self.parent)
         
         # Título centrado
         self.title_label = ctk.CTkLabel(self, text="Gestion de Equipos", font=("Arial", 20))
@@ -71,6 +72,7 @@ class ConsultarFallaEquipo(ctk.CTkFrame):
         super().__init__(parent)
         self.parent = parent
         self.db_manager = DBManager()  # Instanciar DBManager
+        self.db_manager.set_parent(self.parent)
 
         # Título centrado
         self.title_label = ctk.CTkLabel(self, text="Consultar equipo", font=("Arial", 20))
@@ -480,6 +482,7 @@ class RelacionarEquipos(ctk.CTkFrame):
         super().__init__(parent)
         self.parent = parent
         self.db_manager = DBManager()  # Instanciar DBManager
+        self.db_manager.set_parent(self.parent)
 
         # Title
         self.title_label = ctk.CTkLabel(self, text="Ingresa los números de bien a relacionar", font=("Arial", 20))
@@ -573,4 +576,3 @@ class RelacionarEquipos(ctk.CTkFrame):
         self.teclado_entry.delete(0, tk.END)
         self.monitor_entry.delete(0, tk.END)
         self.raton_entry.delete(0, tk.END)
-

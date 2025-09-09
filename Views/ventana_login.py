@@ -32,19 +32,19 @@ class VentanaLogin:
 
         # --- Imagen circular encima del fondo ---
         # Cargar la imagen circular usando ruta compatible con PyInstaller
-        #   if hasattr(sys, '_MEIPASS'):
-        #      img_path_circular = os.path.join(sys._MEIPASS, 'Views', 'Imagen', 'Circular-CL.png')
-      #     else:
-    #       img_path_circular = os.path.join('Views', 'Imagen', 'Circular-CL.png')
-      #     imagen_circular = Image.open(img_path_circular)
-         #  size = (150, 150)
+        if hasattr(sys, '_MEIPASS'):
+            img_path_circular = os.path.join(sys._MEIPASS, 'Views', 'Imagen', 'Circular-CL.png')
+        else:
+            img_path_circular = os.path.join('Views', 'Imagen', 'Circular-CL.png')
+            imagen_circular = Image.open(img_path_circular)
+            size = (150, 150)
 
-        # Convertir a CTkImage para compatibilidad con HighDPI
-      #     ctk_circ_image = ctk.CTkImage(light_image=imagen_circular, dark_image=imagen_circular, size=size)
+        #Convertir a CTkImage para compatibilidad con HighDPI
+        ctk_circ_image = ctk.CTkImage(light_image=imagen_circular, dark_image=imagen_circular, size=size)
 
-        # Crear un label para la imagen circular y colocarla encima del fondo
-     #      self.label_circular = ctk.CTkLabel(self.ventana, image=ctk_circ_image, text="")
-  #       self.label_circular.place(relx=0.5, rely=0.18, anchor="center")
+        #Crear un label para la imagen circular y colocarla encima del fondo
+        self.label_circular = ctk.CTkLabel(self.ventana, image=ctk_circ_image, text="")
+        self.label_circular.place(relx=0.5, rely=0.18, anchor="center")
   
 
         # Configuración del contenedor principal

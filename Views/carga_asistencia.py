@@ -23,6 +23,7 @@ class CargaAsistencia(ctk.CTkFrame):
         super().__init__(parent)
         self.parent = parent
         self.user_data = user_data
+        self.db_manager = DBManager()
         self.db_manager.set_parent(self.parent)
 
 

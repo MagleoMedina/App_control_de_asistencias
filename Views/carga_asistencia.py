@@ -14,24 +14,25 @@ class TimeInput(ctk.CTkFrame):
         self.minute_var = ctk.StringVar(value="00")
         self.minute_entry = ctk.CTkEntry(self, width=40, textvariable=self.minute_var, justify="center")
         self.minute_entry.pack(side="left", padx=2)
-
+        
     def get_time(self):
         return f"{self.hour_var.get()}:{self.minute_var.get()}"
 
 class CargaAsistencia(ctk.CTkFrame):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, user_data=None):
         super().__init__(parent)
         self.parent = parent
-
-        # Instanciar DBManager
+        self.user_data = user_data
         self.db_manager = DBManager()
+        self.db_manager.set_parent(self.parent)
+
 
         # Obtener sedes de la base de datos
         self.sedes = self.db_manager.obtener_sedes()
         sede_names = [s[1] for s in self.sedes] if self.sedes else []
 
         # Color para el canvas y el scrollBar_frame
-        color= "#333333"
+        color= "white"
         
         # Crear un Canvas para permitir el desplazamiento
         self.canvas = Canvas(self, highlightthickness=0, bg= color) #Poner color del fondo xd bg="color"
@@ -64,13 +65,18 @@ class CargaAsistencia(ctk.CTkFrame):
         self.grid_columnconfigure(0, weight=1)
                  
         # Add title
-        self.label_titulo = ctk.CTkLabel(self.scrollable_frame, text="Carga de asistencia", font=("Arial", 24))
+        self.label_titulo = ctk.CTkLabel(self.scrollable_frame, text="Carga de asistencia", font=("Century Gothic", 21, "bold"),text_color="navy")
         self.label_titulo.grid(row=0, column=0, columnspan=6, pady=20)
         
         # Dropdown list and Label for "Sede"
-        self.entry_sede = ctk.CTkComboBox(self.scrollable_frame, values= sede_names,command=self.on_sede_selected)
+        self.entry_sede = ctk.CTkComboBox(self.scrollable_frame, values= sede_names,command=self.on_sede_selected,
+        font=("Century Gothic", 12),
+        border_color="dodger blue",
+        button_color="dodger blue",
+        fg_color="white",
+        button_hover_color="deep sky blue")
         self.entry_sede.grid(row=1, column=1, padx=10, pady=10)
-        self.label_sede = ctk.CTkLabel(self.scrollable_frame, text="Sede")
+        self.label_sede = ctk.CTkLabel(self.scrollable_frame, text="Sede", font=("Century Gothic", 14,"bold"))
         self.label_sede.grid(row=1, column=0, padx=10, pady=10)
 
         # Inicializar laboratorios según la sede seleccionada
@@ -78,9 +84,14 @@ class CargaAsistencia(ctk.CTkFrame):
         self.lab_names = []
 
         # Crear el ComboBox de laboratorio con valores vacíos
-        self.label_laboratorio = ctk.CTkLabel(self.scrollable_frame, text="Laboratorio")
+        self.label_laboratorio = ctk.CTkLabel(self.scrollable_frame, text="Laboratorio", font=("Century Gothic", 14,"bold"))
         self.label_laboratorio.grid(row=1, column=2, padx=10, pady=10)
-        self.entry_laboratorio = ctk.CTkComboBox(self.scrollable_frame, values=[], state="readonly")
+        self.entry_laboratorio = ctk.CTkComboBox(self.scrollable_frame, values=[], state="readonly",
+        font=("Century Gothic", 12),
+        border_color="dodger blue",
+        button_color="dodger blue",
+        fg_color="white",
+        button_hover_color="deep sky blue")
         self.entry_laboratorio.grid(row=1, column=3, padx=10, pady=10)
 
         # Si hay sedes, selecciona la primera y actualiza laboratorios
@@ -95,71 +106,102 @@ class CargaAsistencia(ctk.CTkFrame):
             self.on_sede_selected()
 
         # DateEntry y Label para "Fecha"
-        self.entry_fecha = DateEntry(self.scrollable_frame,date_pattern="dd/mm/yyyy",font=("Arial", 11, "bold"), foreground='#1abc9c', background='#34495e', borderwidth=2, relief='sunken', width=20)
+        self.entry_fecha = DateEntry(self.scrollable_frame,date_pattern="dd/mm/yyyy",font=("Century Gothic", 12, "bold"),background='deep sky blue',foreground='white',borderwidth=2,relief='sunken', width=20)
         #self.entry_fecha.configure(font=("Arial", 11, "bold"), foreground='#1abc9c', background='#34495e', borderwidth=2, relief='sunken', width=20)
         self.entry_fecha.grid(row=1, column=5, padx=10, pady=10)
         
-        self.label_fecha = ctk.CTkLabel(self.scrollable_frame, text="Fecha")
+        self.label_fecha = ctk.CTkLabel(self.scrollable_frame, text="Fecha", font=("Century Gothic", 14, "bold"))
         self.label_fecha.grid(row=1, column=4, padx=10, pady=10)
         
         # Dropdown lists for "Hora de inicio"
-        self.label_hora_inicio = ctk.CTkLabel(self.scrollable_frame, text="Hora de inicio")
+        self.label_hora_inicio = ctk.CTkLabel(self.scrollable_frame, text="Hora de inicio", font=("Century Gothic", 14,"bold"))
         self.label_hora_inicio.grid(row=3, column=0, padx=10, pady=10)
         self.time_inicio = TimeInput(self.scrollable_frame)
         self.time_inicio.grid(row=3, column=1, columnspan=2, padx=5, pady=10)
 
         # Dropdown lists for "Hora de finalización"
-        self.label_hora_finalizacion = ctk.CTkLabel(self.scrollable_frame, text="Hora de finalización")
+        self.label_hora_finalizacion = ctk.CTkLabel(self.scrollable_frame, text="Hora de finalización",font=("Century Gothic", 14,"bold"))
         self.label_hora_finalizacion.grid(row=3, column=3, padx=10, pady=10)
         self.time_finalizacion = TimeInput(self.scrollable_frame)
         self.time_finalizacion.grid(row=3, column=4, columnspan=2, padx=5, pady=10)
 
         # Add title
-        self.label_titulo = ctk.CTkLabel(self.scrollable_frame, text="Datos de persona", font=("Arial", 24))
+        self.label_titulo = ctk.CTkLabel(self.scrollable_frame, text="Datos de persona",font=("Century Gothic", 21, "bold"),text_color="navy")
         self.label_titulo.grid(row=5, column=0, columnspan=6, pady=20)
         
         # Add labels and entries for personal data
-        self.label_tipo_usuario = ctk.CTkLabel(self.scrollable_frame, text="Tipo de uso")
+        self.label_tipo_usuario = ctk.CTkLabel(self.scrollable_frame, text="Tipo de uso", font=("Century Gothic", 14,"bold"))
         self.label_tipo_usuario.grid(row=6, column=0, padx=10, pady=10)
         
         # Recuperar tipos de uso de la BD
         tipos_uso = self.db_manager.obtener_tipos_uso()
-        self.entry_tipo_uso = ctk.CTkComboBox(self.scrollable_frame, values=tipos_uso)
+        self.entry_tipo_uso = ctk.CTkComboBox(self.scrollable_frame, values=tipos_uso,
+        font=("Century Gothic", 12),
+        border_color="dodger blue",
+        button_color="dodger blue",
+        fg_color="white",
+        button_hover_color="deep sky blue")
         self.entry_tipo_uso.grid(row=6, column=1, padx=10, pady=10)
         
-        self.label_nombre = ctk.CTkLabel(self.scrollable_frame, text="Nombre")
+        self.label_nombre = ctk.CTkLabel(self.scrollable_frame, text="Nombre", font=("Century Gothic", 14, "bold"))
         self.label_nombre.grid(row=6, column=2, padx=10, pady=10)
-        self.entry_nombre = ctk.CTkEntry(self.scrollable_frame)
+        self.entry_nombre = ctk.CTkEntry(self.scrollable_frame,placeholder_text="Nombre")
         self.entry_nombre.grid(row=6, column=3, padx=10, pady=10)
+        # Agregar eventos para hover en nombre
+        self.entry_nombre.bind("<Enter>", lambda event: self.on_hover(event, self.entry_nombre))
+        self.entry_nombre.bind("<Leave>", lambda event: self.off_hover(event, self.entry_nombre))
         
-        self.label_apellido = ctk.CTkLabel(self.scrollable_frame, text="Apellido")
+        self.label_apellido = ctk.CTkLabel(self.scrollable_frame, text="Apellido", font=("Century Gothic", 14,"bold"))
         self.label_apellido.grid(row=6, column=4, padx=10, pady=10)
-        self.entry_apellido = ctk.CTkEntry(self.scrollable_frame)
+        self.entry_apellido = ctk.CTkEntry(self.scrollable_frame,placeholder_text="Apellido")
         self.entry_apellido.grid(row=6, column=5, padx=10, pady=10)
-        
-        self.label_cedula = ctk.CTkLabel(self.scrollable_frame, text="Cedula")
+         # Agregar eventos para hover en apellido
+        self.entry_apellido.bind("<Enter>", lambda event: self.on_hover(event, self.entry_apellido))
+        self.entry_apellido.bind("<Leave>", lambda event: self.off_hover(event, self.entry_apellido))
+
+        self.label_cedula = ctk.CTkLabel(self.scrollable_frame, text="Cédula", font=("Century Gothic", 14, "bold"))
         self.label_cedula.grid(row=9, column=0, padx=10, pady=10)
         vcmd = (self.register(self._validate_numeric), '%P')
-        self.entry_cedula = ctk.CTkEntry(self.scrollable_frame, validate="key", validatecommand=vcmd)
+        self.entry_cedula = ctk.CTkEntry(self.scrollable_frame, validate="key", validatecommand=vcmd,placeholder_text="12345678")
         self.entry_cedula.grid(row=9, column=1, padx=10, pady=10)
+        # Agregar eventos para hover en cedula
+        self.entry_cedula.bind("<Enter>", lambda event: self.on_hover(event, self.entry_cedula))
+        self.entry_cedula.bind("<Leave>", lambda event: self.off_hover(event, self.entry_cedula))
 
         # Entry y Label para "Organización"
-        self.label_organizacion = ctk.CTkLabel(self.scrollable_frame, text="Organización")
+        self.label_organizacion = ctk.CTkLabel(self.scrollable_frame, text="Organización", font=("Century Gothic", 14, "bold"))
         self.label_organizacion.grid(row=9, column=2, padx=10, pady=10)
-        self.entry_organizacion = ctk.CTkEntry(self.scrollable_frame)
+        self.entry_organizacion = ctk.CTkEntry(self.scrollable_frame,placeholder_text="Organización")
         self.entry_organizacion.grid(row=9, column=3, padx=10, pady=10)
-        
-        self.label_telefono = ctk.CTkLabel(self.scrollable_frame, text="Telefono")
-        self.label_telefono.grid(row=9, column=4, padx=10, pady=10)
-        self.entry_telefono = ctk.CTkEntry(self.scrollable_frame, validate="key", validatecommand=vcmd)
-        self.entry_telefono.grid(row=9, column=5, padx=10, pady=10)
+        # Agregar eventos para hover en organizacion
+        self.entry_organizacion.bind("<Enter>", lambda event: self.on_hover(event, self.entry_organizacion))
+        self.entry_organizacion.bind("<Leave>", lambda event: self.off_hover(event, self.entry_organizacion))
 
-        self.label_numero_bien = ctk.CTkLabel(self.scrollable_frame, text="Numero de bien")
+        self.label_telefono = ctk.CTkLabel(self.scrollable_frame, text="Teléfono", font=("Century Gothic", 14, "bold"))
+        self.label_telefono.grid(row=9, column=4, padx=10, pady=10)
+        self.entry_telefono = ctk.CTkEntry(self.scrollable_frame,placeholder_text="teléfono", validate="key", validatecommand=vcmd)
+        self.entry_telefono.grid(row=9, column=5, padx=10, pady=10)
+        # Agregar eventos para hover en telefono
+        self.entry_telefono.bind("<Enter>", lambda event: self.on_hover(event, self.entry_telefono))
+        self.entry_telefono.bind("<Leave>", lambda event: self.off_hover(event, self.entry_telefono))
+
+        self.label_numero_bien = ctk.CTkLabel(self.scrollable_frame, text="Número de bien", font=("Century Gothic", 14, "bold"))
         self.label_numero_bien.grid(row=10, column=2, padx=10, pady=10)
-        self.entry_numero_bien = ctk.CTkEntry(self.scrollable_frame, validate="key", validatecommand=vcmd)
+        self.entry_numero_bien = ctk.CTkEntry(self.scrollable_frame,placeholder_text="Nro. bien", validate="key", validatecommand=vcmd)
         self.entry_numero_bien.grid(row=10, column=3, padx=10, pady=10)
-        
-        self.button_añadir_persona = ctk.CTkButton(self.scrollable_frame, text="Añadir persona", command=self.añadir_persona)
+        # Agregar eventos para hover en numero_bien
+        self.entry_numero_bien.bind("<Enter>", lambda event: self.on_hover(event, self.entry_numero_bien))
+        self.entry_numero_bien.bind("<Leave>", lambda event: self.off_hover(event, self.entry_numero_bien))
+
+        self.button_añadir_persona = ctk.CTkButton(self.scrollable_frame, text="Añadir persona", command=self.añadir_persona,
+        height=28,
+        fg_color="dodger blue",
+        hover_color="deep sky blue",  # Color cuando pasas el mouse
+        border_color="#ffffff",  # Color del borde
+        border_width=2,  # Grosor del borde
+        text_color="#ffffff",
+        font=("Century Gothic", 14, "bold"),
+        corner_radius=10)
         self.button_añadir_persona.grid(row=12, column=2, columnspan=2, pady=20)
         
         # Initialize counter
@@ -201,34 +243,48 @@ class CargaAsistencia(ctk.CTkFrame):
         self.tree.bind("<Double-1>", self.on_double_click)
 
         # Add label and radio buttons for "Fallo alguna computadora?"
-        self.label_fallo_computadora = ctk.CTkLabel(self.scrollable_frame, text="Fallo alguna computadora?")
+        self.label_fallo_computadora = ctk.CTkLabel(self.scrollable_frame, text="Fallo alguna computadora?", font=("Century Gothic", 14, "bold"))
         self.label_fallo_computadora.grid(row=14, column=0, padx=10, pady=10)
         
         self.radio_var = ctk.StringVar(value="")
-        self.radio_si = ctk.CTkRadioButton(self.scrollable_frame, text="si", variable=self.radio_var, value="si", command=self.on_fallo_computadora_change)
+        self.radio_si = ctk.CTkRadioButton(self.scrollable_frame, text="si", font=("Century Gothic", 14, "bold"),variable=self.radio_var, value="si", command=self.on_fallo_computadora_change)
         self.radio_si.grid(row=14, column=1, padx=10, pady=10)
         
-        self.radio_no = ctk.CTkRadioButton(self.scrollable_frame, text="no", variable=self.radio_var, value="no", command=self.on_fallo_computadora_change)
+        self.radio_no = ctk.CTkRadioButton(self.scrollable_frame, text="no", font=("Century Gothic", 14, "bold"),variable=self.radio_var, value="no", command=self.on_fallo_computadora_change)
         self.radio_no.grid(row=14, column=2, padx=10, pady=10)
         
         # Labels and entries for "numero de bien" and "Descripcion de la falla"
-        self.label_numero_bien_falla = ctk.CTkLabel(self.scrollable_frame, text="Numero de bien")
+        self.label_numero_bien_falla = ctk.CTkLabel(self.scrollable_frame, text="Numero de bien",font=("Century Gothic", 14, "bold"))
         self.entry_numero_bien_falla = ctk.CTkEntry(self.scrollable_frame)
-        self.label_descripcion_falla = ctk.CTkLabel(self.scrollable_frame, text="Descripcion de la falla")
+        self.label_descripcion_falla = ctk.CTkLabel(self.scrollable_frame, text="Descripcion de la falla",font=("Century Gothic", 14, "bold"))
         self.entry_descripcion_falla = ctk.CTkEntry(self.scrollable_frame)
         
         # Hide these fields initially
         self.hide_fallo_computadora_fields()
 
         # Additional widgets for "si" option
-        self.label_cantidad_equipos = ctk.CTkLabel(self.scrollable_frame, text="Cantidad de equipos")
-        self.combo_cantidad_equipos = ttk.Combobox(self.scrollable_frame, values=[1, 2, 3, 4, 5], state="readonly")
+        self.label_cantidad_equipos = ctk.CTkLabel(self.scrollable_frame, text="Cantidad de equipos",font=("Century Gothic", 14,"bold"))
+        self.combo_cantidad_equipos = ttk.Combobox(self.scrollable_frame, values=[1, 2, 3, 4, 5], state="readonly",font=("Century Gothic", 14, "bold"))
         self.equipos_entries = []
 
         # Submit button
-        self.btn_submit = ctk.CTkButton(self.scrollable_frame, text="Submit", command=self.submit)
+        self.btn_submit = ctk.CTkButton(self.scrollable_frame, text="Submit", command=self.submit,
+        height=28,
+        fg_color="dodger blue",
+        hover_color="deep sky blue",  # Color cuando pasas el mouse
+        border_color="#ffffff",  # Color del borde
+        border_width=2,  # Grosor del borde
+        text_color="#ffffff",
+        font=("Century Gothic", 14, "bold"),
+        corner_radius=10)
         self.btn_submit.grid(row=20, column=4, padx=10, pady=10)
         self.btn_submit.grid_remove()
+    # Cambia el color cuando el mouse entra
+    def on_hover(self, event, widget):
+        widget.configure(border_color="light sky blue")
+
+    def off_hover(self, event, widget):
+        widget.configure(border_color="light blue")
 
     def _on_mouse_wheel(self, event):
         """Desplaza el canvas con la rueda del mouse, solo si el cursor NO está sobre la tabla."""
@@ -277,11 +333,11 @@ class CargaAsistencia(ctk.CTkFrame):
         cantidad = int(self.combo_cantidad_equipos.get())
         vcmd = (self.register(self._validate_numeric), '%P')
         for i in range(cantidad):
-            label_nro_bien = ctk.CTkLabel(self.scrollable_frame, text=f"Nro de bien del equipo {i+1}")
+            label_nro_bien = ctk.CTkLabel(self.scrollable_frame, text=f"Nro de bien del equipo {i+1}",font=("Century Gothic", 14,"bold"))
             entry_nro_bien = ctk.CTkEntry(self.scrollable_frame, validate="key", validatecommand=vcmd)
-            label_descripcion = ctk.CTkLabel(self.scrollable_frame, text=f"Descripcion {i+1}")
+            label_descripcion = ctk.CTkLabel(self.scrollable_frame, text=f"Descripcion {i+1}",font=("Century Gothic", 14,"bold"))
             entry_descripcion = ctk.CTkEntry(self.scrollable_frame)
-            label_hora_falla = ctk.CTkLabel(self.scrollable_frame, text=f"Hora de la falla {i+1}")
+            label_hora_falla = ctk.CTkLabel(self.scrollable_frame, text=f"Hora de la falla {i+1}",font=("Century Gothic", 14,"bold"))
             time_falla = TimeInput(self.scrollable_frame)
 
             label_nro_bien.grid(row=16+i, column=0, padx=10, pady=10)
@@ -424,7 +480,7 @@ class CargaAsistencia(ctk.CTkFrame):
         # Registrar asistencia en la base de datos
         print("Enviando datos a la base de datos...")
         resultado = self.db_manager.registrar_asistencia_laboratorio_usr(
-            laboratorio_id, tipo_uso, fecha, hora_inicio, hora_finalizacion, personas
+            laboratorio_id, tipo_uso, fecha, hora_inicio, hora_finalizacion, personas, self.user_data["Admin_id"]
         )
         print(f"Resultado registrar_asistencia_laboratorio_usr: {resultado}")
         if not resultado:

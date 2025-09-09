@@ -1,5 +1,10 @@
 import customtkinter as ctk
 from tkinter import messagebox
+from PIL import Image
+import os
+import sys
+from db_manager import DBManager
+
 
 class VentanaLogin:
     def __init__(self):
@@ -8,7 +13,40 @@ class VentanaLogin:
         self.ventana.title("Login")
         self.ventana.geometry("1280x720+10+10")
         ctk.set_appearance_mode("light")
+        self.db = DBManager()  # Conexión a la BD
+        self.db.set_parent(self.ventana) 
         
+
+        if hasattr(sys, '_MEIPASS'):
+            img_path3 = os.path.join(sys._MEIPASS, 'Views', 'Imagen', 'login.png')
+        else:
+            img_path3 = os.path.join('Views', 'Imagen', 'login.png')
+        imagen_login = Image.open(img_path3)
+        tamaño_imagen3 = (1880, 900)
+        ctk_login = ctk.CTkImage(light_image=imagen_login, dark_image=imagen_login, size=tamaño_imagen3)   # Ajusta al tamaño de la ventana
+        
+
+        # Crear un label para la imagen de fondo
+        self.label_fondo = ctk.CTkLabel(self.ventana, image=ctk_login, text="")
+        self.label_fondo.place(x=0, y=0, relwidth=1, relheight=1)
+
+        # --- Imagen circular encima del fondo ---
+        # Cargar la imagen circular usando ruta compatible con PyInstaller
+        if hasattr(sys, '_MEIPASS'):
+            img_path_circular = os.path.join(sys._MEIPASS, 'Views', 'Imagen', 'Circular-CL.png')
+        else:
+            img_path_circular = os.path.join('Views', 'Imagen', 'Circular-CL.png')
+            imagen_circular = Image.open(img_path_circular)
+            size = (150, 150)
+
+        #Convertir a CTkImage para compatibilidad con HighDPI
+        ctk_circ_image = ctk.CTkImage(light_image=imagen_circular, dark_image=imagen_circular, size=size)
+
+        #Crear un label para la imagen circular y colocarla encima del fondo
+        self.label_circular = ctk.CTkLabel(self.ventana, image=ctk_circ_image, text="")
+        self.label_circular.place(relx=0.5, rely=0.18, anchor="center")
+  
+
         # Configuración del contenedor principal
         self.frame_principal = ctk.CTkFrame(self.ventana,fg_color="gray99",border_width=3, border_color="DeepSkyBlue2",height=400)
         self.frame_principal.place(relx=0.5, rely=0.5, anchor='center')  # Centrar el frame
@@ -82,16 +120,37 @@ class VentanaLogin:
         usuario = self.entry_usuario.get()
         password = self.entry_password.get()
 
-        if usuario and password:
-            self.ventana.destroy()  # Properly destroy the login window
-            from Views.ventana_main import VentanaMain
-            main = VentanaMain()
-            main.iniciar()
-        else:
+        if not usuario or not password:
             messagebox.showwarning("Error", "Por favor, completa todos los campos.")
+            return
 
+        # Consulta a la base de datos
+        user_data = self.db.autenticar_usuario(usuario, password)
+
+        if user_data:
+            messagebox.showinfo("Éxito", "Inicio de sesión exitoso")
+            
+            for task in self.ventana.tk.call('after', 'info'):
+                try:
+                    self.ventana.after_cancel(task)
+                except Exception:
+                    pass
+
+            self.ventana.destroy()  
+            
+            # Se importa aquí para evitar dependencias circulares
+            from Views.ventana_main import VentanaMainAdmin, VentanaMain
+
+            if user_data["Tipo_usuario"].lower() == "administrador":
+                app = VentanaMainAdmin(user_data)
+            else:
+                app = VentanaMain(user_data)
+
+            app.iniciar()
+
+        else:
+            messagebox.showerror("Error", "Usuario o contraseña incorrectos.")
     
     def iniciar(self):
         """Inicia el bucle principal de la ventana."""
         self.ventana.mainloop()
-

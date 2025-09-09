@@ -107,7 +107,7 @@ class CargaAsistencia(ctk.CTkFrame):
             self.on_sede_selected()
 
         # DateEntry y Label para "Fecha"
-        self.entry_fecha = DateEntry(self.scrollable_frame,date_pattern="dd/mm/yyyy",font=("Century Gothic", 12, "bold"), foreground='#1abc9c', background='#34495e', borderwidth=2, relief='sunken', width=20)
+        self.entry_fecha = DateEntry(self.scrollable_frame,date_pattern="dd/mm/yyyy",font=("Century Gothic", 12, "bold"),background='deep sky blue',foreground='white',borderwidth=2,relief='sunken', width=20)
         #self.entry_fecha.configure(font=("Arial", 11, "bold"), foreground='#1abc9c', background='#34495e', borderwidth=2, relief='sunken', width=20)
         self.entry_fecha.grid(row=1, column=5, padx=10, pady=10)
         
@@ -146,36 +146,54 @@ class CargaAsistencia(ctk.CTkFrame):
         
         self.label_nombre = ctk.CTkLabel(self.scrollable_frame, text="Nombre", font=("Century Gothic", 14, "bold"))
         self.label_nombre.grid(row=6, column=2, padx=10, pady=10)
-        self.entry_nombre = ctk.CTkEntry(self.scrollable_frame)
+        self.entry_nombre = ctk.CTkEntry(self.scrollable_frame,placeholder_text="Nombre")
         self.entry_nombre.grid(row=6, column=3, padx=10, pady=10)
+        # Agregar eventos para hover en nombre
+        self.entry_nombre.bind("<Enter>", lambda event: self.on_hover(event, self.entry_nombre))
+        self.entry_nombre.bind("<Leave>", lambda event: self.off_hover(event, self.entry_nombre))
         
         self.label_apellido = ctk.CTkLabel(self.scrollable_frame, text="Apellido", font=("Century Gothic", 14,"bold"))
         self.label_apellido.grid(row=6, column=4, padx=10, pady=10)
-        self.entry_apellido = ctk.CTkEntry(self.scrollable_frame)
+        self.entry_apellido = ctk.CTkEntry(self.scrollable_frame,placeholder_text="Apellido")
         self.entry_apellido.grid(row=6, column=5, padx=10, pady=10)
-        
-        self.label_cedula = ctk.CTkLabel(self.scrollable_frame, text="Cedula", font=("Century Gothic", 14, "bold"))
+         # Agregar eventos para hover en apellido
+        self.entry_apellido.bind("<Enter>", lambda event: self.on_hover(event, self.entry_apellido))
+        self.entry_apellido.bind("<Leave>", lambda event: self.off_hover(event, self.entry_apellido))
+
+        self.label_cedula = ctk.CTkLabel(self.scrollable_frame, text="Cédula", font=("Century Gothic", 14, "bold"))
         self.label_cedula.grid(row=9, column=0, padx=10, pady=10)
         vcmd = (self.register(self._validate_numeric), '%P')
-        self.entry_cedula = ctk.CTkEntry(self.scrollable_frame, validate="key", validatecommand=vcmd)
+        self.entry_cedula = ctk.CTkEntry(self.scrollable_frame, validate="key", validatecommand=vcmd,placeholder_text="12345678")
         self.entry_cedula.grid(row=9, column=1, padx=10, pady=10)
+        # Agregar eventos para hover en cedula
+        self.entry_cedula.bind("<Enter>", lambda event: self.on_hover(event, self.entry_cedula))
+        self.entry_cedula.bind("<Leave>", lambda event: self.off_hover(event, self.entry_cedula))
 
         # Entry y Label para "Organización"
         self.label_organizacion = ctk.CTkLabel(self.scrollable_frame, text="Organización", font=("Century Gothic", 14, "bold"))
         self.label_organizacion.grid(row=9, column=2, padx=10, pady=10)
-        self.entry_organizacion = ctk.CTkEntry(self.scrollable_frame)
+        self.entry_organizacion = ctk.CTkEntry(self.scrollable_frame,placeholder_text="Organización")
         self.entry_organizacion.grid(row=9, column=3, padx=10, pady=10)
-        
-        self.label_telefono = ctk.CTkLabel(self.scrollable_frame, text="Telefono", font=("Century Gothic", 14, "bold"))
-        self.label_telefono.grid(row=9, column=4, padx=10, pady=10)
-        self.entry_telefono = ctk.CTkEntry(self.scrollable_frame, validate="key", validatecommand=vcmd)
-        self.entry_telefono.grid(row=9, column=5, padx=10, pady=10)
+        # Agregar eventos para hover en organizacion
+        self.entry_organizacion.bind("<Enter>", lambda event: self.on_hover(event, self.entry_organizacion))
+        self.entry_organizacion.bind("<Leave>", lambda event: self.off_hover(event, self.entry_organizacion))
 
-        self.label_numero_bien = ctk.CTkLabel(self.scrollable_frame, text="Numero de bien", font=("Century Gothic", 14, "bold"))
+        self.label_telefono = ctk.CTkLabel(self.scrollable_frame, text="Teléfono", font=("Century Gothic", 14, "bold"))
+        self.label_telefono.grid(row=9, column=4, padx=10, pady=10)
+        self.entry_telefono = ctk.CTkEntry(self.scrollable_frame,placeholder_text="teléfono", validate="key", validatecommand=vcmd)
+        self.entry_telefono.grid(row=9, column=5, padx=10, pady=10)
+        # Agregar eventos para hover en telefono
+        self.entry_telefono.bind("<Enter>", lambda event: self.on_hover(event, self.entry_telefono))
+        self.entry_telefono.bind("<Leave>", lambda event: self.off_hover(event, self.entry_telefono))
+
+        self.label_numero_bien = ctk.CTkLabel(self.scrollable_frame, text="Número de bien", font=("Century Gothic", 14, "bold"))
         self.label_numero_bien.grid(row=10, column=2, padx=10, pady=10)
-        self.entry_numero_bien = ctk.CTkEntry(self.scrollable_frame, validate="key", validatecommand=vcmd)
+        self.entry_numero_bien = ctk.CTkEntry(self.scrollable_frame,placeholder_text="Nro. bien", validate="key", validatecommand=vcmd)
         self.entry_numero_bien.grid(row=10, column=3, padx=10, pady=10)
-        
+        # Agregar eventos para hover en numero_bien
+        self.entry_numero_bien.bind("<Enter>", lambda event: self.on_hover(event, self.entry_numero_bien))
+        self.entry_numero_bien.bind("<Leave>", lambda event: self.off_hover(event, self.entry_numero_bien))
+
         self.button_añadir_persona = ctk.CTkButton(self.scrollable_frame, text="Añadir persona", command=self.añadir_persona,
         height=28,
         fg_color="dodger blue",
@@ -262,6 +280,12 @@ class CargaAsistencia(ctk.CTkFrame):
         corner_radius=10)
         self.btn_submit.grid(row=20, column=4, padx=10, pady=10)
         self.btn_submit.grid_remove()
+    # Cambia el color cuando el mouse entra
+    def on_hover(self, event, widget):
+        widget.configure(border_color="light sky blue")
+
+    def off_hover(self, event, widget):
+        widget.configure(border_color="light blue")
 
     def _on_mouse_wheel(self, event):
         """Desplaza el canvas con la rueda del mouse, solo si el cursor NO está sobre la tabla."""

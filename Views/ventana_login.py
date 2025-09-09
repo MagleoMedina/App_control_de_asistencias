@@ -1,5 +1,8 @@
 import customtkinter as ctk
 from tkinter import messagebox
+from PIL import Image, ImageTk,ImageDraw
+import os
+import sys
 
 class VentanaLogin:
     def __init__(self):
@@ -9,6 +12,37 @@ class VentanaLogin:
         self.ventana.geometry("1280x720+10+10")
         ctk.set_appearance_mode("light")
         
+
+        if hasattr(sys, '_MEIPASS'):
+            img_path3 = os.path.join(sys._MEIPASS, 'Views', 'Imagen', 'login.png')
+        else:
+            img_path3 = os.path.join('Views', 'Imagen', 'login.png')
+        imagen_login = Image.open(img_path3)
+        tamaño_imagen3 = (1880, 900)
+        ctk_login = ctk.CTkImage(light_image=imagen_login, dark_image=imagen_login, size=tamaño_imagen3)   # Ajusta al tamaño de la ventana
+        
+
+        # Crear un label para la imagen de fondo
+        self.label_fondo = ctk.CTkLabel(self.ventana, image=ctk_login, text="")
+        self.label_fondo.place(x=0, y=0, relwidth=1, relheight=1)
+
+        # --- Imagen circular encima del fondo ---
+        # Cargar la imagen circular usando ruta compatible con PyInstaller
+        #   if hasattr(sys, '_MEIPASS'):
+        #      img_path_circular = os.path.join(sys._MEIPASS, 'Views', 'Imagen', 'Circular-CL.png')
+      #     else:
+    #       img_path_circular = os.path.join('Views', 'Imagen', 'Circular-CL.png')
+      #     imagen_circular = Image.open(img_path_circular)
+         #  size = (150, 150)
+
+        # Convertir a CTkImage para compatibilidad con HighDPI
+      #     ctk_circ_image = ctk.CTkImage(light_image=imagen_circular, dark_image=imagen_circular, size=size)
+
+        # Crear un label para la imagen circular y colocarla encima del fondo
+     #      self.label_circular = ctk.CTkLabel(self.ventana, image=ctk_circ_image, text="")
+  #       self.label_circular.place(relx=0.5, rely=0.18, anchor="center")
+  
+
         # Configuración del contenedor principal
         self.frame_principal = ctk.CTkFrame(self.ventana,fg_color="gray99",border_width=3, border_color="DeepSkyBlue2",height=400)
         self.frame_principal.place(relx=0.5, rely=0.5, anchor='center')  # Centrar el frame

@@ -4,7 +4,7 @@ from Views.gestion_de_usuarios import VentanaRegistro
 
 
 
-app = VentanaMain()
+app = VentanaLogin()
 app.iniciar()
 
 

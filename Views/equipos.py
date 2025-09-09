@@ -13,7 +13,7 @@ class Equipos(ctk.CTkFrame):
         self.parent = parent
         # Cambiar el color del fondo a blanco
         self.configure(fg_color="white")
-
+        self.db_manager = DBManager()
         self.db_manager.set_parent(self.parent)
 
         

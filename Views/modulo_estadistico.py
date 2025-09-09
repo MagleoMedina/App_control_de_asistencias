@@ -18,6 +18,7 @@ class ModuloEstadistico(ctk.CTkFrame):
 
         # Instanciar DBManager
         self.db_manager = DBManager()
+        self.db_manager.set_parent(self.parent)
 
         self.configure(fg_color="white")
 

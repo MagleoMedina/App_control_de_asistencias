@@ -1,8 +1,10 @@
 import customtkinter as ctk
 from tkinter import messagebox
-from PIL import Image, ImageTk,ImageDraw
+from PIL import Image
 import os
 import sys
+from db_manager import DBManager
+
 
 class VentanaLogin:
     def __init__(self):
@@ -11,6 +13,8 @@ class VentanaLogin:
         self.ventana.title("Login")
         self.ventana.geometry("1280x720+10+10")
         ctk.set_appearance_mode("light")
+        self.db = DBManager()  # Conexión a la BD
+        self.db.set_parent(self.ventana) 
         
 
         if hasattr(sys, '_MEIPASS'):
@@ -116,16 +120,37 @@ class VentanaLogin:
         usuario = self.entry_usuario.get()
         password = self.entry_password.get()
 
-        if usuario and password:
-            self.ventana.destroy()  # Properly destroy the login window
-            from Views.ventana_main import VentanaMain
-            main = VentanaMain()
-            main.iniciar()
-        else:
+        if not usuario or not password:
             messagebox.showwarning("Error", "Por favor, completa todos los campos.")
+            return
 
+        # Consulta a la base de datos
+        user_data = self.db.autenticar_usuario(usuario, password)
+
+        if user_data:
+            messagebox.showinfo("Éxito", "Inicio de sesión exitoso")
+            
+            for task in self.ventana.tk.call('after', 'info'):
+                try:
+                    self.ventana.after_cancel(task)
+                except Exception:
+                    pass
+
+            self.ventana.destroy()  
+            
+            # Se importa aquí para evitar dependencias circulares
+            from Views.ventana_main import VentanaMainAdmin, VentanaMain
+
+            if user_data["Tipo_usuario"].lower() == "administrador":
+                app = VentanaMainAdmin(user_data)
+            else:
+                app = VentanaMain(user_data)
+
+            app.iniciar()
+
+        else:
+            messagebox.showerror("Error", "Usuario o contraseña incorrectos.")
     
     def iniciar(self):
         """Inicia el bucle principal de la ventana."""
         self.ventana.mainloop()
-

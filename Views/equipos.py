@@ -11,10 +11,11 @@ class Equipos(ctk.CTkFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
-        self.db_manager = DBManager()  # Instancia de DBManager
-
         # Cambiar el color del fondo a blanco
         self.configure(fg_color="white")
+
+        self.db_manager.set_parent(self.parent)
+
         
         # Título centrado
         self.title_label = ctk.CTkLabel(self, text="Gestion de Equipos", font=("Century Gothic", 20, "bold"),text_color="navy")
@@ -105,6 +106,7 @@ class ConsultarFallaEquipo(ctk.CTkFrame):
         super().__init__(parent)
         self.parent = parent
         self.db_manager = DBManager()  # Instanciar DBManager
+        self.db_manager.set_parent(self.parent)
 
         # Cambiar el color del fondo a navy
         self.configure(fg_color="navy")
@@ -547,6 +549,7 @@ class RelacionarEquipos(ctk.CTkFrame):
         super().__init__(parent)
         self.parent = parent
         self.db_manager = DBManager()  # Instanciar DBManager
+        self.db_manager.set_parent(self.parent)
 
          # Cambiar el color del fondo a navy
         self.configure(fg_color="navy")
@@ -649,4 +652,3 @@ class RelacionarEquipos(ctk.CTkFrame):
         self.teclado_entry.delete(0, tk.END)
         self.monitor_entry.delete(0, tk.END)
         self.raton_entry.delete(0, tk.END)
-

@@ -4,7 +4,6 @@ from tkcalendar import DateEntry
 from tkinter import ttk  # Import ttk for Combobox
 from tkinter import messagebox  # Import messagebox for validation alerts
 from Views.carga_asistencia import TimeInput  # Importar TimeInput
-
 class CargaAsistenciaEstudiantes(ctk.CTkFrame):
     def __init__(self, parent, user_data=None):
         super().__init__(parent)
@@ -21,6 +20,7 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
         self.sedes = self.db_manager.obtener_sedes()
         sede_names = [s[1] for s in self.sedes] if self.sedes else []
         
+
         # Title
         self.label_title = ctk.CTkLabel(self, text="Carga de asistencia estudiantes", font=("Century Gothic", 21, "bold"),text_color="navy")
         self.label_title.grid(row=0, column=3, columnspan=4, pady=20, sticky="ew")
@@ -64,14 +64,18 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
         # Fecha
         self.label_fecha = ctk.CTkLabel(self, text="Fecha", font=("Century Gothic", 14, "bold"))
         self.label_fecha.grid(row=1, column=5, padx=10, pady=10)
-        self.entry_fecha = DateEntry(self, date_pattern='dd/mm/y',font=("Century Gothic", 14, "bold"), foreground='#1abc9c', background='#34495e', borderwidth=2, relief='sunken', width=20)
+        self.entry_fecha = DateEntry(self, date_pattern='dd/mm/y',font=("Century Gothic", 12, "bold"), background='deep sky blue',foreground='white',borderwidth=2,relief='sunken', width=20)
         self.entry_fecha.grid(row=1, column=6, padx=10, pady=10)
         
         # Cantidad de usuarios atendidos
         self.label_cantidad_usuarios = ctk.CTkLabel(self, text="Cantidad de usuarios atendidos", font=("Century Gothic", 14,"bold"))
         self.label_cantidad_usuarios.grid(row=1, column=7, padx=10, pady=10)
-        self.entry_cantidad_usuarios = ctk.CTkEntry(self, width=50)
+        self.entry_cantidad_usuarios = ctk.CTkEntry(self, width=50,placeholder_text="Cantidad", font=("Century Gothic", 12))
         self.entry_cantidad_usuarios.grid(row=1, column=8, padx=10, pady=10)
+        # Agregar eventos para hover en nombre
+        self.entry_cantidad_usuarios.bind("<Enter>", lambda event: self.on_hover(event, self.entry_cantidad_usuarios))
+        self.entry_cantidad_usuarios.bind("<Leave>", lambda event: self.off_hover(event, self.entry_cantidad_usuarios))
+
         
         # Validation for entry_cantidad_usuarios
         self.entry_cantidad_usuarios.configure(validate="key", validatecommand=(self.register(self.validate_numeric), "%P"))
@@ -105,6 +109,13 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
         self.label_cantidad_equipos = ctk.CTkLabel(self, text="Cantidad de equipos", font=("Century Gothic", 14,"bold"))
         self.combo_cantidad_equipos = ttk.Combobox(self, values=[1, 2, 3, 4, 5], state="readonly",font=("Century Gothic", 12))
         self.equipos_entries = []
+
+    # Cambia el color cuando el mouse entra
+    def on_hover(self, event, widget):
+        widget.configure(border_color="light sky blue")
+
+    def off_hover(self, event, widget):
+        widget.configure(border_color="light blue")
 
     def update_laboratorios(self):
         selected_sede_name = self.entry_sede.get()

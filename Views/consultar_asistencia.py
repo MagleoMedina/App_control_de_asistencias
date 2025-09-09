@@ -6,6 +6,7 @@ import os
 from datetime import datetime  # Added import for datetime
 from db_manager import DBManager  
 
+
 class ConsultarAsistencia(ctk.CTkFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -64,7 +65,7 @@ class ConsultarAsistencia(ctk.CTkFrame):
         
         self.fecha = ctk.CTkLabel(self, text="Fecha",font=("Century Gothic", 14,"bold"))
         self.fecha.grid(row=2, column=4, padx=10, pady=5, sticky="e")
-        self.fecha_entry = DateEntry(self, date_pattern="dd/mm/yyyy",font=("Century Gothic", 12, "bold"), foreground='#1abc9c', background='#34495e', borderwidth=2, relief='sunken', width=20)
+        self.fecha_entry = DateEntry(self, date_pattern="dd/mm/yyyy",font=("Century Gothic", 12, "bold"), background='deep sky blue',foreground='white',borderwidth=2,relief='sunken', width=20)
         self.fecha_entry.grid(row=2, column=5, padx=10, pady=5, sticky="w")
 
         # Botón Generar Reporte
@@ -78,6 +79,13 @@ class ConsultarAsistencia(ctk.CTkFrame):
         font=("Century Gothic", 14, "bold"),
         corner_radius=10)
         self.generar_reporte_btn.grid(row=3, column=3, columnspan=2, pady=20)
+
+    # Cambia el color cuando el mouse entra
+    def on_hover(self, event, widget):
+        widget.configure(border_color="light sky blue")
+
+    def off_hover(self, event, widget):
+        widget.configure(border_color="light blue")
 
     def update_laboratorios(self):
         selected_sede_name = self.sede_entry.get()

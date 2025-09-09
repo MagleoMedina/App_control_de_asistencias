@@ -220,6 +220,7 @@ class VentanaMain:
         from Views.ventana_login import VentanaLogin
         app = VentanaLogin()
         app.iniciar()
+    
 
 class VentanaMainAdmin(VentanaMain):
     def __init__(self, user_data):

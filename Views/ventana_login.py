@@ -94,6 +94,13 @@ class VentanaLogin:
 
         if user_data:
             messagebox.showinfo("Éxito", "Inicio de sesión exitoso")
+            
+            for task in self.ventana.tk.call('after', 'info'):
+                try:
+                    self.ventana.after_cancel(task)
+                except Exception:
+                    pass
+
             self.ventana.destroy()  
             
             # Se importa aquí para evitar dependencias circulares

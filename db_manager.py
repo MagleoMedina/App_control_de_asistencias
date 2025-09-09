@@ -757,7 +757,7 @@ class DBManager:
                     return False
         return True
 
-    def registrar_asistencia_laboratorio_usr(self, laboratorio_id, tipo_uso, fecha, hora_inicio, hora_finalizacion, personas):
+    def registrar_asistencia_laboratorio_usr(self, laboratorio_id, tipo_uso, fecha, hora_inicio, hora_finalizacion, personas, admin_id):
         """
         Registra el uso del laboratorio y la asistencia de usuarios.
         - laboratorio_id: ID del laboratorio
@@ -781,7 +781,7 @@ class DBManager:
         """
         # Para este ejemplo, Administrador se pone como NULL (o puedes pasar el ID si lo tienes)
         uso_result = self.execute_query(
-            uso_sql, (laboratorio_id, 1, tipo_uso_id, fecha, hora_inicio, hora_finalizacion), commit=True
+            uso_sql, (laboratorio_id, admin_id, tipo_uso_id, fecha, hora_inicio, hora_finalizacion), commit=True
         )
         if uso_result is None:
             print("Error al registrar uso de laboratorio.")
@@ -956,7 +956,15 @@ class DBManager:
 
         # Obtener todos los usos de laboratorio para esa fecha, ordenados por hora_inicio ASC
         usos = self.execute_query(
-            "SELECT ID, Tipo_de_uso, Hora_inicio, Hora_finalizacion FROM Uso_laboratorio_usr WHERE Laboratorio = ? AND Fecha = ? ORDER BY Hora_inicio ASC",
+            """
+            SELECT uso.ID, uso.Tipo_de_uso, uso.Hora_inicio, uso.Hora_finalizacion,
+                p.Nombre, p.Apellido
+            FROM Uso_laboratorio_usr uso
+            JOIN Administrador a ON uso.Administrador = a.Persona
+            JOIN Persona p ON a.Persona = p.ID
+            WHERE uso.Laboratorio = ? AND uso.Fecha = ?
+            ORDER BY uso.Hora_inicio ASC
+            """,
             (lab_id, fecha)
         )
         if not usos:
@@ -964,7 +972,7 @@ class DBManager:
 
         bloques = []
         for uso in usos:
-            uso_id, tipo_uso_id, hora_inicio, hora_finalizacion = uso
+            uso_id, tipo_uso_id, hora_inicio, hora_finalizacion, admin_nombre, admin_apellido = uso
             tipo_uso = self.execute_query("SELECT Descripcion FROM Tipo_de_uso WHERE ID = ?", (tipo_uso_id,), fetch_one=True)
             tipo_uso = tipo_uso[0] if tipo_uso else ""
 
@@ -1001,7 +1009,9 @@ class DBManager:
                 "hora_inicio": hora_inicio,
                 "hora_finalizacion": hora_finalizacion,
                 "tipo_uso": tipo_uso,
-                "personas": personas
+                "personas": personas,
+                "admin_nombre": admin_nombre,
+                "admin_apellido": admin_apellido
             })
         return bloques
 
@@ -1148,7 +1158,8 @@ class DBManager:
         Retorna un diccionario con los datos si existe, o None si no.
         """
         query = """
-        SELECT u.Username, u.Password, p.Nombre, p.Apellido, t.Descripcion as Tipo_usuario
+        SELECT a.Persona AS Admin_id, u.Numero_de_ficha  AS Usuario_id, u.Username, u.Password, 
+        p.Nombre, p.Apellido, t.Descripcion  AS Tipo_usuario
         FROM Usuario u
         JOIN Administrador a ON a.Usuario = u.Numero_de_ficha
         JOIN Persona p ON a.Persona = p.ID
@@ -1158,10 +1169,12 @@ class DBManager:
         result = self.execute_query(query, (username, password), fetch_one=True)
         if result:
             return {
-                "Username": result[0],
-                "Password": result[1],
-                "Nombre": result[2],
-                "Apellido": result[3],
-                "Tipo_usuario": result[4],
+                "Admin_id":    result[0], 
+                "Usuario_id":  result[1],
+                "Username":    result[2],
+                "Password":    result[3],
+                "Nombre":      result[4],
+                "Apellido":    result[5],
+                "Tipo_usuario":result[6],
             }
         return None

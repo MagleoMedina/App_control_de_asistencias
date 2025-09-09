@@ -6,9 +6,10 @@ from tkinter import messagebox  # Import messagebox for validation alerts
 from Views.carga_asistencia import TimeInput  # Importar TimeInput
 
 class CargaAsistenciaEstudiantes(ctk.CTkFrame):
-    def __init__(self, parent):
+    def __init__(self, parent, user_data=None):
         super().__init__(parent)
         self.parent = parent
+        self.user_data = user_data
 
         # Instanciar DBManager
         self.db_manager = DBManager()
@@ -198,8 +199,7 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
             return
 
         # Registrar en la base de datos
-        administrador_id = 1  # Por ahora fijo
-        ok = self.db_manager.registrar_asistencia_estudiantes(administrador_id, laboratorio_id, fecha, cantidad)
+        ok = self.db_manager.registrar_asistencia_estudiantes(self.user_data["Admin_id"], laboratorio_id, fecha, cantidad)
         if ok:
             # Si hay fallas de equipos, registrar cada una
             if self.radio_var.get() == "Si" and self.equipos_entries:

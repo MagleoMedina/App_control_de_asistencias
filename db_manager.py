@@ -32,6 +32,12 @@ class DBManager:
         self._connection = None
         self._executor = ThreadPoolExecutor(max_workers=4)
         print("DBManager inicializado. Credenciales cargadas.")
+        
+        self.default_parent = None 
+    
+    def set_parent(self, parent):
+        """Define el parent por defecto para mostrar la pantalla de carga."""
+        self.default_parent = parent
 
     def get_db_connection(self):
         """
@@ -59,15 +65,41 @@ class DBManager:
             self._connection = None
             print("Conexión a la base de datos cerrada.")
 
-    def execute_query(self, query, params=None, fetch_one=False, commit=False):
+    def execute_query(self, query, params=None, fetch_one=False, commit=False, parent=None):
         """
         Ejecuta una consulta SQL en la base de datos en un hilo aparte.
+        mostrando una pantalla de carga si se pasa un parent.
         :param query: La cadena de consulta SQL a ejecutar.
         :param params: Una tupla o lista de parámetros para la consulta (opcional).
         :param fetch_one: Si es True, retorna solo la primera fila del resultado.
         :param commit: Si es True, realiza un commit y sincroniza los cambios.
         :return: El resultado de la consulta (fila/s o True/False para commit), o None en caso de error.
         """
+        
+        if parent is None:
+            parent = self.default_parent  # usa el parent global por defecto
+        
+        loading = None
+        if parent is not None:
+            import customtkinter as ctk
+            loading = ctk.CTkToplevel(parent)
+            loading.title("Cargando...")
+            # Tamaño de la ventana
+            ancho, alto = 250, 100
+            # Dimensiones de la pantalla
+            screen_width = parent.winfo_screenwidth()
+            screen_height = parent.winfo_screenheight()
+            # Coordenadas para centrar
+            x = (screen_width // 2) - (ancho // 2)
+            y = (screen_height // 2) - (alto // 2)
+
+            loading.geometry(f"{ancho}x{alto}+{x}+{y}")
+            loading.transient(parent)   # Mantener sobre la ventana padre
+            loading.grab_set()          # Bloquea interacción con la principal
+            label = ctk.CTkLabel(loading, text="Procesando, por favor espere...")
+            label.pack(expand=True, padx=20, pady=20)
+            loading.update()
+        
         def _run_query():
             conn = self.get_db_connection()
             if conn is None:
@@ -100,6 +132,10 @@ class DBManager:
                 pass
 
         future = self._executor.submit(_run_query)
+        
+        if loading:
+            loading.destroy()
+        
         return future.result()  # Espera el resultado pero no bloquea la interfaz principal
 
     def init_database(self):
@@ -721,7 +757,7 @@ class DBManager:
                     return False
         return True
 
-    def registrar_asistencia_laboratorio_usr(self, laboratorio_id, tipo_uso, fecha, hora_inicio, hora_finalizacion, personas):
+    def registrar_asistencia_laboratorio_usr(self, laboratorio_id, tipo_uso, fecha, hora_inicio, hora_finalizacion, personas, admin_id):
         """
         Registra el uso del laboratorio y la asistencia de usuarios.
         - laboratorio_id: ID del laboratorio
@@ -745,7 +781,7 @@ class DBManager:
         """
         # Para este ejemplo, Administrador se pone como NULL (o puedes pasar el ID si lo tienes)
         uso_result = self.execute_query(
-            uso_sql, (laboratorio_id, 1, tipo_uso_id, fecha, hora_inicio, hora_finalizacion), commit=True
+            uso_sql, (laboratorio_id, admin_id, tipo_uso_id, fecha, hora_inicio, hora_finalizacion), commit=True
         )
         if uso_result is None:
             print("Error al registrar uso de laboratorio.")
@@ -920,7 +956,15 @@ class DBManager:
 
         # Obtener todos los usos de laboratorio para esa fecha, ordenados por hora_inicio ASC
         usos = self.execute_query(
-            "SELECT ID, Tipo_de_uso, Hora_inicio, Hora_finalizacion FROM Uso_laboratorio_usr WHERE Laboratorio = ? AND Fecha = ? ORDER BY Hora_inicio ASC",
+            """
+            SELECT uso.ID, uso.Tipo_de_uso, uso.Hora_inicio, uso.Hora_finalizacion,
+                p.Nombre, p.Apellido
+            FROM Uso_laboratorio_usr uso
+            JOIN Administrador a ON uso.Administrador = a.Persona
+            JOIN Persona p ON a.Persona = p.ID
+            WHERE uso.Laboratorio = ? AND uso.Fecha = ?
+            ORDER BY uso.Hora_inicio ASC
+            """,
             (lab_id, fecha)
         )
         if not usos:
@@ -928,7 +972,7 @@ class DBManager:
 
         bloques = []
         for uso in usos:
-            uso_id, tipo_uso_id, hora_inicio, hora_finalizacion = uso
+            uso_id, tipo_uso_id, hora_inicio, hora_finalizacion, admin_nombre, admin_apellido = uso
             tipo_uso = self.execute_query("SELECT Descripcion FROM Tipo_de_uso WHERE ID = ?", (tipo_uso_id,), fetch_one=True)
             tipo_uso = tipo_uso[0] if tipo_uso else ""
 
@@ -965,7 +1009,9 @@ class DBManager:
                 "hora_inicio": hora_inicio,
                 "hora_finalizacion": hora_finalizacion,
                 "tipo_uso": tipo_uso,
-                "personas": personas
+                "personas": personas,
+                "admin_nombre": admin_nombre,
+                "admin_apellido": admin_apellido
             })
         return bloques
 
@@ -1105,3 +1151,30 @@ class DBManager:
             total_personas += cantidad
 
         return estadisticas, total_personas
+    
+    def autenticar_usuario(self, username, password):
+        """
+        Verifica si existe un usuario con username y password.
+        Retorna un diccionario con los datos si existe, o None si no.
+        """
+        query = """
+        SELECT a.Persona AS Admin_id, u.Numero_de_ficha  AS Usuario_id, u.Username, u.Password, 
+        p.Nombre, p.Apellido, t.Descripcion  AS Tipo_usuario
+        FROM Usuario u
+        JOIN Administrador a ON a.Usuario = u.Numero_de_ficha
+        JOIN Persona p ON a.Persona = p.ID
+        JOIN Tipo t ON a.Tipo = t.ID
+        WHERE u.Username = ? AND u.Password = ?
+        """
+        result = self.execute_query(query, (username, password), fetch_one=True)
+        if result:
+            return {
+                "Admin_id":    result[0], 
+                "Usuario_id":  result[1],
+                "Username":    result[2],
+                "Password":    result[3],
+                "Nombre":      result[4],
+                "Apellido":    result[5],
+                "Tipo_usuario":result[6],
+            }
+        return None

@@ -13,6 +13,7 @@ class ConsultarAsistencia(ctk.CTkFrame):
 
          # Instanciar DBManager
         self.db_manager = DBManager()
+        self.db_manager.set_parent(self.parent)
 
         self.configure(fg_color="white")
 
@@ -136,6 +137,8 @@ class ConsultarAsistencia(ctk.CTkFrame):
             html_content = html_content.replace("{{hora_inicio}}", bloque["hora_inicio"])
             html_content = html_content.replace("{{hora_finalizacion}}", bloque["hora_finalizacion"])
             html_content = html_content.replace("{{tabla_consulta_asistencia}}", tabla_consulta_asistencia)
+            html_content = html_content.replace("{{encargado}}", f"{bloque['admin_nombre']} {bloque['admin_apellido']}")
+
             # Si hay más bloques, añade salto de página
             bloques_html += html_content
             if idx < len(bloques) - 1:
@@ -163,5 +166,3 @@ class ConsultarAsistencia(ctk.CTkFrame):
         else:
             # Lógica para generar el reporte
             self.crear_pdf()
-
-

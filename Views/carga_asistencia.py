@@ -19,14 +19,12 @@ class TimeInput(ctk.CTkFrame):
         return f"{self.hour_var.get()}:{self.minute_var.get()}"
 
 class CargaAsistencia(ctk.CTkFrame):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, user_data=None):
         super().__init__(parent)
         self.parent = parent
+        self.user_data = user_data
+        self.db_manager.set_parent(self.parent)
 
-        
-        # Instanciar DBManager
-        self.db_manager = DBManager()
-        
 
         # Obtener sedes de la base de datos
         self.sedes = self.db_manager.obtener_sedes()
@@ -457,7 +455,7 @@ class CargaAsistencia(ctk.CTkFrame):
         # Registrar asistencia en la base de datos
         print("Enviando datos a la base de datos...")
         resultado = self.db_manager.registrar_asistencia_laboratorio_usr(
-            laboratorio_id, tipo_uso, fecha, hora_inicio, hora_finalizacion, personas
+            laboratorio_id, tipo_uso, fecha, hora_inicio, hora_finalizacion, personas, self.user_data["Admin_id"]
         )
         print(f"Resultado registrar_asistencia_laboratorio_usr: {resultado}")
         if not resultado:

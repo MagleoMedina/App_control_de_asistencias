@@ -1183,3 +1183,25 @@ class DBManager:
                 "Tipo_usuario":result[6],
             }
         return None
+
+    def get_next_sn_bien(self):
+        """
+        Obtiene el siguiente número de bien disponible con formato S/N-00000,
+        autoincrementando el mayor existente en la base de datos.
+        """
+        query = """
+        SELECT Nro_de_bien FROM Equipo WHERE Nro_de_bien LIKE 'S/N-%'
+        """
+        result = self.execute_query(query)
+        max_num = 0
+        if result:
+            for row in result:
+                nro = row[0]
+                try:
+                    num = int(nro.split('-')[1])
+                    if num > max_num:
+                        max_num = num
+                except (IndexError, ValueError):
+                    continue
+        next_num = max_num + 1
+        return f"S/N-{next_num:05d}"

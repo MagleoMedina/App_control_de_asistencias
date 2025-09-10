@@ -259,10 +259,10 @@ class AgregarEquipo(ctk.CTkFrame):
         self.nro_bien_label.grid(row=4, column=0, padx=10, pady=5)
         self.nro_bien_entry = ctk.CTkEntry(self)
         self.nro_bien_entry.grid(row=4, column=1, padx=10, pady=5)
-
-        # Add validation for numeric input
-        self.nro_bien_entry.configure(validate="key", validatecommand=(self.register(self.validate_numeric), "%S"))
-
+        # Botón al lado del entry de número de bien
+        self.nro_bien_button = ctk.CTkButton(self, text="S/N", width=50, command=self.generar_sn_bien)
+        self.nro_bien_button.grid(row=4, column=2, padx=5, pady=5)
+       
         # Botón "Guardar"
         self.guardar_button = ctk.CTkButton(self, text="Guardar", command=self.guardar_datos,fg_color="dodger blue",
         hover_color="deep sky blue",  # Color cuando pasas el mouse
@@ -319,6 +319,7 @@ class AgregarEquipo(ctk.CTkFrame):
        
         self.equipo_dropdown.set("")
         self.status_dropdown.set("")
+        self.nro_bien_entry.configure(state="normal")
         self.nro_bien_entry.delete(0, tk.END)
 
     def update_laboratorios(self):
@@ -342,6 +343,13 @@ class AgregarEquipo(ctk.CTkFrame):
             self.laboratorio_dropdown.set(self.lab_names[0])
         else:
             self.laboratorio_dropdown.set("")
+
+    def generar_sn_bien(self):
+        sn = self.db_manager.get_next_sn_bien()
+        self.nro_bien_entry.configure(state="normal")
+        self.nro_bien_entry.delete(0, tk.END)
+        self.nro_bien_entry.insert(0, sn)
+        self.nro_bien_entry.configure(state="readonly")
 
 class ModificarEquipo(ctk.CTkFrame):
     def __init__(self, parent=None, db_manager=None):

@@ -18,9 +18,9 @@ class VentanaLogin:
         
 
         if hasattr(sys, '_MEIPASS'):
-            img_path3 = os.path.join(sys._MEIPASS, 'Views', 'Imagen', 'login.png')
+            img_path3 = os.path.join(sys._MEIPASS, 'assets', 'login.png')
         else:
-            img_path3 = os.path.join('Views', 'Imagen', 'login.png')
+            img_path3 = os.path.join('assets', 'login.png')
         imagen_login = Image.open(img_path3)
         tamaño_imagen3 = (1880, 900)
         ctk_login = ctk.CTkImage(light_image=imagen_login, dark_image=imagen_login, size=tamaño_imagen3)   # Ajusta al tamaño de la ventana
@@ -33,9 +33,9 @@ class VentanaLogin:
         # --- Imagen circular encima del fondo ---
         # Cargar la imagen circular usando ruta compatible con PyInstaller
         if hasattr(sys, '_MEIPASS'):
-            img_path_circular = os.path.join(sys._MEIPASS, 'Views', 'Imagen', 'Circular-CL.png')
+            img_path_circular = os.path.join(sys._MEIPASS, 'assets', 'Circular-CL.png')
         else:
-            img_path_circular = os.path.join('Views', 'Imagen', 'Circular-CL.png')
+            img_path_circular = os.path.join('assets', 'Circular-CL.png')
             imagen_circular = Image.open(img_path_circular)
             size = (150, 150)
 
@@ -128,25 +128,9 @@ class VentanaLogin:
         user_data = self.db.autenticar_usuario(usuario, password)
 
         if user_data:
-            messagebox.showinfo("Éxito", "Inicio de sesión exitoso")
-            
-            for task in self.ventana.tk.call('after', 'info'):
-                try:
-                    self.ventana.after_cancel(task)
-                except Exception:
-                    pass
 
-            self.ventana.destroy()  
-            
-            # Se importa aquí para evitar dependencias circulares
-            from Views.ventana_main import VentanaMainAdmin, VentanaMain
-
-            if user_data["Tipo_usuario"].lower() == "administrador":
-                app = VentanaMainAdmin(user_data)
-            else:
-                app = VentanaMain(user_data)
-
-            app.iniciar()
+            # Espera 100 ms antes de cerrar para que CTk termine sus after
+            self.ventana.after(100, self._abrir_main, user_data)
 
         else:
             messagebox.showerror("Error", "Usuario o contraseña incorrectos.")
@@ -154,3 +138,23 @@ class VentanaLogin:
     def iniciar(self):
         """Inicia el bucle principal de la ventana."""
         self.ventana.mainloop()
+        
+    def _abrir_main(self, user_data):
+        """Función para abrir la ventana principal y cerrar la de login."""
+        try:
+            for task in self.ventana.tk.call('after', 'info'):
+                try:
+                    self.ventana.after_cancel(task)
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
+        self.ventana.destroy()
+
+        from Views.ventana_main import VentanaMainAdmin, VentanaMain
+        if user_data["Tipo_usuario"].lower() == "administrador":
+            app = VentanaMainAdmin(user_data)
+        else:
+            app = VentanaMain(user_data)
+        app.iniciar()

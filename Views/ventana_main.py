@@ -62,9 +62,9 @@ class VentanaMain:
         # Cargar la imagen LOGO DE LA UNEG usando una ruta compatible con PyInstaller
         import os, sys
         if hasattr(sys, '_MEIPASS'):
-            img_path = os.path.join(sys._MEIPASS, 'Views', 'Imagen', 'logoUNEG.png')
+            img_path = os.path.join(sys._MEIPASS, 'assets', 'logo_uneg.png')
         else:
-            img_path = os.path.join('Views', 'Imagen', 'logoUNEG.png')
+            img_path = os.path.join('assets','logo_uneg.png')
         imagen_logo = Image.open(img_path)
         tamaño_imagen = (42, 42)
         imagen_redimensionada = imagen_logo.resize(tamaño_imagen)
@@ -101,9 +101,9 @@ class VentanaMain:
 
          # Cargar la imagen LOGO CL usando una ruta compatible con PyInstaller
         if hasattr(sys, '_MEIPASS'):
-            img_path2 = os.path.join(sys._MEIPASS, 'Views', 'Imagen', 'CL.png')
+            img_path2 = os.path.join(sys._MEIPASS, 'assets', 'CL.png')
         else:
-            img_path2 = os.path.join('Views', 'Imagen', 'CL.png')
+            img_path2 = os.path.join('assets', 'CL.png')
         imagen_logo2 = Image.open(img_path2)
         tamaño_imagen2 = (43, 43) 
         imagen_redimensionada2 = imagen_logo2.resize(tamaño_imagen2)
@@ -208,19 +208,46 @@ class VentanaMain:
         self.ventana.mainloop()
 
     def cerrar(self):
-        # Disable all buttons to prevent further clicks
+        # Deshabilitar botones para evitar más clics
         for boton in self.botones_nav:
-            boton.configure(state="disabled")
+            try:
+                boton.configure(state="disabled")
+            except Exception:
+                pass
 
-        # Cancelar todos los eventos after del canvas
-        self.canvas.after_cancel(self.canvas.after_id) if hasattr(self.canvas, 'after_id') else None
-        
-        # Cerrar la ventana y volver al login 
-        self.ventana.destroy()  # Properly destroy the main window
+        # Espera 100 ms antes de cerrar para que CTk termine sus after
+        self.ventana.after(100, self._abrir_login)
+
+    def _abrir_login(self):
+        """Cierra la ventana principal y vuelve al login."""
+        try:
+            # Cancelar afters pendientes
+            for task in self.ventana.tk.call('after', 'info'):
+                try:
+                    self.ventana.after_cancel(task)
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
+        # Quitar bindings que siguen vivos (como el <Configure>)
+        try:
+            self.ventana.unbind("<Configure>")
+        except Exception:
+            pass
+
+        # Destruir ventana principal
+        if self.ventana.winfo_exists():
+            try:
+                self.ventana.destroy()
+            except Exception:
+                pass
+
+        # Importar login y mostrarlo
         from Views.ventana_login import VentanaLogin
         app = VentanaLogin()
         app.iniciar()
-    
+
 
 class VentanaMainAdmin(VentanaMain):
     def __init__(self, user_data):

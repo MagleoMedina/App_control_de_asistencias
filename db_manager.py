@@ -294,6 +294,10 @@ class DBManager:
                 "Laboratorio"	INTEGER NOT NULL,
                 "Fecha"	TEXT NOT NULL,
                 "Cantidad"	INTEGER,
+                "Profesor" TEXT,
+                "Materia" TEXT,
+                "Hora_Incio" TEXT,
+                "Hora_Finalizacion" TEXT,
                 PRIMARY KEY("ID" AUTOINCREMENT),
                 FOREIGN KEY("Laboratorio") REFERENCES "Laboratorio"("ID") ON UPDATE CASCADE,
                 FOREIGN KEY("Administrador") REFERENCES "Administrador"("Persona") ON UPDATE CASCADE

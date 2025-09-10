@@ -95,10 +95,11 @@ class DBManager:
 
             loading.geometry(f"{ancho}x{alto}+{x}+{y}")
             loading.transient(parent)   # Mantener sobre la ventana padre
-            loading.grab_set()          # Bloquea interacción con la principal
             label = ctk.CTkLabel(loading, text="Procesando, por favor espere...")
             label.pack(expand=True, padx=20, pady=20)
+            loading.deiconify() 
             loading.update()
+            loading.grab_set()   
         
         def _run_query():
             conn = self.get_db_connection()

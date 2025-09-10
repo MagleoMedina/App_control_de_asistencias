@@ -23,8 +23,10 @@ datas_extra = (
     collect_data_files('reportlab') +  # fonts, encodings, etc.
     collect_data_files('xhtml2pdf') +  # templates/resources
     [
-        ('Views/Imagen/logoUNEG.png', 'Views/Imagen'),  # <-- add logo image
-        ('Views/Imagen/CL.png', 'Views/Imagen'),  # <-- add CL.png image
+        ('assets/logoUNEG.png', 'assets'),  # <-- add logo image
+        ('assets/CL.png', 'assets'),  # <-- add CL.png image
+        ('assets/Circular-CL.png', 'assets'), 
+        ('assets/Login.png, 'assets'), 
         ('Pdf/modulo_estadistico.html', 'Pdf'),  # <-- add HTML template
         ('Pdf/consultar_asistencia.html', 'Pdf'),
         ('Pdf/consultar_falla_equipo.html', 'Pdf'),

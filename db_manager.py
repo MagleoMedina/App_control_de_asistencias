@@ -156,7 +156,7 @@ class DBManager:
             """
             CREATE TABLE IF NOT EXISTS "Usuario" (
                 "Numero_de_ficha"	INTEGER,
-                "Username"	TEXT UNIQUE,
+                "Username"	TEXT,
                 "Password"	TEXT,
                 PRIMARY KEY("Numero_de_ficha")
             )
@@ -208,7 +208,7 @@ class DBManager:
             """,
             """
             CREATE TABLE IF NOT EXISTS "Equipo" (
-                "Nro_de_bien"	INTEGER,
+                "Nro_de_bien"	TEXT,
                 "Laboratorio"	INTEGER NOT NULL,
                 "Status"	TEXT NOT NULL,
                 PRIMARY KEY("Nro_de_bien"),
@@ -217,7 +217,7 @@ class DBManager:
             """,
             """
             CREATE TABLE IF NOT EXISTS "Componente" (
-                "Nro_de_bien"	INTEGER,
+                "Nro_de_bien"	TEXT,
                 "Descripcion"	TEXT NOT NULL,
                 PRIMARY KEY("Nro_de_bien"),
                 FOREIGN KEY("Nro_de_bien") REFERENCES "Equipo"("Nro_de_bien") ON UPDATE CASCADE
@@ -233,8 +233,8 @@ class DBManager:
             """
             CREATE TABLE IF NOT EXISTS "Asignacion" (
                 "ID"	INTEGER,
-                "Equipo"	INTEGER,
-                "Componente"	INTEGER,
+                "Equipo"	TEXT,
+                "Componente"	TEXT,
                 PRIMARY KEY("ID" AUTOINCREMENT),
                 FOREIGN KEY("Equipo") REFERENCES "Equipo"("Nro_de_bien") ON UPDATE CASCADE,
                 FOREIGN KEY("Componente") REFERENCES "Componente"("Nro_de_bien") ON UPDATE CASCADE
@@ -260,7 +260,7 @@ class DBManager:
                 "ID"	INTEGER,
                 "Uso_laboratorio_usr"	INTEGER NOT NULL,
                 "Usuario_laboratorio"	INTEGER NOT NULL,
-                "Equipo"	INTEGER NOT NULL,
+                "Equipo"	TEXT NOT NULL,
                 PRIMARY KEY("ID" AUTOINCREMENT),
                 FOREIGN KEY("Equipo") REFERENCES "Equipo"("Nro_de_bien") ON UPDATE CASCADE,
                 FOREIGN KEY("Usuario_laboratorio") REFERENCES "Usuario_laboratorio"("Persona") ON UPDATE CASCADE,
@@ -270,7 +270,7 @@ class DBManager:
             """
             CREATE TABLE IF NOT EXISTS "Falla_equipo"(
                 "ID" INTEGER,
-                "Equipo" INTEGER,
+                "Equipo" TEXT,
                 "Fecha_falla" TEXT,
                 "Descripcion_falla" TEXT,
                 "Hora_de_la_falla" TEXT,

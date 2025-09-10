@@ -95,6 +95,11 @@ class VentanaLogin:
 
         # Variable para controlar la visibilidad de la contraseña
         self.password_visible = False
+
+        # Bind Enter key to trigger ingresar
+        self.ventana.bind("<Return>", lambda event: self.ingresar())
+        self.entry_usuario.bind("<Return>", lambda event: self.ingresar())
+        self.entry_password.bind("<Return>", lambda event: self.ingresar())
     
     # Cambia el color cuando el mouse entra
     def on_hover(self, event, widget):

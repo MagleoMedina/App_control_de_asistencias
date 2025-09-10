@@ -260,9 +260,21 @@ class VentanaMainAdmin(VentanaMain):
             text_color="#ffffff" ,font=("Century Gothic", 14,"bold"),corner_radius=10)
         boton_gestion_usuarios.pack(pady=5)
         self.botones_nav.append(boton_gestion_usuarios)
+        
+        # Botón para limpiar la bd
+        boton_eliminar_bd = ctk.CTkButton(self.nav_frame, text="🗑️ Limpiar datos", width=200,height=40, command=self.eliminar_datos, fg_color="red",
+            hover_color="#FF315E",  # Color cuando pasas el mouse
+            border_color="#ffffff",  # Color del borde
+            border_width=2,  # Grosor del borde
+            text_color="#ffffff" ,font=("Century Gothic", 14,"bold"),corner_radius=10)
+        boton_eliminar_bd.pack(pady=5)
+        self.botones_nav.append(boton_eliminar_bd)
 
     def gestion_usuarios(self):
         self.limpiar_frame()
         app = GestionUsuarios(self.main_frame)
         app.pack(fill="both", expand=True)
         app.pack(fill="both", expand=True)
+        
+    def eliminar_datos(self):
+        pass

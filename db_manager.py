@@ -83,7 +83,6 @@ class DBManager:
         if parent is not None:
             import customtkinter as ctk
             loading = ctk.CTkToplevel(parent)
-            loading.title("Cargando...")
             # Tamaño de la ventana
             ancho, alto = 250, 100
             # Dimensiones de la pantalla
@@ -93,6 +92,7 @@ class DBManager:
             x = (screen_width // 2) - (ancho // 2)
             y = (screen_height // 2) - (alto // 2)
 
+            loading.overrideredirect(True)
             loading.geometry(f"{ancho}x{alto}+{x}+{y}")
             loading.transient(parent)   # Mantener sobre la ventana padre
             label = ctk.CTkLabel(loading, text="Procesando, por favor espere...")

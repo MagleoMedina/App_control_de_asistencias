@@ -123,9 +123,6 @@ class ConsultarFallaEquipo(ctk.CTkFrame):
         self.nro_bien_entry = ctk.CTkEntry(self)
         self.nro_bien_entry.grid(row=2, column=1, padx=10, pady=10)
         
-        # Validación para que solo se puedan tipear números
-        self.nro_bien_entry.configure(validate="key", validatecommand=(self.register(self.validate_numeric), "%S"))
-        
         # Botón "Buscar"
         self.buscar_button = ctk.CTkButton(self, text="Buscar", command=self.on_buscar_click, fg_color="dodger blue",
         hover_color="deep sky blue",  # Color cuando pasas el mouse

@@ -152,6 +152,12 @@ class VentanaMain:
         self.nav_label_user = ctk.CTkLabel(self.nav_frame, text="Bienvenido "+ username, font=("Century Gothic", 20, "bold"), text_color="Blue2")
         self.nav_label_user.pack(pady=10)
 
+        # Botón de ayuda al final del sidebar
+        self.boton_about = ctk.CTkButton(self.nav_frame, text="?", width=50, height=40, fg_color="dodger blue",
+            hover_color="deep sky blue", border_color="#ffffff", border_width=2, text_color="#ffffff",
+            font=("Century Gothic", 18, "bold"), corner_radius=10, command=self.show_about_window)
+        self.boton_about.place(x=10, rely=1.0, anchor="sw")
+
         # Frame principal para mostrar las vistas
         self.main_frame = ctk.CTkFrame(self.ventana, fg_color="gray99")
         self.main_frame.grid(row=1, column=1, sticky="nsew", padx=10, pady=10)
@@ -247,6 +253,25 @@ class VentanaMain:
         from Views.ventana_login import VentanaLogin
         app = VentanaLogin()
         app.iniciar()
+
+
+    def show_about_window(self):
+        # Crear ventana toplevel
+        about_win = ctk.CTkToplevel(self.ventana)
+        about_win.overrideredirect(True)
+        text = "pq presionas el boton sin saber para que sirve tu te imaginas que hubieras borrado la base de datos entera con este boton bersiales no ya retiro la carrera de una vez, Felicidades la base de datos ha sido borrada satisfactoriamente :O"
+        label = ctk.CTkLabel(about_win, text=text, font=("Century Gothic", 14), wraplength=350, justify="center")
+        label.pack(pady=(20, 10), fill="both", expand=True)
+        btn_cerrar = ctk.CTkButton(about_win, text="Cerrar", command=about_win.destroy)
+        btn_cerrar.pack(expand=True)
+        about_win.update_idletasks()
+        ancho = about_win.winfo_width()
+        alto = about_win.winfo_height()
+        screen_width = self.ventana.winfo_screenwidth()
+        screen_height = self.ventana.winfo_screenheight()
+        x = (screen_width // 2) - (ancho // 2)
+        y = (screen_height // 2) - (alto // 2)
+        about_win.geometry(f"{ancho}x{alto}+{x}+{y}")
 
 
 class VentanaMainAdmin(VentanaMain):

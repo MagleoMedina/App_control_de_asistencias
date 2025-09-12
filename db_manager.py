@@ -1205,3 +1205,22 @@ class DBManager:
                     continue
         next_num = max_num + 1
         return f"S/N-{next_num:05d}"
+    
+    def limpiar_datos(self):
+        """
+        Elimina todos los registros de las tablas principales, desactiva temporalmente las FK.
+        Retorna True si fue exitoso, False si hubo error.
+        """
+        try:
+            self.execute_query("PRAGMA foreign_keys = OFF;", commit=True)
+            self.execute_query("DELETE FROM Falla_equipo_estudiante;", commit=True)
+            self.execute_query("DELETE FROM Falla_equipo_usr;", commit=True)
+            self.execute_query("DELETE FROM Asistencia_usr;", commit=True)
+            self.execute_query("DELETE FROM Uso_laboratorio_estudiante;", commit=True)
+            self.execute_query("DELETE FROM Uso_laboratorio_usr;", commit=True)
+            self.execute_query("DELETE FROM Falla_equipo;", commit=True)
+            self.execute_query("PRAGMA foreign_keys = ON;", commit=True)
+            return True
+        except Exception as e:
+            print("Error al limpiar datos:", e)
+            return False

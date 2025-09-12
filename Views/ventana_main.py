@@ -8,6 +8,7 @@ from Views.consultar_asistencia import ConsultarAsistencia
 from Views.modulo_estadistico import ModuloEstadistico
 from Views.equipos import Equipos
 from Views.gestion_de_usuarios import GestionUsuarios
+from Views.eliminar_datos import EliminarDatos
 
 class VentanaMain:
     def __init__(self, user_data):
@@ -302,4 +303,9 @@ class VentanaMainAdmin(VentanaMain):
         app.pack(fill="both", expand=True)
         
     def eliminar_datos(self):
-        pass
+        confirm = messagebox.askyesno(
+            "Advertencia",
+            "¿Está seguro de que desea eliminar todos los datos?\nEsta acción no se puede deshacer."
+        )
+        if confirm:
+            EliminarDatos(self.ventana, self.user_data) 

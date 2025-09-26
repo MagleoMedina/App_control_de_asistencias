@@ -123,6 +123,12 @@ class ConsultarFallaEquipo(ctk.CTkFrame):
         self.nro_bien_entry = ctk.CTkEntry(self)
         self.nro_bien_entry.grid(row=2, column=1, padx=10, pady=10)
         
+        # Dar foco automático
+        self.nro_bien_entry.focus_set()
+        
+        # Permitir que se ejecute con la tecla Enter
+        self.nro_bien_entry.bind("<Return>", lambda event: self.on_buscar_click())
+        
         # Botón "Buscar"
         self.buscar_button = ctk.CTkButton(self, text="Buscar", command=self.on_buscar_click, fg_color="dodger blue",
         hover_color="deep sky blue",  # Color cuando pasas el mouse
@@ -212,7 +218,7 @@ class AgregarEquipo(ctk.CTkFrame):
         # Label and Dropdown for "Sede"
         self.sede_label = ctk.CTkLabel(self, text="Sede",font=("Century Gothic", 12, "bold"),text_color="white")
         self.sede_label.grid(row=0, column=0, padx=10, pady=5)
-        self.sede_dropdown = ctk.CTkComboBox(self, values=sede_names, command=self.on_sede_selected) 
+        self.sede_dropdown = ctk.CTkComboBox(self, values=sede_names, state="readonly", command=self.on_sede_selected) 
         self.sede_dropdown.grid(row=0, column=1, padx=10, pady=5)
 
         # Inicializar laboratorios según la sede seleccionada (si existe)
@@ -256,6 +262,7 @@ class AgregarEquipo(ctk.CTkFrame):
         self.nro_bien_label.grid(row=4, column=0, padx=10, pady=5)
         self.nro_bien_entry = ctk.CTkEntry(self)
         self.nro_bien_entry.grid(row=4, column=1, padx=10, pady=5)
+        self.nro_bien_entry.focus_set()
         # Botón al lado del entry de número de bien
         self.nro_bien_button = ctk.CTkButton(self, text="S/N", width=50, command=self.generar_sn_bien)
         self.nro_bien_button.grid(row=4, column=2, padx=5, pady=5)
@@ -269,6 +276,16 @@ class AgregarEquipo(ctk.CTkFrame):
         font=("Century Gothic", 14, "bold"),
         corner_radius=10)
         self.guardar_button.grid(row=5, column=0, columnspan=2, pady=10)
+        
+        # Hacer que ENTER dispare guardar_datos
+        for widget in [
+            self.sede_dropdown, 
+            self.laboratorio_dropdown, 
+            self.equipo_dropdown, 
+            self.status_dropdown, 
+            self.nro_bien_entry
+        ]:
+            widget.bind("<Return>", lambda e: self.guardar_datos())
 
     def validate_numeric(self, char):
         return char.isdigit()
@@ -364,9 +381,15 @@ class ModificarEquipo(ctk.CTkFrame):
         # Entry for "Número de bien del equipo"
         self.nro_bien_entry = ctk.CTkEntry(self)
         self.nro_bien_entry.grid(row=0, column=1, padx=10, pady=5)
+        
+        # Dar foco automático
+        self.nro_bien_entry.focus_set()
 
         # Add validation for numeric input
         self.nro_bien_entry.configure(validate="key", validatecommand=(self.register(self.validate_numeric), "%S"))
+        
+        # Permitir que se ejecute con Enter
+        self.nro_bien_entry.bind("<Return>", lambda event: self.buscar_equipo())
 
         # Button "Buscar"
         self.buscar_button = ctk.CTkButton(self, text="Buscar", command=self.buscar_equipo, fg_color="dodger blue",
@@ -425,6 +448,8 @@ class ModificarEquipo(ctk.CTkFrame):
         self.sede_dropdown = ctk.CTkComboBox(self, values=sede_names, state="readonly", command=self.on_sede_selected)
         self.sede_dropdown.grid(row=1, column=1, padx=10, pady=5)
         self.sede_dropdown.set(equipo_data["sede_nombre"])
+        self.bind_focus_to_combobox(self.sede_dropdown)
+        self.sede_dropdown.bind("<Return>", lambda e: self.actualizar_datos())
 
         # Laboratorios para la sede seleccionada
         self.update_laboratorios()
@@ -433,6 +458,8 @@ class ModificarEquipo(ctk.CTkFrame):
         self.laboratorio_dropdown = ctk.CTkComboBox(self, values=self.lab_names, state="readonly")
         self.laboratorio_dropdown.grid(row=2, column=1, padx=10, pady=5)
         self.laboratorio_dropdown.set(equipo_data["laboratorio_nombre"])
+        self.bind_focus_to_combobox(self.laboratorio_dropdown)
+        self.laboratorio_dropdown.bind("<Return>", lambda e: self.actualizar_datos())
 
         # Tipos de equipo
         tipos_por_defecto = ["Computadora", "Teclado", "Ratón", "Monitor"]
@@ -446,6 +473,8 @@ class ModificarEquipo(ctk.CTkFrame):
         self.equipo_dropdown = ctk.CTkComboBox(self, values=self.tipos_equipo, state="readonly")
         self.equipo_dropdown.grid(row=3, column=1, padx=10, pady=5)
         self.equipo_dropdown.set(equipo_data["descripcion_equipo"])
+        self.bind_focus_to_combobox(self.equipo_dropdown)
+        self.equipo_dropdown.bind("<Return>", lambda e: self.actualizar_datos())
 
         # Status
         self.status_label = ctk.CTkLabel(self, text="Status",font=("Century Gothic", 14, "bold"),text_color="white")
@@ -454,6 +483,8 @@ class ModificarEquipo(ctk.CTkFrame):
         self.status_dropdown = ctk.CTkComboBox(self, values=values_status, state="readonly")
         self.status_dropdown.grid(row=4, column=1, padx=10, pady=5)
         self.status_dropdown.set(equipo_data["status"])
+        self.bind_focus_to_combobox(self.status_dropdown)
+        self.status_dropdown.bind("<Return>", lambda e: self.actualizar_datos())
 
         # Número de bien
         self.nuevo_nro_bien_label = ctk.CTkLabel(self, text="Nuevo número de bien",font=("Century Gothic", 14, "bold"),text_color="white")
@@ -461,7 +492,7 @@ class ModificarEquipo(ctk.CTkFrame):
         self.nuevo_nro_bien_entry = ctk.CTkEntry(self)
         self.nuevo_nro_bien_entry.grid(row=5, column=1, padx=10, pady=5)
         self.nuevo_nro_bien_entry.insert(0, str(equipo_data["nro_bien"]))
-        
+        self.nuevo_nro_bien_entry.bind("<Return>", lambda e: self.actualizar_datos())
 
         # Botón Actualizar
         if not self.actualizar_button:
@@ -494,6 +525,24 @@ class ModificarEquipo(ctk.CTkFrame):
             self.laboratorio_dropdown.set(self.lab_names[0])
         else:
             self.laboratorio_dropdown.set("")
+            
+    def bind_focus_to_combobox(self, combo):
+        """Asegura que el combobox gane el foco cuando se interactúe con él (clic en campo, flechita o selección)."""
+        def give_focus(event=None):
+            try:
+                combo.focus_set()
+            except Exception:
+                pass
+
+        # Enlaza varios eventos: click, liberación de click y selección de item
+        combo.bind("<Button-1>", give_focus, add="+")
+        combo.bind("<ButtonRelease-1>", give_focus, add="+")
+        combo.bind("<<ComboboxSelected>>", give_focus, add="+")
+
+        # Enlaza los hijos (si existen) — cubre la mayoria de implementaciones internas
+        for child in combo.winfo_children():
+            child.bind("<Button-1>", give_focus, add="+")
+            child.bind("<ButtonRelease-1>", give_focus, add="+")
 
     def actualizar_datos(self):
         # Recoger datos de los campos
@@ -569,6 +618,8 @@ class RelacionarEquipos(ctk.CTkFrame):
         self.computadora_entry = ctk.CTkEntry(self)
         self.computadora_entry.grid(row=1, column=1, padx=10, pady=5)
         self.computadora_entry.configure(validate="key", validatecommand=(self.register(self.validate_numeric), "%S"))
+        # Dar foco automático
+        self.computadora_entry.focus_set()
 
         # Label and Entry for "Teclado"
         self.teclado_label = ctk.CTkLabel(self, text="Teclado",font=("Century Gothic", 12, "bold"),text_color="white")
@@ -600,6 +651,10 @@ class RelacionarEquipos(ctk.CTkFrame):
         font=("Century Gothic", 14, "bold"),
         corner_radius=10)
         self.relacionar_button.grid(row=5, column=0, columnspan=2, pady=10)
+        
+        # Hacer que ENTER ejecute relacionar
+        for entry in [self.computadora_entry, self.teclado_entry, self.monitor_entry, self.raton_entry]:
+            entry.bind("<Return>", lambda e: self.relacionar_equipos())
 
     def validate_numeric(self, char):
         return char.isdigit()

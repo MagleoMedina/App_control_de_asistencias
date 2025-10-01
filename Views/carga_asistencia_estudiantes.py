@@ -80,6 +80,11 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
         # Validation for entry_cantidad_usuarios
         self.entry_cantidad_usuarios.configure(validate="key", validatecommand=(self.register(self.validate_numeric), "%P"))
         
+        self.entry_fecha.bind("<Return>", self.on_enter)
+        self.entry_sede.bind("<Return>", self.on_enter)
+        self.entry_laboratorio.bind("<Return>", self.on_enter)
+        self.entry_cantidad_usuarios.bind("<Return>", self.on_enter)
+        
         # Fallo algun equipo?
         self.label_fallo_equipo = ctk.CTkLabel(self, text="Fallo algun equipo?" , font=("Century Gothic", 14, "bold"))
         self.label_fallo_equipo.grid(row=3, column=1, padx=10, pady=10)
@@ -138,6 +143,14 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
             self.entry_laboratorio.set(self.lab_names[0])
         else:
             self.entry_laboratorio.set("")
+            
+    def on_enter(self, event):
+        """Solo permite submit con Enter si está marcada la opción 'No'."""
+        if self.radio_var.get() in ("No", "Si"):
+            self.validate_and_submit()
+        else:
+            # Ignorar si no eligió ninguna opcion de falla
+            return "break"  # Previene que haga nada
 
     def on_radio_change(self):
         if self.radio_var.get() == "Si":
@@ -145,11 +158,15 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
             self.combo_cantidad_equipos.grid(row=4, column=2, padx=10, pady=10)
             self.combo_cantidad_equipos.bind("<<ComboboxSelected>>", self.on_cantidad_equipos_change)
             self.btn_submit.grid_forget()
+            
         else:
             self.label_cantidad_equipos.grid_forget()
             self.combo_cantidad_equipos.grid_forget()
             self.clear_equipos_entries()
             self.btn_submit.grid(row=4, column=4, padx=10, pady=10)
+            
+            # Poner foco en cantidad
+            self.entry_cantidad_usuarios.focus_set()
         
         if self.radio_var.get() == "No":
             self.btn_submit.grid(row=4, column=4, padx=10, pady=10)
@@ -173,6 +190,12 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
             entry_descripcion.grid(row=5+i, column=4, padx=10, pady=10)
             label_hora_falla.grid(row=5+i, column=5, padx=10, pady=10)
             time_falla.grid(row=5+i, column=6, columnspan=2, padx=5, pady=10)
+            
+            # Bind Enter en los campos dinámicos
+            entry_nro_bien.bind("<Return>", lambda e: self.validate_and_submit())
+            entry_descripcion.bind("<Return>", lambda e: self.validate_and_submit())
+            time_falla.hour_entry.bind("<Return>", lambda e: self.validate_and_submit())
+            time_falla.minute_entry.bind("<Return>", lambda e: self.validate_and_submit())
 
             self.equipos_entries.append((label_nro_bien, entry_nro_bien, label_descripcion, entry_descripcion, label_hora_falla, time_falla))
         self.btn_submit.grid(row=5+cantidad, column=4, padx=10, pady=10)
@@ -253,5 +276,18 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
                             messagebox.showerror("Error", "No se pudo registrar la falla de equipo.")
                             return
             messagebox.showinfo("Success", "Asistencia de estudiantes registrada correctamente.")
+            self.reset_form()
         else:
             messagebox.showerror("Error", "No se pudo registrar la asistencia de estudiantes.")
+            
+    def reset_form(self):
+        # Limpiar campos
+        self.entry_cantidad_usuarios.delete(0, "end")
+        self.radio_var.set("")
+        self.combo_cantidad_equipos.set("")
+
+        # Ocultar secciones dinámicas
+        self.label_cantidad_equipos.grid_forget()
+        self.combo_cantidad_equipos.grid_forget()
+        self.clear_equipos_entries()
+        self.btn_submit.grid_remove()

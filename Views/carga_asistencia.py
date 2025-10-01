@@ -192,6 +192,15 @@ class CargaAsistencia(ctk.CTkFrame):
         # Agregar eventos para hover en numero_bien
         self.entry_numero_bien.bind("<Enter>", lambda event: self.on_hover(event, self.entry_numero_bien))
         self.entry_numero_bien.bind("<Leave>", lambda event: self.off_hover(event, self.entry_numero_bien))
+        
+        for widget in [
+            self.entry_nombre, self.entry_apellido, self.entry_cedula,
+            self.entry_organizacion, self.entry_telefono, self.entry_numero_bien,
+            self.entry_tipo_uso, self.entry_sede, self.entry_laboratorio,
+            self.entry_fecha, self.time_inicio.hour_entry, self.time_inicio.minute_entry,
+            self.time_finalizacion.hour_entry, self.time_finalizacion.minute_entry
+        ]:
+            widget.bind("<Return>", self._on_enter_pressed)
 
         self.button_añadir_persona = ctk.CTkButton(self.scrollable_frame, text="Añadir persona", command=self.añadir_persona,
         height=28,
@@ -346,6 +355,11 @@ class CargaAsistencia(ctk.CTkFrame):
             entry_descripcion.grid(row=16+i, column=3, padx=10, pady=10)
             label_hora_falla.grid(row=16+i, column=4, padx=10, pady=10)
             time_falla.grid(row=16+i, column=5, columnspan=2, padx=5, pady=10)
+            
+            entry_nro_bien.bind("<Return>", self._on_enter_pressed)
+            entry_descripcion.bind("<Return>", self._on_enter_pressed)
+            time_falla.hour_entry.bind("<Return>", self._on_enter_pressed)
+            time_falla.minute_entry.bind("<Return>", self._on_enter_pressed)
 
             self.equipos_entries.append((label_nro_bien, entry_nro_bien, label_descripcion, entry_descripcion, label_hora_falla, time_falla))
         self.btn_submit.grid(row=16+cantidad, column=4, padx=10, pady=10)
@@ -541,3 +555,30 @@ class CargaAsistencia(ctk.CTkFrame):
     def _validate_numeric(self, value):
         """Permite solo valores numéricos en los campos."""
         return value.isdigit() or value == ""
+    
+    def _on_enter_pressed(self, event):
+        """Control central del Enter según estado y foco."""
+        opcion = self.radio_var.get()
+        widget = self.focus_get()
+        widget_id = str(widget) 
+        print("Widget actual:", widget_id)
+
+        if opcion == "no":
+            # Con "no", cualquier Enter envía submit
+            self.submit()
+
+        elif opcion == "si":
+            # Revisar si el foco está en un campo de fallas
+            for widgets in self.equipos_entries:
+                for w in widgets:
+                    try:
+                        if widget_id.startswith(str(w)):
+                            self.submit()
+                            return
+                    except Exception:
+                        pass
+            self.añadir_persona()
+
+        else:
+            # Si aún no seleccionó nada, añadir persona
+            self.añadir_persona()

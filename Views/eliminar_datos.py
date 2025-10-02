@@ -31,6 +31,8 @@ class EliminarDatos(ctk.CTkToplevel):
 
         self.entry_pass = ctk.CTkEntry(self, show="*")
         self.entry_pass.pack(pady=10)
+        self.after(100, lambda: self.entry_pass.focus_set())
+        self.entry_pass.bind("<Return>", lambda e: self.confirmar())
 
         self.btn_confirm = ctk.CTkButton(self, text="Confirmar", command=self.confirmar)
         self.btn_confirm.pack(pady=10)
@@ -43,6 +45,7 @@ class EliminarDatos(ctk.CTkToplevel):
         user = self.db.autenticar_usuario(username, password)
         if not user or user["Tipo_usuario"].lower() != "administrador":
             messagebox.showerror("Error", "Contraseña incorrecta, no se puede eliminar los datos.")
+            self.entry_pass.focus_set()
             return
 
         if self.db.limpiar_datos():

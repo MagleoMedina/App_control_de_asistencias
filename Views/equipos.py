@@ -525,8 +525,9 @@ class ModificarEquipo(ctk.CTkFrame):
             self.laboratorio_dropdown.set(self.lab_names[0])
         else:
             self.laboratorio_dropdown.set("")
-            
-    def bind_focus_to_combobox(self, combo):
+    
+    @staticmethod    
+    def bind_focus_to_combobox(combo):
         """Asegura que el combobox gane el foco cuando se interactúe con él (clic en campo, flechita o selección)."""
         def give_focus(event=None):
             try:

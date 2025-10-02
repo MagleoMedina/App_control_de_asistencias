@@ -1,6 +1,7 @@
 import customtkinter as ctk
 from tkinter import messagebox
 from db_manager import DBManager
+from Views.equipos import ModificarEquipo
 
 #Clase encargada de registrar nuevos usuarios
 class GestionUsuarios(ctk.CTkFrame):
@@ -63,7 +64,7 @@ class VentanaRegistro(ctk.CTkFrame):
         self.label_usuario.grid(row=0, column=0, sticky='w', pady=5)
         self.entry_usuario = ctk.CTkEntry(self)
         self.entry_usuario.grid(row=0, column=1, pady=5)
-
+        self.entry_usuario.focus_set()
         # Contraseña
         self.label_password = ctk.CTkLabel(self, text="Contraseña:")
         self.label_password.grid(row=1, column=0, sticky='w', pady=5)
@@ -110,6 +111,19 @@ class VentanaRegistro(ctk.CTkFrame):
         values = self.db.obtener_tipos_usuario() # Extrae los tipos desde la BD
         self.combo_tipo_usuario = ctk.CTkComboBox(self, values=values, state='readonly') 
         self.combo_tipo_usuario.grid(row=7, column=1, pady=5)
+        
+         # Hacer que ENTER dispare registrar_usuario()
+        for widget in [
+            self.entry_usuario,
+            self.entry_password, 
+            self.entry_nombre, 
+            self.entry_apellido,
+            self.entry_cedula,
+            self.entry_telefono,
+            self.entry_ficha,
+            self.combo_tipo_usuario
+        ]:
+            widget.bind("<Return>", lambda e: self.registrar_usuario())
 
         # Botón de registro
         self.boton_registro = ctk.CTkButton(self, text="Registrar", command=self.registrar_usuario)
@@ -184,6 +198,11 @@ class ModificarDatos(ctk.CTkFrame):
         self.entry_cedula.grid(row=0, column=1, padx=10, pady=10)
         # Guardar referencia para búsqueda
         self.entry_cedula_buscar = self.entry_cedula
+        
+        self.entry_cedula.focus_set()
+        
+        # Permitir que se ejecute con Enter
+        self.entry_cedula.bind("<Return>", lambda e: self.buscar_click())
 
         # Botón Buscar
         self.boton_buscar = ctk.CTkButton(self, text="Buscar", command=self.buscar_click)
@@ -251,6 +270,19 @@ class ModificarDatos(ctk.CTkFrame):
         self.combo_tipo_usuario = ctk.CTkComboBox(self, values=values, state='readonly')
         self.combo_tipo_usuario.grid(row=8, column=1, pady=5)
         self.combo_tipo_usuario.grid_remove()
+        ModificarEquipo.bind_focus_to_combobox(self.combo_tipo_usuario)
+        
+        for widget in [
+            self.entry_usuario,
+            self.entry_password,
+            self.entry_nombre,
+            self.entry_apellido,
+            self.entry_cedula,
+            self.entry_telefono,
+            self.entry_ficha,
+            self.combo_tipo_usuario
+        ]:
+            widget.bind("<Return>", lambda e: self.actualizar_usuario())
 
         # Botón Actualizar (initially hidden)
         self.boton_actualizar = ctk.CTkButton(self, text="Actualizar", command=self.actualizar_usuario)
@@ -346,6 +378,7 @@ class ModificarDatos(ctk.CTkFrame):
             self.entry_telefono.configure(state='normal')
             self.entry_ficha.configure(state='normal')
             self.combo_tipo_usuario.configure(state='normal')
+            self.entry_usuario.focus_set()
             self.boton_habilitar.configure(text="Deshabilitar")
         else:
             self.entry_usuario.configure(state='readonly')
@@ -356,6 +389,7 @@ class ModificarDatos(ctk.CTkFrame):
             self.entry_telefono.configure(state='readonly')
             self.entry_ficha.configure(state='readonly')
             self.combo_tipo_usuario.configure(state='readonly')
+            self.entry_cedula_buscar.focus_set()
             self.boton_habilitar.configure(text="Habilitar")
 
     def actualizar_usuario(self):
@@ -435,6 +469,12 @@ class RecuperarDatosApp(ctk.CTkFrame):
         vcmd = (self.register(self.validate_numeric), '%P')
         self.entry_cedula = ctk.CTkEntry(self, width=150, validate='key', validatecommand=vcmd)
         self.entry_cedula.pack(pady=10)
+        
+        # Dar foco automático
+        self.entry_cedula.focus_set()
+        
+        # Permitir que se ejecute con la tecla Enter
+        self.entry_cedula.bind("<Return>", lambda e: self.buscar_click())
 
         # Botón Buscar
         self.boton_buscar = ctk.CTkButton(self, text="Buscar", command=self.buscar_click)

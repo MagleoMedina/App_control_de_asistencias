@@ -423,35 +423,36 @@ class ModificarDatos(ctk.CTkFrame):
         )
         if resultado:
             messagebox.showinfo("Actualización exitosa", "Usuario actualizado exitosamente.")
-            # Limpiar los campos después de actualización exitosa
-            self.entry_usuario.configure(state='normal')
-            self.entry_password.configure(state='normal')
-            self.entry_nombre.configure(state='normal')
-            self.entry_apellido.configure(state='normal')
-            self.entry_cedula.configure(state='normal')
-            self.entry_telefono.configure(state='normal')
-            self.entry_ficha.configure(state='normal')
-            self.combo_tipo_usuario.configure(state='normal')
-            self.entry_usuario.delete(0, 'end')
-            self.entry_password.delete(0, 'end')
-            self.entry_nombre.delete(0, 'end')
-            self.entry_apellido.delete(0, 'end')
-            self.entry_cedula.delete(0, 'end')
-            self.entry_telefono.delete(0, 'end')
-            self.entry_ficha.delete(0, 'end')
-            self.entry_cedula_buscar.delete(0, 'end')
-            self.combo_tipo_usuario.set('')
-            # Opcional: volver a poner los campos en readonly y ocultar elementos
-            self.entry_usuario.configure(state='readonly')
-            self.entry_password.configure(state='readonly')
-            self.entry_nombre.configure(state='readonly')
-            self.entry_apellido.configure(state='readonly')
-            self.entry_cedula.configure(state='readonly')
-            self.entry_telefono.configure(state='readonly')
-            self.entry_ficha.configure(state='readonly')
-            self.combo_tipo_usuario.configure(state='readonly')
+            self.resetear_formulario()
         else:
             messagebox.showerror("Error", "No se pudo actualizar el usuario. Verifica los datos.")
+            
+    def resetear_formulario(self):
+        """Oculta los campos y deja solo el buscador de cédula."""
+        # Ocultar todos los elementos extra
+        self.label_usuario.grid_remove()
+        self.entry_usuario.grid_remove()
+        self.label_password.grid_remove()
+        self.entry_password.grid_remove()
+        self.label_nombre.grid_remove()
+        self.entry_nombre.grid_remove()
+        self.label_apellido.grid_remove()
+        self.entry_apellido.grid_remove()
+        self.label_cedula.grid_remove()
+        self.entry_cedula.grid_remove()
+        self.label_telefono.grid_remove()
+        self.entry_telefono.grid_remove()
+        self.label_ficha.grid_remove()
+        self.entry_ficha.grid_remove()
+        self.label_tipo_usuario.grid_remove()
+        self.combo_tipo_usuario.grid_remove()
+        self.boton_actualizar.grid_remove()
+        self.boton_habilitar.grid_remove()
+
+        # Limpiar el buscador
+        self.entry_cedula_buscar.delete(0, 'end')
+        self.entry_cedula_buscar.focus_set()
+
 
 #Clase encargada de recuperar los datos de un usuario
 class RecuperarDatosApp(ctk.CTkFrame):

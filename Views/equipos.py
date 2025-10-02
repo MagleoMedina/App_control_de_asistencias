@@ -493,17 +493,20 @@ class ModificarEquipo(ctk.CTkFrame):
         self.nuevo_nro_bien_entry.grid(row=5, column=1, padx=10, pady=5)
         self.nuevo_nro_bien_entry.insert(0, str(equipo_data["nro_bien"]))
         self.nuevo_nro_bien_entry.bind("<Return>", lambda e: self.actualizar_datos())
-
-        # Botón Actualizar
-        if not self.actualizar_button:
-            self.actualizar_button = ctk.CTkButton(self, text="Actualizar", command=self.actualizar_datos, fg_color="dodger blue",
-            hover_color="deep sky blue",  # Color cuando pasas el mouse
-            border_color="#ffffff",  # Color del borde
-            border_width=2,  # Grosor del borde
+            
+        # Botón Actualizar 
+        self.actualizar_button = ctk.CTkButton(
+            self, text="Actualizar", command=self.actualizar_datos,
+            fg_color="dodger blue",
+            hover_color="deep sky blue",
+            border_color="#ffffff",
+            border_width=2,
             text_color="#ffffff",
             font=("Century Gothic", 14, "bold"),
-            corner_radius=10)
-            self.actualizar_button.grid(row=6, column=0, columnspan=2, pady=10)
+            corner_radius=10
+        )
+        self.actualizar_button.grid(row=6, column=0, columnspan=2, pady=10)
+
 
     def update_laboratorios(self):
         selected_sede_name = self.sede_dropdown.get()

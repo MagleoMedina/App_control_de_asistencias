@@ -1,3 +1,6 @@
+import platform
+import sys
+import os
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import messagebox
@@ -18,6 +21,29 @@ class VentanaMain:
         self.ventana.geometry("1280x720+10+10")
         self.ventana.title("SALU")
         ctk.set_appearance_mode("light")
+        
+        # --- Establecer icono personalizado multiplataforma ---
+        if hasattr(sys, '_MEIPASS'):
+            icon_png_path = os.path.join(sys._MEIPASS, 'assets', 'Circular-CL.png')
+            icon_ico_path = os.path.join(sys._MEIPASS, 'assets', 'Circular-CL.ico')
+        else:
+            icon_png_path = os.path.join('assets', 'Circular-CL.png')
+            icon_ico_path = os.path.join('assets', 'Circular-CL.ico')
+        system = platform.system()
+        if system == "Windows" and os.path.exists(icon_ico_path):
+            try:
+                self.ventana.iconbitmap(icon_ico_path)
+            except Exception as e:
+                print(f"Advertencia: No se pudo establecer el icono .ico: {e}")
+        elif system == "Linux" and os.path.exists(icon_png_path):
+            try:
+                # Usar PhotoImage para icono en Linux
+                icon_img = tk.PhotoImage(file=icon_png_path)
+                self.ventana.iconphoto(True, icon_img)
+            except Exception as e:
+                print(f"Advertencia: No se pudo establecer el icono .png: {e}")
+        else:
+            print(f"Advertencia: No se encontró el icono en la ruta: {icon_png_path} o {icon_ico_path}")
     
         
         # Crear un Canvas para el gradiente
@@ -61,7 +87,6 @@ class VentanaMain:
 
 
         # Cargar la imagen LOGO DE LA UNEG usando una ruta compatible con PyInstaller
-        import os, sys
         if hasattr(sys, '_MEIPASS'):
             img_path = os.path.join(sys._MEIPASS, 'assets', 'logo_uneg.png')
         else:
@@ -260,7 +285,8 @@ class VentanaMain:
         # Crear ventana toplevel
         about_win = ctk.CTkToplevel(self.ventana)
         about_win.overrideredirect(True)
-        text = "pq presionas el boton sin saber para que sirve tu te imaginas que hubieras borrado la base de datos entera con este boton bersiales no ya retiro la carrera de una vez, Felicidades la base de datos ha sido borrada satisfactoriamente :O"
+        text = "hola"
+        #text = "pq presionas el boton sin saber para que sirve tu te imaginas que hubieras borrado la base de datos entera con este boton bersiales no ya retiro la carrera de una vez, Felicidades la base de datos ha sido borrada satisfactoriamente :O"
         label = ctk.CTkLabel(about_win, text=text, font=("Century Gothic", 14), wraplength=350, justify="center")
         label.pack(pady=(20, 10), fill="both", expand=True)
         btn_cerrar = ctk.CTkButton(about_win, text="Cerrar", command=about_win.destroy)
@@ -308,4 +334,4 @@ class VentanaMainAdmin(VentanaMain):
             "¿Está seguro de que desea eliminar todos los datos?\nEsta acción no se puede deshacer."
         )
         if confirm:
-            EliminarDatos(self.ventana, self.user_data) 
+            EliminarDatos(self.ventana, self.user_data)

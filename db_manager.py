@@ -1,10 +1,26 @@
 # App_control_de_asistencias/db_manager.py
 
 import libsql
+import platform
 import os
 import sys
 from dotenv import load_dotenv
 from concurrent.futures import ThreadPoolExecutor
+
+def get_salu_folder():
+    system = platform.system()
+    user_home = os.path.expanduser("~")
+
+    if system == "Windows":
+        base_path = os.environ.get("LOCALAPPDATA", user_home) # C:\Users\<user>\AppData\Local
+    elif system == "Linux":
+        base_path = user_home # /home/<user>
+    else:
+        base_path = user_home  # fallback
+
+    salu_path = os.path.join(base_path, ".salu")
+    os.makedirs(salu_path, exist_ok=True)  # crear si no existe
+    return salu_path
 
 class DBManager:
     """
@@ -34,6 +50,9 @@ class DBManager:
         print("DBManager inicializado. Credenciales cargadas.")
         
         self.default_parent = None 
+        
+        self.salu_path = get_salu_folder()
+        self.db_file = os.path.join(self.salu_path, "salu-db.db")
     
     def set_parent(self, parent):
         """Define el parent por defecto para mostrar la pantalla de carga."""
@@ -47,7 +66,7 @@ class DBManager:
         if self._connection is None:
             try:
                 # Conecta a la réplica local ("salu-db.db" en este caso) y la sincroniza con Turso
-                self._connection = libsql.connect("salu-db.db", sync_url=self.url, auth_token=self.auth_token)
+                self._connection = libsql.connect(self.db_file, sync_url=self.url, auth_token=self.auth_token)
                 self._connection.sync()
                 print("Conexión a la base de datos Turso establecida y sincronizada.")
             except Exception as e:

@@ -6,6 +6,7 @@ import os
 import sys
 from dotenv import load_dotenv
 from concurrent.futures import ThreadPoolExecutor
+import zipfile  
 
 def get_salu_folder():
     system = platform.system()
@@ -20,6 +21,25 @@ def get_salu_folder():
 
     salu_path = os.path.join(base_path, ".salu")
     os.makedirs(salu_path, exist_ok=True)  # crear si no existe
+
+    if system == "Linux":
+        if hasattr(sys, '_MEIPASS'):
+            # Si se ejecuta como un ejecutable empaquetado
+            db_zip_path = os.path.join(sys._MEIPASS, "db.zip")
+        else:
+            # Si se ejecuta como script normal
+            db_zip_path = os.path.join(os.path.dirname(__file__), "db.zip")
+        # Solo descomprimir si existe el zip y faltan archivos en la carpeta destino
+        if os.path.exists(db_zip_path):
+            # Verifica si la base de datos principal no existe
+            db_main_file = os.path.join(salu_path, "salu-db.db")
+            if not os.path.exists(db_main_file):
+                try:
+                    with zipfile.ZipFile(db_zip_path, "r") as zip_ref:
+                        zip_ref.extractall(salu_path)
+                    print(f"db.zip descomprimido en {salu_path}")
+                except Exception as e:
+                    print(f"Error al descomprimir db.zip: {e}")
     return salu_path
 
 class DBManager:
@@ -335,7 +355,7 @@ class DBManager:
 
         print("Inicializando base de datos...")
         for sql in create_tables_sql:
-            # Usamos execute_query con commit=True para cada sentencia CREATE TABLE
+            # Usamos execute_query with commit=True para cada sentencia CREATE TABLE
             result = self.execute_query(sql, commit=True)
             if result is None:
                 print(f"Advertencia: Falló la creación de tabla con la consulta: {sql[:50]}...")

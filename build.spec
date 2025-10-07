@@ -26,6 +26,7 @@ datas_extra = (
         ('assets/logoUNEG.png', 'assets'),  
         ('assets/CL.png', 'assets'),  
         ('assets/Circular-CL.png', 'assets'), 
+        ('assets/Circular-CL.ico', 'assets'), 
         ('assets/Login.png, 'assets'), 
         ('Pdf/modulo_estadistico.html', 'Pdf'),  
         ('Pdf/consultar_asistencia.html', 'Pdf'),

@@ -22,11 +22,11 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
         
 
         # Title
-        self.label_title = ctk.CTkLabel(self, text="Carga de asistencia estudiantes", font=("Century Gothic", 21, "bold"),text_color="navy")
+        self.label_title = ctk.CTkLabel(self, text="Carga de Asistencia Estudiantes", font=("Century Gothic", 21, "bold"),text_color="navy")
         self.label_title.grid(row=0, column=3, columnspan=4, pady=20, sticky="ew")
         
         # Sede
-        self.label_sede = ctk.CTkLabel(self, text="Sede",font=("Century Gothic", 14, "bold"))
+        self.label_sede = ctk.CTkLabel(self, text="Sede",font=("Century Gothic", 13.5, "bold"))
         self.label_sede.grid(row=1, column=1, padx=10, pady=10)
         self.entry_sede = ctk.CTkComboBox(self, values=sede_names, state="readonly", command=self.on_sede_selected,font=("Century Gothic", 12),
         border_color="dodger blue",
@@ -41,7 +41,7 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
         self.lab_names = []
         
         # Laboratorio
-        self.label_laboratorio = ctk.CTkLabel(self, text="Laboratorio" , font=("Century Gothic", 14, "bold"))
+        self.label_laboratorio = ctk.CTkLabel(self, text="Laboratorio" , font=("Century Gothic", 13.5, "bold"))
         self.label_laboratorio.grid(row=1, column=3, padx=10, pady=10)
         self.entry_laboratorio = ctk.CTkComboBox(self, values=[], state="readonly",font=("Century Gothic", 12),
         border_color="dodger blue",
@@ -62,15 +62,15 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
             self.on_sede_selected()
         
         # Fecha
-        self.label_fecha = ctk.CTkLabel(self, text="Fecha", font=("Century Gothic", 14, "bold"))
+        self.label_fecha = ctk.CTkLabel(self, text="Fecha", font=("Century Gothic", 13.5, "bold"))
         self.label_fecha.grid(row=1, column=5, padx=10, pady=10)
         self.entry_fecha = DateEntry(self, date_pattern='dd/mm/y',font=("Century Gothic", 12, "bold"), background='deep sky blue',foreground='white',borderwidth=2,relief='sunken', width=20)
         self.entry_fecha.grid(row=1, column=6, padx=10, pady=10)
         
         # Cantidad de usuarios atendidos
-        self.label_cantidad_usuarios = ctk.CTkLabel(self, text="Cantidad de usuarios atendidos", font=("Century Gothic", 14,"bold"))
+        self.label_cantidad_usuarios = ctk.CTkLabel(self, text="Cantidad de usuarios atendidos", font=("Century Gothic", 13.5,"bold"))
         self.label_cantidad_usuarios.grid(row=1, column=7, padx=10, pady=10)
-        self.entry_cantidad_usuarios = ctk.CTkEntry(self, width=50,placeholder_text="Cantidad", font=("Century Gothic", 12))
+        self.entry_cantidad_usuarios = ctk.CTkEntry(self, width=50,placeholder_text="Cantidad", font=("Century Gothic", 12), border_width=2,border_color="light blue")
         self.entry_cantidad_usuarios.grid(row=1, column=8, padx=10, pady=10)
         # Agregar eventos para hover en nombre
         self.entry_cantidad_usuarios.bind("<Enter>", lambda event: self.on_hover(event, self.entry_cantidad_usuarios))
@@ -81,14 +81,26 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
         self.entry_cantidad_usuarios.configure(validate="key", validatecommand=(self.register(self.validate_numeric), "%P"))
         
         # Fallo algun equipo?
-        self.label_fallo_equipo = ctk.CTkLabel(self, text="Fallo algun equipo?" , font=("Century Gothic", 14, "bold"))
+        self.label_fallo_equipo = ctk.CTkLabel(self, text="Fallo algun equipo?" , font=("Century Gothic", 13.5, "bold"))
         self.label_fallo_equipo.grid(row=3, column=1, padx=10, pady=10)
         
         # Radio buttons
         self.radio_var = ctk.StringVar(value="")
-        self.radio_si = ctk.CTkRadioButton(self, text="Si",font=("Century Gothic", 14, "bold"), variable=self.radio_var, value="Si", command=self.on_radio_change)
+        self.radio_si = ctk.CTkRadioButton(self, text="Si",font=("Century Gothic", 13.5, "bold"), variable=self.radio_var, value="Si", command=self.on_radio_change,
+        fg_color="dodger blue",         # Color del círculo seleccionado
+        hover_color="deep sky blue",    # Color al pasar el mouse
+        border_color="dodger blue",     # Borde del círculo
+        radiobutton_height=22,          # Tamaño del radio
+        radiobutton_width=22
+                                            )
         self.radio_si.grid(row=3, column=2, padx=10, pady=10)
-        self.radio_no = ctk.CTkRadioButton(self, text="No",font=("Century Gothic", 14, "bold"), variable=self.radio_var, value="No", command=self.on_radio_change)
+        self.radio_no = ctk.CTkRadioButton(self, text="No",font=("Century Gothic", 13.5, "bold"), variable=self.radio_var, value="No", command=self.on_radio_change,
+        fg_color="dodger blue",         # Color del círculo seleccionado
+        hover_color="deep sky blue",    # Color al pasar el mouse
+        border_color="dodger blue",     # Borde del círculo
+        radiobutton_height=22,          # Tamaño del radio
+        radiobutton_width=22
+                                            )
         self.radio_no.grid(row=3, column=3, padx=10, pady=10)
         
         # Button
@@ -106,7 +118,7 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
         self.btn_submit.grid_remove()
         
         # Additional widgets for "Si" option
-        self.label_cantidad_equipos = ctk.CTkLabel(self, text="Cantidad de equipos", font=("Century Gothic", 14,"bold"))
+        self.label_cantidad_equipos = ctk.CTkLabel(self, text="Cantidad de equipos", font=("Century Gothic", 13.5,"bold"))
         self.combo_cantidad_equipos = ttk.Combobox(self, values=[1, 2, 3, 4, 5], state="readonly",font=("Century Gothic", 12))
         self.equipos_entries = []
 
@@ -160,11 +172,18 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
         self.clear_equipos_entries()
         cantidad = int(self.combo_cantidad_equipos.get())
         for i in range(cantidad):
-            label_nro_bien = ctk.CTkLabel(self, text=f"Nro de bien del equipo {i+1}" , font=("Century Gothic", 14,"bold"))
-            entry_nro_bien = ctk.CTkEntry(self, validate="key", validatecommand=(self.register(self.validate_numeric), "%P"))
+            label_nro_bien = ctk.CTkLabel(self, text=f"Nro de bien del equipo {i+1}" , font=("Century Gothic", 13.5,"bold"))
+            entry_nro_bien = ctk.CTkEntry(self, validate="key", validatecommand=(self.register(self.validate_numeric), "%P"), border_width=2,border_color="light blue")
+            entry_nro_bien.bind("<Enter>", lambda event,  widget=entry_nro_bien: self.on_hover(event, widget))
+            entry_nro_bien.bind("<Leave>", lambda event,  widget=entry_nro_bien: self.off_hover(event, widget))
+            
             label_descripcion = ctk.CTkLabel(self, text=f"Descripcion {i+1}" , font=("Century Gothic", 14,"bold"))
-            entry_descripcion = ctk.CTkEntry(self)
-            label_hora_falla = ctk.CTkLabel(self, text=f"Hora de la falla {i+1}", font=("Century Gothic", 14, "bold"))
+            entry_descripcion = ctk.CTkEntry(self, border_width=2,border_color="light blue")
+            entry_descripcion.bind("<Enter>", lambda event,  widget=entry_descripcion: self.on_hover(event, widget))
+            entry_descripcion.bind("<Leave>", lambda event,  widget=entry_descripcion: self.off_hover(event, widget))
+
+            
+            label_hora_falla = ctk.CTkLabel(self, text=f"Hora de la falla {i+1}", font=("Century Gothic", 13.5, "bold"))
             time_falla = TimeInput(self)  # Usar TimeInput en vez de combo_hora y combo_minutos
 
             label_nro_bien.grid(row=5+i, column=1, padx=10, pady=10)

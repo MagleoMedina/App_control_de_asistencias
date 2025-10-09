@@ -2,53 +2,91 @@ import customtkinter as ctk
 from tkinter import messagebox
 from db_manager import DBManager
 from Views.equipos import ModificarEquipo
+from tkinter import ttk, Canvas, Scrollbar, messagebox
 
 #Clase encargada de registrar nuevos usuarios
 class GestionUsuarios(ctk.CTkFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
+    
+        self.configure(fg_color="white")
 
-        # Título
-        self.label_titulo = ctk.CTkLabel(self, text="Selecciona una opcion")
-        self.label_titulo.grid(row=0, column=0, columnspan=4, pady=10)
+        # Configurar columnas para centrado
+        for i in range(4):
+            self.grid_columnconfigure(i, weight=1)
+
+        # Título centrado
+        self.label_titulo = ctk.CTkLabel(self, text="Gestion de Usuarios", font=("Century Gothic", 20, "bold"), text_color="navy")
+        self.label_titulo.grid(row=0, column=0, columnspan=4, pady=(20, 30), sticky="n")
+
+        self.label_subtitulo = ctk.CTkLabel(self, text="Selecciona una opcion",font=("Century Gothic", 13.5, "bold"))
+        self.label_subtitulo.grid(row=1, column=0, columnspan=4, pady=(0, 30))
 
         # Botón Crear
-        self.boton_crear = ctk.CTkButton(self, text="Crear", command=self.crear_usuario)
-        self.boton_crear.grid(row=1, column=0, padx=5, pady=5)
+        self.boton_crear = ctk.CTkButton(self, text="Crear", command=self.crear_usuario,height=28,
+        fg_color="dodger blue",
+        hover_color="deep sky blue",  # Color cuando pasas el mouse
+        border_color="#ffffff",  # Color del borde
+        border_width=2,  # Grosor del borde
+        text_color="#ffffff",
+        font=("Century Gothic", 14, "bold"),
+        corner_radius=10)
+        self.boton_crear.grid(row=2, column=0, padx=5, pady=5)
 
         # Botón Modificar
-        self.boton_modificar = ctk.CTkButton(self, text="Modificar", command=self.modificar_usuario)
-        self.boton_modificar.grid(row=1, column=1, padx=5, pady=5)
+        self.boton_modificar = ctk.CTkButton(self, text="Modificar", command=self.modificar_usuario,height=28,
+        fg_color="dodger blue",
+        hover_color="deep sky blue",  # Color cuando pasas el mouse
+        border_color="#ffffff",  # Color del borde
+        border_width=2,  # Grosor del borde
+        text_color="#ffffff",
+        font=("Century Gothic", 14, "bold"),
+        corner_radius=10)
+        self.boton_modificar.grid(row=2, column=1, padx=5, pady=5)
 
         # Botón Recuperar Credenciales
-        self.boton_recuperar = ctk.CTkButton(self, text="Recuperar Credenciales", command=self.recuperar_credenciales)
-        self.boton_recuperar.grid(row=1, column=2, padx=5, pady=5)
+        self.boton_recuperar = ctk.CTkButton(self, text="Recuperar Credenciales", command=self.recuperar_credenciales,height=28,
+        fg_color="dodger blue",
+        hover_color="deep sky blue",  # Color cuando pasas el mouse
+        border_color="#ffffff",  # Color del borde
+        border_width=2,  # Grosor del borde
+        text_color="#ffffff",
+        font=("Century Gothic", 14, "bold"),
+        corner_radius=10)
+        self.boton_recuperar.grid(row=2, column=2, padx=5, pady=5)
 
         # Botón Eliminar Credenciales
-        self.boton_eliminar = ctk.CTkButton(self, text="Eliminar Credenciales", command=self.eliminar_usuario)
-        self.boton_eliminar.grid(row=1, column=3, padx=5, pady=5)
+        self.boton_eliminar = ctk.CTkButton(self, text="Eliminar Credenciales", command=self.eliminar_usuario,height=28,
+        fg_color="dodger blue",
+        hover_color="deep sky blue",  # Color cuando pasas el mouse
+        border_color="#ffffff",  # Color del borde
+        border_width=2,  # Grosor del borde
+        text_color="#ffffff",
+        font=("Century Gothic", 14, "bold"),
+        corner_radius=10)
+        self.boton_eliminar.grid(row=2, column=3, padx=5, pady=5)
 
     def limpiar_pantalla(self):
         for widget in self.winfo_children():
-            if widget not in [self.label_titulo, self.boton_crear, self.boton_modificar, self.boton_recuperar, self.boton_eliminar]:
+            if widget not in [self.label_titulo,self.label_subtitulo, self.boton_crear, self.boton_modificar, self.boton_recuperar, self.boton_eliminar]:
                 widget.grid_forget()
 
     def crear_usuario(self):
         self.limpiar_pantalla()
-        VentanaRegistro(self).grid(row=2, column=0, columnspan=4, pady=10)
+        VentanaRegistro(self).grid(row=3, column=0, columnspan=4, pady=10)
 
     def modificar_usuario(self):
         self.limpiar_pantalla()
-        ModificarDatos(self).grid(row=2, column=0, columnspan=4, pady=10)
+        ModificarDatos(self).grid(row=3, column=0, columnspan=4, pady=10)
 
     def recuperar_credenciales(self):
         self.limpiar_pantalla()
-        RecuperarDatosApp(self).grid(row=2, column=0, columnspan=4, pady=10)
+        RecuperarDatosApp(self).grid(row=3, column=0, columnspan=4, pady=10)
 
     def eliminar_usuario(self):
         self.limpiar_pantalla()
-        EliminarUsuario(self).grid(row=2, column=0, columnspan=4, pady=10)
+        EliminarUsuario(self).grid(row=3, column=0, columnspan=4, pady=10)
         
 
 #Clase encargada de registrar nuevos usuarios
@@ -58,58 +96,78 @@ class VentanaRegistro(ctk.CTkFrame):
         self.parent = parent
         self.db = DBManager()
         self.db.set_parent(self.parent) 
+        # Cambiar el color del fondo a navy
+        self.configure(fg_color="navy")
 
         # Nombre de usuario
-        self.label_usuario = ctk.CTkLabel(self, text="Nombre de Usuario:")
+        self.label_usuario = ctk.CTkLabel(self, text="Nombre de Usuario:",font=("Century Gothic", 12, "bold"),text_color="white")
         self.label_usuario.grid(row=0, column=0, sticky='w', pady=5)
-        self.entry_usuario = ctk.CTkEntry(self)
+        self.entry_usuario = ctk.CTkEntry(self,border_width=2,border_color="light blue")
         self.entry_usuario.grid(row=0, column=1, pady=5)
-        self.entry_usuario.focus_set()
+        self.entry_usuario.bind("<Enter>", lambda event: self.on_hover(event, self.entry_usuario))
+        self.entry_usuario.bind("<Leave>", lambda event: self.off_hover(event, self.entry_usuario)) 
+
         # Contraseña
-        self.label_password = ctk.CTkLabel(self, text="Contraseña:")
+        self.label_password = ctk.CTkLabel(self, text="Contraseña:",font=("Century Gothic", 12, "bold"),text_color="white")
         self.label_password.grid(row=1, column=0, sticky='w', pady=5)
-        self.entry_password = ctk.CTkEntry(self) #show ="*" para colocar *** al tipear
+        self.entry_password = ctk.CTkEntry(self,border_width=2,border_color="light blue") #show ="*" para colocar *** al tipear
         self.entry_password.grid(row=1, column=1, pady=5)
+        self.entry_password.bind("<Enter>", lambda event: self.on_hover(event, self.entry_password))
+        self.entry_password.bind("<Leave>", lambda event: self.off_hover(event, self.entry_password)) 
 
         # Nombre
-        self.label_nombre = ctk.CTkLabel(self, text="Nombre:")
+        self.label_nombre = ctk.CTkLabel(self, text="Nombre:",font=("Century Gothic", 12, "bold"),text_color="white")
         self.label_nombre.grid(row=2, column=0, sticky='w', pady=5)
-        self.entry_nombre = ctk.CTkEntry(self)
+        self.entry_nombre = ctk.CTkEntry(self,border_width=2,border_color="light blue")
         self.entry_nombre.grid(row=2, column=1, pady=5)
+        self.entry_nombre.bind("<Enter>", lambda event: self.on_hover(event, self.entry_nombre))
+        self.entry_nombre.bind("<Leave>", lambda event: self.off_hover(event, self.entry_nombre)) 
 
         # Apellido
-        self.label_apellido = ctk.CTkLabel(self, text="Apellido:")
+        self.label_apellido = ctk.CTkLabel(self, text="Apellido:",font=("Century Gothic", 12, "bold"),text_color="white")
         self.label_apellido.grid(row=3, column=0, sticky='w', pady=5)
-        self.entry_apellido = ctk.CTkEntry(self)
+        self.entry_apellido = ctk.CTkEntry(self,border_width=2,border_color="light blue")
         self.entry_apellido.grid(row=3, column=1, pady=5)
+        self.entry_apellido.bind("<Enter>", lambda event: self.on_hover(event, self.entry_apellido))
+        self.entry_apellido.bind("<Leave>", lambda event: self.off_hover(event, self.entry_apellido)) 
 
         # Validación para permitir solo números
         validate_numeric = self.register(self.solo_numeros)
 
         # Cédula
-        self.label_cedula = ctk.CTkLabel(self, text="Cédula:")
+        self.label_cedula = ctk.CTkLabel(self, text="Cédula:",font=("Century Gothic", 12, "bold"),text_color="white")
         self.label_cedula.grid(row=4, column=0, sticky='w', pady=5)
-        self.entry_cedula = ctk.CTkEntry(self, validate="key", validatecommand=(validate_numeric, '%S'))
+        self.entry_cedula = ctk.CTkEntry(self, validate="key", validatecommand=(validate_numeric, '%S'),border_width=2,border_color="light blue")
         self.entry_cedula.grid(row=4, column=1, pady=5)
+        self.entry_cedula.bind("<Enter>", lambda event: self.on_hover(event, self.entry_cedula))
+        self.entry_cedula.bind("<Leave>", lambda event: self.off_hover(event, self.entry_cedula)) 
 
         # Número de teléfono
-        self.label_telefono = ctk.CTkLabel(self, text="Número de Teléfono:")
+        self.label_telefono = ctk.CTkLabel(self, text="Número de Teléfono:",font=("Century Gothic", 12, "bold"),text_color="white")
         self.label_telefono.grid(row=5, column=0, sticky='w', pady=5)
-        self.entry_telefono = ctk.CTkEntry(self, validate="key", validatecommand=(validate_numeric,  '%S' ))
+        self.entry_telefono = ctk.CTkEntry(self, validate="key", validatecommand=(validate_numeric,  '%S' ),border_width=2,border_color="light blue")
         self.entry_telefono.grid(row=5, column=1, pady=5)
+        self.entry_telefono.bind("<Enter>", lambda event: self.on_hover(event, self.entry_telefono))
+        self.entry_telefono.bind("<Leave>", lambda event: self.off_hover(event, self.entry_telefono)) 
 
 
         # Número de ficha de trabajador
-        self.label_ficha = ctk.CTkLabel(self, text="Número de Ficha:")
+        self.label_ficha = ctk.CTkLabel(self, text="Número de Ficha:",font=("Century Gothic", 12, "bold"),text_color="white")
         self.label_ficha.grid(row=6, column=0, sticky='w', pady=5)
-        self.entry_ficha = ctk.CTkEntry(self, validate="key", validatecommand=(validate_numeric, '%S'))
+        self.entry_ficha = ctk.CTkEntry(self, validate="key", validatecommand=(validate_numeric, '%S'),border_width=2,border_color="light blue")
         self.entry_ficha.grid(row=6, column=1, pady=5)
+        self.entry_ficha.bind("<Enter>", lambda event: self.on_hover(event, self.entry_ficha))
+        self.entry_ficha.bind("<Leave>", lambda event: self.off_hover(event, self.entry_ficha)) 
 
         # Tipo de usuario
-        self.label_tipo_usuario = ctk.CTkLabel(self, text="Tipo de Usuario:")
+        self.label_tipo_usuario = ctk.CTkLabel(self, text="Tipo de Usuario:",font=("Century Gothic", 12, "bold"),text_color="white")
         self.label_tipo_usuario.grid(row=7, column=0, sticky='w', pady=5)
         values = self.db.obtener_tipos_usuario() # Extrae los tipos desde la BD
-        self.combo_tipo_usuario = ctk.CTkComboBox(self, values=values, state='readonly') 
+        self.combo_tipo_usuario = ctk.CTkComboBox(self, values=values, state='readonly',font=("Century Gothic", 12),
+        border_color="dodger blue",
+        button_color="dodger blue",
+        fg_color="white",
+        button_hover_color="deep sky blue")
         self.combo_tipo_usuario.grid(row=7, column=1, pady=5)
         
          # Hacer que ENTER dispare registrar_usuario()
@@ -126,9 +184,21 @@ class VentanaRegistro(ctk.CTkFrame):
             widget.bind("<Return>", lambda e: self.registrar_usuario())
 
         # Botón de registro
-        self.boton_registro = ctk.CTkButton(self, text="Registrar", command=self.registrar_usuario)
+        self.boton_registro = ctk.CTkButton(self, text="Registrar", command=self.registrar_usuario,height=28,
+        fg_color="dodger blue",
+        hover_color="deep sky blue",  # Color cuando pasas el mouse
+        border_color="#ffffff",  # Color del borde
+        border_width=2,  # Grosor del borde
+        text_color="#ffffff",
+        font=("Century Gothic", 14, "bold"),
+        corner_radius=10)
         self.boton_registro.grid(row=8, column=0, columnspan=2, pady=20)  # Centrar el botón
+    
+    def on_hover(self, event, widget):
+        widget.configure(border_color="light sky blue")
 
+    def off_hover(self, event, widget):
+        widget.configure(border_color="light blue") 
     def registrar_usuario(self):
         """Función que se ejecuta al hacer clic en 'Registrar'."""
         datos = {
@@ -187,83 +257,115 @@ class ModificarDatos(ctk.CTkFrame):
         self.parent = parent
         self.db = DBManager()  # Agregado para acceso a la base de datos
         self.db.set_parent(self.parent)
+        # Cambiar el color del fondo a navy
+        self.configure(fg_color="navy")
 
         # Label for numero de cedula
-        self.label_cedula = ctk.CTkLabel(self, text="Ingrese el número de cédula del usuario:")
+        self.label_cedula = ctk.CTkLabel(self, text="Ingrese el número de cédula del usuario:",font=("Century Gothic", 12, "bold"),text_color="white")
         self.label_cedula.grid(row=0, column=0, pady=10)
 
         # Entry for numero de cedula with validation
         vcmd = (self.register(self.validate_numeric), '%S')
-        self.entry_cedula = ctk.CTkEntry(self, validate='key', validatecommand=vcmd)
+        self.entry_cedula = ctk.CTkEntry(self, validate='key', validatecommand=vcmd,border_width=2,border_color="light blue")
         self.entry_cedula.grid(row=0, column=1, padx=10, pady=10)
         # Guardar referencia para búsqueda
         self.entry_cedula_buscar = self.entry_cedula
         
-        self.entry_cedula.focus_set()
+       # self.entry_cedula.focus_set()#MIRAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
         
         # Permitir que se ejecute con Enter
         self.entry_cedula.bind("<Return>", lambda e: self.buscar_click())
+        self.entry_cedula_buscar.bind("<Enter>", lambda event: self.on_hover(event, self.entry_cedula_buscar))
+        self.entry_cedula_buscar.bind("<Leave>", lambda event: self.off_hover(event, self.entry_cedula_buscar)) 
 
         # Botón Buscar
-        self.boton_buscar = ctk.CTkButton(self, text="Buscar", command=self.buscar_click)
+        self.boton_buscar = ctk.CTkButton(self, text="Buscar", command=self.buscar_click,height=28,
+        fg_color="dodger blue",
+        hover_color="deep sky blue",  # Color cuando pasas el mouse
+        border_color="#ffffff",  # Color del borde
+        border_width=2,  # Grosor del borde
+        text_color="#ffffff",
+        font=("Century Gothic", 14, "bold"),
+        corner_radius=10)
         self.boton_buscar.grid(row=0, column=2, padx=10, pady=10)
 
         # Botón Habilitar (initially hidden)
-        self.boton_habilitar = ctk.CTkButton(self, text="Habilitar", command=self.toggle_habilitar)
+        self.boton_habilitar = ctk.CTkButton(self, text="Habilitar", command=self.toggle_habilitar,height=28,
+        fg_color="dodger blue",
+        hover_color="deep sky blue",  # Color cuando pasas el mouse
+        border_color="#ffffff",  # Color del borde
+        border_width=2,  # Grosor del borde
+        text_color="#ffffff",
+        font=("Century Gothic", 14, "bold"),
+        corner_radius=10)
         self.boton_habilitar.grid(row=0, column=3, padx=10, pady=10)
         self.boton_habilitar.grid_remove()
 
         # User data fields (initially hidden)
-        self.label_usuario = ctk.CTkLabel(self, text="Nombre de usuario:")
+        self.label_usuario = ctk.CTkLabel(self, text="Nombre de usuario:",font=("Century Gothic", 12, "bold"),text_color="white")
         self.label_usuario.grid(row=1, column=0, pady=5)
         self.label_usuario.grid_remove()
-        self.entry_usuario = ctk.CTkEntry(self, state='readonly')
+        self.entry_usuario = ctk.CTkEntry(self, state='readonly',border_width=2,border_color="light blue")
         self.entry_usuario.grid(row=1, column=1, pady=5)
         self.entry_usuario.grid_remove()
+        self.entry_usuario.bind("<Enter>", lambda event: self.on_hover(event, self.entry_usuario))
+        self.entry_usuario.bind("<Leave>", lambda event: self.off_hover(event, self.entry_usuario)) 
 
-        self.label_password = ctk.CTkLabel(self, text="Contraseña:")
+        self.label_password = ctk.CTkLabel(self, text="Contraseña:",font=("Century Gothic", 12, "bold"),text_color="white")
         self.label_password.grid(row=2, column=0, pady=5)
         self.label_password.grid_remove()
-        self.entry_password = ctk.CTkEntry(self, state='readonly')
+        self.entry_password = ctk.CTkEntry(self, state='readonly',border_width=2,border_color="light blue")
         self.entry_password.grid(row=2, column=1, pady=5)
         self.entry_password.grid_remove()
+        self.entry_password.bind("<Enter>", lambda event: self.on_hover(event, self.entry_password))
+        self.entry_password.bind("<Leave>", lambda event: self.off_hover(event, self.entry_password)) 
 
-        self.label_nombre = ctk.CTkLabel(self, text="Nombre:")
+        self.label_nombre = ctk.CTkLabel(self, text="Nombre:",font=("Century Gothic", 12, "bold"),text_color="white")
         self.label_nombre.grid(row=3, column=0, pady=5)
         self.label_nombre.grid_remove()
-        self.entry_nombre = ctk.CTkEntry(self, state='readonly')
+        self.entry_nombre = ctk.CTkEntry(self, state='readonly',border_width=2,border_color="light blue")
         self.entry_nombre.grid(row=3, column=1, pady=5)
         self.entry_nombre.grid_remove()
+        self.entry_nombre.bind("<Enter>", lambda event: self.on_hover(event, self.entry_nombre))
+        self.entry_nombre.bind("<Leave>", lambda event: self.off_hover(event, self.entry_nombre)) 
 
-        self.label_apellido = ctk.CTkLabel(self, text="Apellido:")
+        self.label_apellido = ctk.CTkLabel(self, text="Apellido:",font=("Century Gothic", 12, "bold"),text_color="white")
         self.label_apellido.grid(row=4, column=0, pady=5)
         self.label_apellido.grid_remove()
-        self.entry_apellido = ctk.CTkEntry(self, state='readonly')
+        self.entry_apellido = ctk.CTkEntry(self, state='readonly',border_width=2,border_color="light blue")
         self.entry_apellido.grid(row=4, column=1, pady=5)
         self.entry_apellido.grid_remove()
+        self.entry_apellido.bind("<Enter>", lambda event: self.on_hover(event, self.entry_apellido))
+        self.entry_apellido.bind("<Leave>", lambda event: self.off_hover(event, self.entry_apellido)) 
 
-        self.label_cedula = ctk.CTkLabel(self, text="Cédula:")
+        self.label_cedula = ctk.CTkLabel(self, text="Cédula:",font=("Century Gothic", 12, "bold"),text_color="white")
         self.label_cedula.grid(row=5, column=0, pady=5)
         self.label_cedula.grid_remove()
-        self.entry_cedula = ctk.CTkEntry(self, state='readonly')
+        self.entry_cedula = ctk.CTkEntry(self, state='readonly',border_width=2,border_color="light blue")
         self.entry_cedula.grid(row=5, column=1, pady=5)
         self.entry_cedula.grid_remove()
+        self.entry_cedula.bind("<Enter>", lambda event: self.on_hover(event, self.entry_cedula))
+        self.entry_cedula.bind("<Leave>", lambda event: self.off_hover(event, self.entry_cedula)) 
 
-        self.label_telefono = ctk.CTkLabel(self, text="Número de Teléfono:")
+        self.label_telefono = ctk.CTkLabel(self, text="Número de Teléfono:",font=("Century Gothic", 12, "bold"),text_color="white")
         self.label_telefono.grid(row=6, column=0, pady=5)
         self.label_telefono.grid_remove()
-        self.entry_telefono = ctk.CTkEntry(self, state='readonly')
+        self.entry_telefono = ctk.CTkEntry(self, state='readonly',border_width=2,border_color="light blue")
         self.entry_telefono.grid(row=6, column=1, pady=5)
         self.entry_telefono.grid_remove()
+        self.entry_telefono.bind("<Enter>", lambda event: self.on_hover(event, self.entry_telefono))
+        self.entry_telefono.bind("<Leave>", lambda event: self.off_hover(event, self.entry_telefono)) 
 
-        self.label_ficha = ctk.CTkLabel(self, text="Número de ficha:")
+        self.label_ficha = ctk.CTkLabel(self, text="Número de ficha:",font=("Century Gothic", 12, "bold"),text_color="white")
         self.label_ficha.grid(row=7, column=0, pady=5)
         self.label_ficha.grid_remove()
-        self.entry_ficha = ctk.CTkEntry(self, state='readonly')
+        self.entry_ficha = ctk.CTkEntry(self, state='readonly',border_width=2,border_color="light blue")
         self.entry_ficha.grid(row=7, column=1, pady=5)
         self.entry_ficha.grid_remove()
+        self.entry_ficha.bind("<Enter>", lambda event: self.on_hover(event, self.entry_ficha))
+        self.entry_ficha.bind("<Leave>", lambda event: self.off_hover(event, self.entry_ficha)) 
 
-        self.label_tipo_usuario = ctk.CTkLabel(self, text="Tipo de usuario:")
+        self.label_tipo_usuario = ctk.CTkLabel(self, text="Tipo de usuario:",font=("Century Gothic", 12, "bold"),text_color="white")
         self.label_tipo_usuario.grid(row=8, column=0, pady=5)
         self.label_tipo_usuario.grid_remove()
         values = ["Administrador", "Asistente"]
@@ -285,7 +387,14 @@ class ModificarDatos(ctk.CTkFrame):
             widget.bind("<Return>", lambda e: self.actualizar_usuario())
 
         # Botón Actualizar (initially hidden)
-        self.boton_actualizar = ctk.CTkButton(self, text="Actualizar", command=self.actualizar_usuario)
+        self.boton_actualizar = ctk.CTkButton(self, text="Actualizar", command=self.actualizar_usuario,height=28,
+        fg_color="dodger blue",
+        hover_color="deep sky blue",  # Color cuando pasas el mouse
+        border_color="#ffffff",  # Color del borde
+        border_width=2,  # Grosor del borde
+        text_color="#ffffff",
+        font=("Century Gothic", 14, "bold"),
+        corner_radius=10)
         self.boton_actualizar.grid(row=9, column=0, columnspan=3, pady=20)
         self.boton_actualizar.grid_remove()
 
@@ -391,6 +500,12 @@ class ModificarDatos(ctk.CTkFrame):
             self.combo_tipo_usuario.configure(state='readonly')
             self.entry_cedula_buscar.focus_set()
             self.boton_habilitar.configure(text="Habilitar")
+ 
+    def on_hover(self, event, widget):
+        widget.configure(border_color="light sky blue")
+
+    def off_hover(self, event, widget):
+        widget.configure(border_color="light blue")   
 
     def actualizar_usuario(self):
         # Validar si algún campo está vacío
@@ -461,14 +576,16 @@ class RecuperarDatosApp(ctk.CTkFrame):
         self.parent = parent
         self.db = DBManager()  # Agrega la instancia de DBManager
         self.db.set_parent(self.parent)
+        # Cambiar el color del fondo a navy
+        self.configure(fg_color="navy")
 
         # Label for numero de cedula
-        self.label_cedula = ctk.CTkLabel(self, text="Ingrese el número de cédula del usuario:")
+        self.label_cedula = ctk.CTkLabel(self, text="Ingrese el número de cédula del usuario:",font=("Century Gothic", 12, "bold"),text_color="white")
         self.label_cedula.pack(pady=10)
 
         # Entry for numero de cedula with validation
         vcmd = (self.register(self.validate_numeric), '%P')
-        self.entry_cedula = ctk.CTkEntry(self, width=150, validate='key', validatecommand=vcmd)
+        self.entry_cedula = ctk.CTkEntry(self, width=150, validate='key', validatecommand=vcmd,border_width=2,border_color="light blue")
         self.entry_cedula.pack(pady=10)
         
         # Dar foco automático
@@ -476,10 +593,25 @@ class RecuperarDatosApp(ctk.CTkFrame):
         
         # Permitir que se ejecute con la tecla Enter
         self.entry_cedula.bind("<Return>", lambda e: self.buscar_click())
+        self.entry_cedula.bind("<Enter>", lambda event: self.on_hover(event, self.entry_cedula))
+        self.entry_cedula.bind("<Leave>", lambda event: self.off_hover(event, self.entry_cedula)) 
 
         # Botón Buscar
-        self.boton_buscar = ctk.CTkButton(self, text="Buscar", command=self.buscar_click)
+        self.boton_buscar = ctk.CTkButton(self, text="Buscar", command=self.buscar_click,height=28,
+        fg_color="dodger blue",
+        hover_color="deep sky blue",  # Color cuando pasas el mouse
+        border_color="#ffffff",  # Color del borde
+        border_width=2,  # Grosor del borde
+        text_color="#ffffff",
+        font=("Century Gothic", 14, "bold"),
+        corner_radius=10)
         self.boton_buscar.pack(pady=10)
+    
+    def on_hover(self, event, widget):
+        widget.configure(border_color="light sky blue")
+
+    def off_hover(self, event, widget):
+        widget.configure(border_color="light blue")   
 
     def validate_numeric(self, value_if_allowed):
         if value_if_allowed.isdigit() or value_if_allowed == "":
@@ -514,6 +646,8 @@ class EliminarUsuario(RecuperarDatosApp):
         if not numero_cedula:
             messagebox.showwarning("Error", "Por favor, ingrese el número de cédula.")
             return
+        # Cambiar el color del fondo a navy
+        self.configure(fg_color="navy")
 
         respuesta = messagebox.askyesno("Confirmación", f"¿Estás seguro que deseas eliminar a {numero_cedula}?")
         if respuesta:

@@ -1,10 +1,46 @@
 # App_control_de_asistencias/db_manager.py
 
 import libsql
+import platform
 import os
 import sys
 from dotenv import load_dotenv
 from concurrent.futures import ThreadPoolExecutor
+import zipfile  
+
+def get_salu_folder():
+    system = platform.system()
+    user_home = os.path.expanduser("~")
+
+    if system == "Windows":
+        base_path = os.environ.get("LOCALAPPDATA", user_home) # C:\Users\<user>\AppData\Local
+    elif system == "Linux":
+        base_path = user_home # /home/<user>
+    else:
+        base_path = user_home  # fallback
+
+    salu_path = os.path.join(base_path, ".salu")
+    os.makedirs(salu_path, exist_ok=True)  # crear si no existe
+
+    if system == "Linux":
+        if hasattr(sys, '_MEIPASS'):
+            # Si se ejecuta como un ejecutable empaquetado
+            db_zip_path = os.path.join(sys._MEIPASS, "db.zip")
+        else:
+            # Si se ejecuta como script normal
+            db_zip_path = os.path.join(os.path.dirname(__file__), "db.zip")
+        # Solo descomprimir si existe el zip y faltan archivos en la carpeta destino
+        if os.path.exists(db_zip_path):
+            # Verifica si la base de datos principal no existe
+            db_main_file = os.path.join(salu_path, "salu-db.db")
+            if not os.path.exists(db_main_file):
+                try:
+                    with zipfile.ZipFile(db_zip_path, "r") as zip_ref:
+                        zip_ref.extractall(salu_path)
+                    print(f"db.zip descomprimido en {salu_path}")
+                except Exception as e:
+                    print(f"Error al descomprimir db.zip: {e}")
+    return salu_path
 
 class DBManager:
     """
@@ -34,6 +70,9 @@ class DBManager:
         print("DBManager inicializado. Credenciales cargadas.")
         
         self.default_parent = None 
+        
+        self.salu_path = get_salu_folder()
+        self.db_file = os.path.join(self.salu_path, "salu-db.db")
     
     def set_parent(self, parent):
         """Define el parent por defecto para mostrar la pantalla de carga."""
@@ -47,7 +86,7 @@ class DBManager:
         if self._connection is None:
             try:
                 # Conecta a la réplica local ("salu-db.db" en este caso) y la sincroniza con Turso
-                self._connection = libsql.connect("salu-db.db", sync_url=self.url, auth_token=self.auth_token)
+                self._connection = libsql.connect(self.db_file, sync_url=self.url, auth_token=self.auth_token)
                 self._connection.sync()
                 print("Conexión a la base de datos Turso establecida y sincronizada.")
             except Exception as e:
@@ -83,7 +122,6 @@ class DBManager:
         if parent is not None:
             import customtkinter as ctk
             loading = ctk.CTkToplevel(parent)
-            loading.title("Cargando...")
             # Tamaño de la ventana
             ancho, alto = 250, 100
             # Dimensiones de la pantalla
@@ -93,6 +131,7 @@ class DBManager:
             x = (screen_width // 2) - (ancho // 2)
             y = (screen_height // 2) - (alto // 2)
 
+            loading.overrideredirect(True)
             loading.geometry(f"{ancho}x{alto}+{x}+{y}")
             loading.transient(parent)   # Mantener sobre la ventana padre
             label = ctk.CTkLabel(loading, text="Procesando, por favor espere...")
@@ -316,7 +355,7 @@ class DBManager:
 
         print("Inicializando base de datos...")
         for sql in create_tables_sql:
-            # Usamos execute_query con commit=True para cada sentencia CREATE TABLE
+            # Usamos execute_query with commit=True para cada sentencia CREATE TABLE
             result = self.execute_query(sql, commit=True)
             if result is None:
                 print(f"Advertencia: Falló la creación de tabla con la consulta: {sql[:50]}...")
@@ -1183,3 +1222,44 @@ class DBManager:
                 "Tipo_usuario":result[6],
             }
         return None
+
+    def get_next_sn_bien(self):
+        """
+        Obtiene el siguiente número de bien disponible con formato S/N-00000,
+        autoincrementando el mayor existente en la base de datos.
+        """
+        query = """
+        SELECT Nro_de_bien FROM Equipo WHERE Nro_de_bien LIKE 'S/N-%'
+        """
+        result = self.execute_query(query)
+        max_num = 0
+        if result:
+            for row in result:
+                nro = row[0]
+                try:
+                    num = int(nro.split('-')[1])
+                    if num > max_num:
+                        max_num = num
+                except (IndexError, ValueError):
+                    continue
+        next_num = max_num + 1
+        return f"S/N-{next_num:05d}"
+    
+    def limpiar_datos(self):
+        """
+        Elimina todos los registros de las tablas principales, desactiva temporalmente las FK.
+        Retorna True si fue exitoso, False si hubo error.
+        """
+        try:
+            self.execute_query("PRAGMA foreign_keys = OFF;", commit=True)
+            self.execute_query("DELETE FROM Falla_equipo_estudiante;", commit=True)
+            self.execute_query("DELETE FROM Falla_equipo_usr;", commit=True)
+            self.execute_query("DELETE FROM Asistencia_usr;", commit=True)
+            self.execute_query("DELETE FROM Uso_laboratorio_estudiante;", commit=True)
+            self.execute_query("DELETE FROM Uso_laboratorio_usr;", commit=True)
+            self.execute_query("DELETE FROM Falla_equipo;", commit=True)
+            self.execute_query("PRAGMA foreign_keys = ON;", commit=True)
+            return True
+        except Exception as e:
+            print("Error al limpiar datos:", e)
+            return False

@@ -73,6 +73,19 @@ class ModuloEstadistico(ctk.CTkFrame):
         self.fecha_finalizacion_entry = DateEntry(self, date_pattern="dd/mm/yyyy",font=("Century Gothic", 12, "bold"), background='deep sky blue',foreground='white',borderwidth=2,relief='sunken', width=20)
         self.fecha_finalizacion_entry.grid(row=2, column=7, padx=10, pady=5, sticky="w")
         
+        # Foco inicial en la sede
+        self.sede_entry.focus_set()
+
+        # ENTER ejecuta generar_reporte en cada campo
+        for widget in [
+            self.sede_entry,
+            self.laboratorio_entry,
+            self.fecha_inicio_entry,
+            self.fecha_finalizacion_entry
+        ]:
+            widget.bind("<Return>", lambda e: self.generar_reporte())
+
+        
         # Botón Generar Reporte
         self.generar_reporte_button = ctk.CTkButton(self, text="Generar reporte", command=self.generar_reporte,
         height=28,

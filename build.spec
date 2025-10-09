@@ -23,22 +23,26 @@ datas_extra = (
     collect_data_files('reportlab') +  # fonts, encodings, etc.
     collect_data_files('xhtml2pdf') +  # templates/resources
     [
-        ('Views/Imagen/logoUNEG.png', 'Views/Imagen'),  # <-- add logo image
-        ('Views/Imagen/CL.png', 'Views/Imagen'),  # <-- add CL.png image
-        ('Pdf/modulo_estadistico.html', 'Pdf'),  # <-- add HTML template
+        ('assets/logoUNEG.png', 'assets'),  
+        ('assets/CL.png', 'assets'),  
+        ('assets/Circular-CL.png', 'assets'), 
+        ('assets/Circular-CL.ico', 'assets'), 
+        ('assets/Login.png, 'assets'), 
+        ('Pdf/modulo_estadistico.html', 'Pdf'),  
         ('Pdf/consultar_asistencia.html', 'Pdf'),
         ('Pdf/consultar_falla_equipo.html', 'Pdf'),
-        ('Pdf/estilos.css', 'Pdf'),  # <-- add estilos.css
+        ('Pdf/estilos.css', 'Pdf'),  
+        (db.zip)
     ]
 )
 
 block_cipher = None
 
 a = Analysis(
-    ['d:\\App_control_de_asistencias\\main.py'],
-    pathex=['d:\\App_control_de_asistencias'],
+    ['d:\\App_control_de_asistencias\\main.py'],#Solo sera compatible si esta en esta ruta
+    pathex=['d:\\App_control_de_asistencias'], #igual aqui
     binaries=[],
-    datas=datas_extra,  # was []
+    datas=datas_extra,  
     hiddenimports=[
         'libsql',
         'dotenv',

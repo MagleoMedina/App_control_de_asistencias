@@ -1,8 +1,13 @@
 from xhtml2pdf import pisa
+import os
 
 class PDFGenerator:
     def __init__(self, output_path):
-        self.output_path = output_path
+        # Asegura que la carpeta 'Reportes' exista
+        reportes_dir = os.path.join(os.path.dirname(output_path), 'Reportes')
+        os.makedirs(reportes_dir, exist_ok=True)
+        # Guarda el PDF en la carpeta 'Reportes'
+        self.output_path = os.path.join(reportes_dir, os.path.basename(output_path))
 
     def generate_pdf(self, html_content, css_path=None):
         """

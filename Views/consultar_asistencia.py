@@ -71,6 +71,18 @@ class ConsultarAsistencia(ctk.CTkFrame):
         self.fecha.grid(row=2, column=4, padx=5, pady=5, sticky="e")
         self.fecha_entry = DateEntry(self, date_pattern="dd/mm/yyyy",font=("Century Gothic", 12, "bold"), background='deep sky blue',foreground='white',borderwidth=2,relief='sunken', width=20)
         self.fecha_entry.grid(row=2, column=5, padx=5, pady=5, sticky="w")
+        
+        # Foco inicial en la sede
+        self.sede_entry.focus_set()
+
+        # ENTER ejecuta validar_campos en todos los campos
+        for widget in [
+            self.sede_entry,
+            self.laboratorio_entry,
+            self.fecha_entry
+        ]:
+            widget.bind("<Return>", lambda e: self.validar_campos())
+        
 
         # Botón Generar Reporte
         self.generar_reporte_btn = ctk.CTkButton(self, text="Generar reporte", command=self.validar_campos,

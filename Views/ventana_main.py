@@ -1,3 +1,6 @@
+import platform
+import sys
+import os
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import messagebox
@@ -8,6 +11,7 @@ from Views.consultar_asistencia import ConsultarAsistencia
 from Views.modulo_estadistico import ModuloEstadistico
 from Views.equipos import Equipos
 from Views.gestion_de_usuarios import GestionUsuarios
+from Views.eliminar_datos import EliminarDatos
 
 class VentanaMain:
     def __init__(self, user_data):
@@ -17,6 +21,29 @@ class VentanaMain:
         self.ventana.geometry("1280x720+10+10")
         self.ventana.title("SALU")
         ctk.set_appearance_mode("light")
+        
+        # --- Establecer icono personalizado multiplataforma ---
+        if hasattr(sys, '_MEIPASS'):
+            icon_png_path = os.path.join(sys._MEIPASS, 'assets', 'Circular-CL.png')
+            icon_ico_path = os.path.join(sys._MEIPASS, 'assets', 'Circular-CL.ico')
+        else:
+            icon_png_path = os.path.join('assets', 'Circular-CL.png')
+            icon_ico_path = os.path.join('assets', 'Circular-CL.ico')
+        system = platform.system()
+        if system == "Windows" and os.path.exists(icon_ico_path):
+            try:
+                self.ventana.iconbitmap(icon_ico_path)
+            except Exception as e:
+                print(f"Advertencia: No se pudo establecer el icono .ico: {e}")
+        elif system == "Linux" and os.path.exists(icon_png_path):
+            try:
+                # Usar PhotoImage para icono en Linux
+                icon_img = tk.PhotoImage(file=icon_png_path)
+                self.ventana.iconphoto(True, icon_img)
+            except Exception as e:
+                print(f"Advertencia: No se pudo establecer el icono .png: {e}")
+        else:
+            print(f"Advertencia: No se encontró el icono en la ruta: {icon_png_path} o {icon_ico_path}")
     
         
         # Crear un Canvas para el gradiente
@@ -60,7 +87,6 @@ class VentanaMain:
 
 
         # Cargar la imagen LOGO DE LA UNEG usando una ruta compatible con PyInstaller
-        import os, sys
         if hasattr(sys, '_MEIPASS'):
             img_path = os.path.join(sys._MEIPASS, 'assets', 'logo_uneg.png')
         else:
@@ -151,6 +177,12 @@ class VentanaMain:
         username = f"{self.user_data['Username']}"
         self.nav_label_user = ctk.CTkLabel(self.nav_frame, text="Bienvenido "+ username, font=("Century Gothic", 20, "bold"), text_color="Blue2")
         self.nav_label_user.pack(pady=10)
+
+        # Botón de ayuda al final del sidebar
+        self.boton_about = ctk.CTkButton(self.nav_frame, text="?", width=50, height=40, fg_color="dodger blue",
+            hover_color="deep sky blue", border_color="#ffffff", border_width=2, text_color="#ffffff",
+            font=("Century Gothic", 18, "bold"), corner_radius=10, command=self.show_about_window)
+        self.boton_about.place(x=10, rely=1.0, anchor="sw")
 
         # Frame principal para mostrar las vistas
         self.main_frame = ctk.CTkFrame(self.ventana, fg_color="gray99")
@@ -249,6 +281,26 @@ class VentanaMain:
         app.iniciar()
 
 
+    def show_about_window(self):
+        # Crear ventana toplevel
+        about_win = ctk.CTkToplevel(self.ventana)
+        about_win.overrideredirect(True)
+        text = "hola"
+        #text = "pq presionas el boton sin saber para que sirve tu te imaginas que hubieras borrado la base de datos entera con este boton bersiales no ya retiro la carrera de una vez, Felicidades la base de datos ha sido borrada satisfactoriamente :O"
+        label = ctk.CTkLabel(about_win, text=text, font=("Century Gothic", 14), wraplength=350, justify="center")
+        label.pack(pady=(20, 10), fill="both", expand=True)
+        btn_cerrar = ctk.CTkButton(about_win, text="Cerrar", command=about_win.destroy)
+        btn_cerrar.pack(expand=True)
+        about_win.update_idletasks()
+        ancho = about_win.winfo_width()
+        alto = about_win.winfo_height()
+        screen_width = self.ventana.winfo_screenwidth()
+        screen_height = self.ventana.winfo_screenheight()
+        x = (screen_width // 2) - (ancho // 2)
+        y = (screen_height // 2) - (alto // 2)
+        about_win.geometry(f"{ancho}x{alto}+{x}+{y}")
+
+
 class VentanaMainAdmin(VentanaMain):
     def __init__(self, user_data):
         super().__init__(user_data)
@@ -277,4 +329,9 @@ class VentanaMainAdmin(VentanaMain):
         app.pack(fill="both", expand=True)
         
     def eliminar_datos(self):
-        pass
+        confirm = messagebox.askyesno(
+            "Advertencia",
+            "¿Está seguro de que desea eliminar todos los datos?\nEsta acción no se puede deshacer."
+        )
+        if confirm:
+            EliminarDatos(self.ventana, self.user_data)

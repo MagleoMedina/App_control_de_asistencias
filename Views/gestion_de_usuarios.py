@@ -1,6 +1,7 @@
 import customtkinter as ctk
 from tkinter import messagebox
 from db_manager import DBManager
+from Views.equipos import ModificarEquipo
 from tkinter import ttk, Canvas, Scrollbar, messagebox
 
 #Clase encargada de registrar nuevos usuarios
@@ -168,6 +169,19 @@ class VentanaRegistro(ctk.CTkFrame):
         fg_color="white",
         button_hover_color="deep sky blue")
         self.combo_tipo_usuario.grid(row=7, column=1, pady=5)
+        
+         # Hacer que ENTER dispare registrar_usuario()
+        for widget in [
+            self.entry_usuario,
+            self.entry_password, 
+            self.entry_nombre, 
+            self.entry_apellido,
+            self.entry_cedula,
+            self.entry_telefono,
+            self.entry_ficha,
+            self.combo_tipo_usuario
+        ]:
+            widget.bind("<Return>", lambda e: self.registrar_usuario())
 
         # Botón de registro
         self.boton_registro = ctk.CTkButton(self, text="Registrar", command=self.registrar_usuario,height=28,
@@ -256,6 +270,11 @@ class ModificarDatos(ctk.CTkFrame):
         self.entry_cedula.grid(row=0, column=1, padx=10, pady=10)
         # Guardar referencia para búsqueda
         self.entry_cedula_buscar = self.entry_cedula
+        
+       # self.entry_cedula.focus_set()#MIRAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        
+        # Permitir que se ejecute con Enter
+        self.entry_cedula.bind("<Return>", lambda e: self.buscar_click())
         self.entry_cedula_buscar.bind("<Enter>", lambda event: self.on_hover(event, self.entry_cedula_buscar))
         self.entry_cedula_buscar.bind("<Leave>", lambda event: self.off_hover(event, self.entry_cedula_buscar)) 
 
@@ -353,6 +372,19 @@ class ModificarDatos(ctk.CTkFrame):
         self.combo_tipo_usuario = ctk.CTkComboBox(self, values=values, state='readonly')
         self.combo_tipo_usuario.grid(row=8, column=1, pady=5)
         self.combo_tipo_usuario.grid_remove()
+        ModificarEquipo.bind_focus_to_combobox(self.combo_tipo_usuario)
+        
+        for widget in [
+            self.entry_usuario,
+            self.entry_password,
+            self.entry_nombre,
+            self.entry_apellido,
+            self.entry_cedula,
+            self.entry_telefono,
+            self.entry_ficha,
+            self.combo_tipo_usuario
+        ]:
+            widget.bind("<Return>", lambda e: self.actualizar_usuario())
 
         # Botón Actualizar (initially hidden)
         self.boton_actualizar = ctk.CTkButton(self, text="Actualizar", command=self.actualizar_usuario,height=28,
@@ -455,6 +487,7 @@ class ModificarDatos(ctk.CTkFrame):
             self.entry_telefono.configure(state='normal')
             self.entry_ficha.configure(state='normal')
             self.combo_tipo_usuario.configure(state='normal')
+            self.entry_usuario.focus_set()
             self.boton_habilitar.configure(text="Deshabilitar")
         else:
             self.entry_usuario.configure(state='readonly')
@@ -465,6 +498,7 @@ class ModificarDatos(ctk.CTkFrame):
             self.entry_telefono.configure(state='readonly')
             self.entry_ficha.configure(state='readonly')
             self.combo_tipo_usuario.configure(state='readonly')
+            self.entry_cedula_buscar.focus_set()
             self.boton_habilitar.configure(text="Habilitar")
  
     def on_hover(self, event, widget):
@@ -504,35 +538,36 @@ class ModificarDatos(ctk.CTkFrame):
         )
         if resultado:
             messagebox.showinfo("Actualización exitosa", "Usuario actualizado exitosamente.")
-            # Limpiar los campos después de actualización exitosa
-            self.entry_usuario.configure(state='normal')
-            self.entry_password.configure(state='normal')
-            self.entry_nombre.configure(state='normal')
-            self.entry_apellido.configure(state='normal')
-            self.entry_cedula.configure(state='normal')
-            self.entry_telefono.configure(state='normal')
-            self.entry_ficha.configure(state='normal')
-            self.combo_tipo_usuario.configure(state='normal')
-            self.entry_usuario.delete(0, 'end')
-            self.entry_password.delete(0, 'end')
-            self.entry_nombre.delete(0, 'end')
-            self.entry_apellido.delete(0, 'end')
-            self.entry_cedula.delete(0, 'end')
-            self.entry_telefono.delete(0, 'end')
-            self.entry_ficha.delete(0, 'end')
-            self.entry_cedula_buscar.delete(0, 'end')
-            self.combo_tipo_usuario.set('')
-            # Opcional: volver a poner los campos en readonly y ocultar elementos
-            self.entry_usuario.configure(state='readonly')
-            self.entry_password.configure(state='readonly')
-            self.entry_nombre.configure(state='readonly')
-            self.entry_apellido.configure(state='readonly')
-            self.entry_cedula.configure(state='readonly')
-            self.entry_telefono.configure(state='readonly')
-            self.entry_ficha.configure(state='readonly')
-            self.combo_tipo_usuario.configure(state='readonly')
+            self.resetear_formulario()
         else:
             messagebox.showerror("Error", "No se pudo actualizar el usuario. Verifica los datos.")
+            
+    def resetear_formulario(self):
+        """Oculta los campos y deja solo el buscador de cédula."""
+        # Ocultar todos los elementos extra
+        self.label_usuario.grid_remove()
+        self.entry_usuario.grid_remove()
+        self.label_password.grid_remove()
+        self.entry_password.grid_remove()
+        self.label_nombre.grid_remove()
+        self.entry_nombre.grid_remove()
+        self.label_apellido.grid_remove()
+        self.entry_apellido.grid_remove()
+        self.label_cedula.grid_remove()
+        self.entry_cedula.grid_remove()
+        self.label_telefono.grid_remove()
+        self.entry_telefono.grid_remove()
+        self.label_ficha.grid_remove()
+        self.entry_ficha.grid_remove()
+        self.label_tipo_usuario.grid_remove()
+        self.combo_tipo_usuario.grid_remove()
+        self.boton_actualizar.grid_remove()
+        self.boton_habilitar.grid_remove()
+
+        # Limpiar el buscador
+        self.entry_cedula_buscar.delete(0, 'end')
+        self.entry_cedula_buscar.focus_set()
+
 
 #Clase encargada de recuperar los datos de un usuario
 class RecuperarDatosApp(ctk.CTkFrame):
@@ -552,6 +587,12 @@ class RecuperarDatosApp(ctk.CTkFrame):
         vcmd = (self.register(self.validate_numeric), '%P')
         self.entry_cedula = ctk.CTkEntry(self, width=150, validate='key', validatecommand=vcmd,border_width=2,border_color="light blue")
         self.entry_cedula.pack(pady=10)
+        
+        # Dar foco automático
+        self.entry_cedula.focus_set()
+        
+        # Permitir que se ejecute con la tecla Enter
+        self.entry_cedula.bind("<Return>", lambda e: self.buscar_click())
         self.entry_cedula.bind("<Enter>", lambda event: self.on_hover(event, self.entry_cedula))
         self.entry_cedula.bind("<Leave>", lambda event: self.off_hover(event, self.entry_cedula)) 
 

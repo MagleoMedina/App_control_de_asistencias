@@ -5,6 +5,8 @@ import os
 import sys
 from db_manager import DBManager
 
+import platform
+import tkinter as tk
 
 class VentanaLogin:
     def __init__(self):
@@ -12,6 +14,29 @@ class VentanaLogin:
         self.ventana = ctk.CTk()
         self.ventana.title("Login")
         self.ventana.geometry("1280x720+10+10")
+        # --- Establecer icono personalizado multiplataforma ---
+        if hasattr(sys, '_MEIPASS'):
+            icon_png_path = os.path.join(sys._MEIPASS, 'assets', 'Circular-CL.png')
+            icon_ico_path = os.path.join(sys._MEIPASS, 'assets', 'Circular-CL.ico')
+        else:
+            icon_png_path = os.path.join('assets', 'Circular-CL.png')
+            icon_ico_path = os.path.join('assets', 'Circular-CL.ico')
+        system = platform.system()
+        if system == "Windows" and os.path.exists(icon_ico_path):
+            try:
+                self.ventana.iconbitmap(icon_ico_path)
+            except Exception as e:
+                print(f"Advertencia: No se pudo establecer el icono .ico: {e}")
+        elif system == "Linux" and os.path.exists(icon_png_path):
+            try:
+                # Usar PhotoImage para icono en Linux
+                icon_img = tk.PhotoImage(file=icon_png_path)
+                self.ventana.iconphoto(True, icon_img)
+            except Exception as e:
+                print(f"Advertencia: No se pudo establecer el icono .png: {e}")
+        else:
+            print(f"Advertencia: No se encontró el icono en la ruta: {icon_png_path} o {icon_ico_path}")
+
         ctk.set_appearance_mode("light")
         self.db = DBManager()  # Conexión a la BD
         self.db.set_parent(self.ventana) 
@@ -95,6 +120,11 @@ class VentanaLogin:
 
         # Variable para controlar la visibilidad de la contraseña
         self.password_visible = False
+
+        # Bind Enter key to trigger ingresar
+        self.ventana.bind("<Return>", lambda event: self.ingresar())
+        self.entry_usuario.bind("<Return>", lambda event: self.ingresar())
+        self.entry_password.bind("<Return>", lambda event: self.ingresar())
     
     # Cambia el color cuando el mouse entra
     def on_hover(self, event, widget):

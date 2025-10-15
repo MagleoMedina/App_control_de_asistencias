@@ -19,16 +19,16 @@ class VentanaMain:
         # Crear una instancia de la ventana principal
         self.ventana = ctk.CTk()
         self.ventana.geometry("1280x720+10+10")
-        self.ventana.title("SALU")
+        self.ventana.title("SALIU")
         ctk.set_appearance_mode("light")
         
         # --- Establecer icono personalizado multiplataforma ---
         if hasattr(sys, '_MEIPASS'):
-            icon_png_path = os.path.join(sys._MEIPASS, 'assets', 'Circular-CL.png')
-            icon_ico_path = os.path.join(sys._MEIPASS, 'assets', 'Circular-CL.ico')
+            icon_png_path = os.path.join(sys._MEIPASS, 'assets', 'LogoSALIU.png')
+            icon_ico_path = os.path.join(sys._MEIPASS, 'assets', 'LogoSALIU.ico')
         else:
-            icon_png_path = os.path.join('assets', 'Circular-CL.png')
-            icon_ico_path = os.path.join('assets', 'Circular-CL.ico')
+            icon_png_path = os.path.join('assets', 'LogoSALIU.png')
+            icon_ico_path = os.path.join('assets', 'LogoSALIU.ico')
         system = platform.system()
         if system == "Windows" and os.path.exists(icon_ico_path):
             try:

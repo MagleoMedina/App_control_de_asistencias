@@ -21,6 +21,7 @@ class TimeInput(ctk.CTkFrame):
         
     def get_time(self):
         return f"{self.hour_var.get()}:{self.minute_var.get()}"
+    
     def on_hover(self, event, widget):
         widget.configure(border_color="light sky blue")
 
@@ -135,7 +136,7 @@ class CargaAsistencia(ctk.CTkFrame):
         self.time_finalizacion.grid(row=3, column=4, columnspan=2, padx=5, pady=10)
 
         # Add title
-        self.label_titulo = ctk.CTkLabel(self.scrollable_frame, text="Datos de persona",font=("Century Gothic", 21, "bold"),text_color="navy")
+        self.label_titulo = ctk.CTkLabel(self.scrollable_frame, text="Datos de Persona",font=("Century Gothic", 21, "bold"),text_color="navy")
         self.label_titulo.grid(row=5, column=0, columnspan=6, pady=20)
         
         # Add labels and entries for personal data
@@ -223,20 +224,13 @@ class CargaAsistencia(ctk.CTkFrame):
        
         # Create a style
         style = ttk.Style()
-        style.configure("Custom.Treeview", 
-                        background="white",  # Background color
+        style.configure("Custom.Treeview",
+                        background="#D3D3D3",  # Background color
                         foreground="black",   # Text color
                         rowheight=25,         # Row height
-                        fieldbackground="white")  # Field background color
-        # Fondo de los encabezados
-        style.configure("Custom.Treeview.Heading",
-        background="white",        # Cambia aquí el color del encabezado
-        foreground="navy",         # Color del texto del encabezado
-        font=("Century Gothic", 9, "bold")
-    )
-
-        style.map('Custom.Treeview', background=[('selected', 'white')])  # Selected row color
-
+                        fieldbackground="#D3D3D3")  # Field background color
+        style.map('Custom.Treeview', background=[('selected', '#347083')])  # Selected row color
+        
         # Create table to display added persons
         self.tree = ttk.Treeview(self.scrollable_frame, columns=("no", "tipo_usuario", "nombre", "apellido", "cedula", "organizacion", "telefono", "numero_bien"), show='headings', style="Custom.Treeview")
         self.tree.heading("no", text="No")

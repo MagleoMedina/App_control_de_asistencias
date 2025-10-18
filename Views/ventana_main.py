@@ -18,7 +18,7 @@ class VentanaMain:
         self.user_data = user_data
         # Crear una instancia de la ventana principal
         self.ventana = ctk.CTk()
-        self.ventana.geometry("1280x720+10+10")
+        self.ventana.geometry("1400x720+10+10")
         self.ventana.title("SALIU")
         ctk.set_appearance_mode("light")
         
@@ -119,7 +119,7 @@ class VentanaMain:
 
         self.nombre_sistema = ctk.CTkLabel(
             self.header_frame, 
-            text="Sistema de Administración de Laboratorios UNEG", 
+            text="Sistema de Administración de los Laboratorios de Informática UNEG", 
             font=("Century Gothic", 20, "bold"),text_color="navy",
         )
         self.nombre_sistema.grid(row=0, column=2)  

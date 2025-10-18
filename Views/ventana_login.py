@@ -13,7 +13,7 @@ class VentanaLogin:
         # Crear la ventana principal
         self.ventana = ctk.CTk()
         self.ventana.title("Login")
-        self.ventana.geometry("1280x720+10+10")
+        self.ventana.geometry("1400x720+10+10")
         # --- Establecer icono personalizado multiplataforma ---
         if hasattr(sys, '_MEIPASS'):
             icon_png_path = os.path.join(sys._MEIPASS, 'assets', 'LogoSALIU.png')

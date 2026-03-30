@@ -656,7 +656,7 @@ class RelacionarEquipos(ctk.CTkFrame):
 
         # Title
         self.title_label = ctk.CTkLabel(self, text="Ingresa los números de bien a relacionar", font=("Century Gothic", 20, "bold"),text_color="white")
-        self.title_label.grid(row=0, column=0, columnspan=2, pady=10)
+        self.title_label.grid(row=0, column=0, columnspan=2, pady=10,padx=(20,20))
 
         # Label and Entry for "Computadora"
         self.computadora_label = ctk.CTkLabel(self, text="Computadora",font=("Century Gothic", 12, "bold"),text_color="white")

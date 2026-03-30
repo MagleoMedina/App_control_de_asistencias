@@ -1,12 +1,55 @@
-import customtkinter as ctk
+import  customtkinter as ctk
 from tkinter import messagebox
 from PIL import Image
 import os
 import sys
 from db_manager import DBManager
-
+import subprocess, re, ctypes
 import platform
 import tkinter as tk
+
+
+def obtener_dimensiones_pantalla():
+    
+    system = platform.system()
+    try:
+        if system == "Windows":
+            user32 = ctypes.windll.user32
+            try:
+                user32.SetProcessDPIAware()
+            except Exception:
+                pass
+            return user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
+        if system == "Linux":
+            try:
+                out = subprocess.check_output(['xrandr', '--query'], stderr=subprocess.DEVNULL).decode()
+                m = re.search(r'current\s+(\d+)\s+x\s+(\d+)', out)
+                if m:
+                    return int(m.group(1)), int(m.group(2))
+            except Exception:
+                pass
+        if system == "Darwin":
+            try:
+                out = subprocess.check_output(['system_profiler', 'SPDisplaysDataType'], stderr=subprocess.DEVNULL).decode()
+                m = re.search(r'Resolution:\s*(\d+)\s*x\s*(\d+)', out)
+                if m:
+                    return int(m.group(1)), int(m.group(2))
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+    # Fallback: tkinter oculto (no muestra ventana)
+    try:
+        import tkinter as tk
+        root = tk.Tk()
+        root.withdraw()
+        w = root.winfo_screenwidth()
+        h = root.winfo_screenheight()
+        root.destroy()
+        return w, h
+    except Exception:
+        return 1366, 768
 
 class VentanaLogin:
     def __init__(self):
@@ -14,7 +57,17 @@ class VentanaLogin:
         self.ventana = ctk.CTk()
         self.ventana.title("Login")
         self.ventana.geometry("1400x720+10+10")
+        
+        screen_w, screen_h = obtener_dimensiones_pantalla()
+        win_w, win_h = 1400, 720
+        win_w = min(win_w, screen_w)
+        win_h = min(win_h, screen_h)
+        x = (screen_w - win_w) // 2
+        y = (screen_h - win_h) // 2
+        self.ventana.geometry(f"{win_w}x{win_h}+{x}+{y}")     
         # --- Establecer icono personalizado multiplataforma ---
+
+        
         if hasattr(sys, '_MEIPASS'):
             icon_png_path = os.path.join(sys._MEIPASS, 'assets', 'LogoSALIU.png')
             icon_ico_path = os.path.join(sys._MEIPASS, 'assets', 'LogoSALIU.ico')
@@ -46,16 +99,40 @@ class VentanaLogin:
             img_path3 = os.path.join(sys._MEIPASS, 'assets', 'login.png')
         else:
             img_path3 = os.path.join('assets', 'login.png')
+        # Cargar imagen original
         imagen_login = Image.open(img_path3)
-        tamaño_imagen3 = (1550,800)
-        ctk_login = ctk.CTkImage(light_image=imagen_login, dark_image=imagen_login, size=tamaño_imagen3)   # Ajusta al tamaño de la ventana
-        
 
-        # Crear un label para la imagen de fondo
-        self.label_fondo = ctk.CTkLabel(self.ventana, image=ctk_login, text="")
+        # Obtener resolución real de la pantalla
+        screen_w = self.ventana.winfo_screenwidth()
+        screen_h = self.ventana.winfo_screenheight()
+
+        # Calcular proporción ideal (ajuste al alto o ancho según pantalla)
+        img_ratio = imagen_login.width / imagen_login.height
+        screen_ratio = screen_w / screen_h
+
+        if screen_ratio > img_ratio:
+            # Pantalla más ancha → ajustar al ancho
+            new_w = screen_w
+            new_h = int(screen_w / img_ratio)
+        else:
+            # Pantalla más alta → ajustar al alto
+            new_h = screen_h
+            new_w = int(screen_h * img_ratio)
+
+        # Escalar una sola vez
+        imagen_escalada = imagen_login.resize((new_w, new_h), Image.LANCZOS)
+
+        # Crear imagen CTk
+        self.ctk_login = ctk.CTkImage(
+            light_image=imagen_escalada,
+            dark_image=imagen_escalada,
+            size=(new_w, new_h)
+        )
+
+        # Colocar la imagen de fondo
+        self.label_fondo = ctk.CTkLabel(self.ventana, image=self.ctk_login, text="")
         self.label_fondo.place(x=0, y=0, relwidth=1, relheight=1)
 
-       
 
         # Configuración del contenedor principal
         self.frame_principal = ctk.CTkFrame(self.ventana,fg_color="gray99",border_width=3, border_color="DeepSkyBlue2",height=400)
@@ -144,8 +221,8 @@ class VentanaLogin:
 
         if user_data:
 
-            # Espera 100 ms antes de cerrar para que CTk termine sus after
-            self.ventana.after(100, self._abrir_main, user_data)
+            # Espera 300 ms antes de cerrar para que CTk termine sus callbacks pendientes
+            self.ventana.after(300, self._abrir_main, user_data)
 
         else:
             messagebox.showerror("Error", "Usuario o contraseña incorrectos.")
@@ -165,7 +242,21 @@ class VentanaLogin:
         except Exception:
             pass
 
-        self.ventana.destroy()
+        # Evita errores de Tcl cuando se destruye una ventana que tiene grab activo
+        try:
+            self.ventana.grab_release()
+        except Exception:
+            pass
+
+        try:
+            self.ventana.unbind("<Return>")
+        except Exception:
+            pass
+
+        try:
+            self.ventana.destroy()
+        except Exception:
+            pass
 
         from Views.ventana_main import VentanaMainAdmin, VentanaMain
         if user_data["Tipo_usuario"].lower() == "administrador":
@@ -173,3 +264,6 @@ class VentanaLogin:
         else:
             app = VentanaMain(user_data)
         app.iniciar()
+    
+   
+    

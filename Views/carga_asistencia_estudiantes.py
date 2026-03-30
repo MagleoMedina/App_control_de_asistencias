@@ -69,9 +69,9 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
         
         # Cantidad de usuarios atendidos
         self.label_cantidad_usuarios = ctk.CTkLabel(self, text="Cantidad de usuarios atendidos", font=("Century Gothic", 12.3,"bold"))
-        self.label_cantidad_usuarios.grid(row=1, column=7, padx=10, pady=10)
+        self.label_cantidad_usuarios.grid(row=3, column=1, padx=10, pady=10)
         self.entry_cantidad_usuarios = ctk.CTkEntry(self, width=50,placeholder_text="Cantidad", font=("Century Gothic", 12), border_width=2,border_color="light blue")
-        self.entry_cantidad_usuarios.grid(row=1, column=8, padx=10, pady=10)
+        self.entry_cantidad_usuarios.grid(row=3, column=2, padx=10, pady=10)
         # Agregar eventos para hover en nombre
         self.entry_cantidad_usuarios.bind("<Enter>", lambda event: self.on_hover(event, self.entry_cantidad_usuarios))
         self.entry_cantidad_usuarios.bind("<Leave>", lambda event: self.off_hover(event, self.entry_cantidad_usuarios))
@@ -111,7 +111,7 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
         
         # Fallo algun equipo?
         self.label_fallo_equipo = ctk.CTkLabel(self, text="Fallo algun equipo?" , font=("Century Gothic", 12.3, "bold"))
-        self.label_fallo_equipo.grid(row=3, column=1, padx=10, pady=10)
+        self.label_fallo_equipo.grid(row=5, column=1, padx=10, pady=10)
         
         # Radio buttons
         self.radio_var = ctk.StringVar(value="")
@@ -122,7 +122,7 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
         radiobutton_height=22,          # Tamaño del radio
         radiobutton_width=22
                                             )
-        self.radio_si.grid(row=3, column=2, padx=10, pady=10)
+        self.radio_si.grid(row=5, column=2, padx=10, pady=10)
         self.radio_no = ctk.CTkRadioButton(self, text="No",font=("Century Gothic",12.3, "bold"), variable=self.radio_var, value="No", command=self.on_radio_change,
         fg_color="dodger blue",         # Color del círculo seleccionado
         hover_color="deep sky blue",    # Color al pasar el mouse
@@ -130,7 +130,7 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
         radiobutton_height=22,          # Tamaño del radio
         radiobutton_width=22
                                             )
-        self.radio_no.grid(row=3, column=3, padx=10, pady=10)
+        self.radio_no.grid(row=5, column=3, padx=10, pady=10)
         
         # Button
         self.btn_submit = ctk.CTkButton(self, text="Submit", command=self.validate_and_submit,
@@ -190,8 +190,8 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
 
     def on_radio_change(self):
         if self.radio_var.get() == "Si":
-            self.label_cantidad_equipos.grid(row=4, column=1, padx=10, pady=10)
-            self.combo_cantidad_equipos.grid(row=4, column=2, padx=10, pady=10)
+            self.label_cantidad_equipos.grid(row=6, column=1, padx=10, pady=10)
+            self.combo_cantidad_equipos.grid(row=6, column=2, padx=10, pady=10)
             self.combo_cantidad_equipos.bind("<<ComboboxSelected>>", self.on_cantidad_equipos_change)
             self.btn_submit.grid_forget()
             
@@ -199,13 +199,13 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
             self.label_cantidad_equipos.grid_forget()
             self.combo_cantidad_equipos.grid_forget()
             self.clear_equipos_entries()
-            self.btn_submit.grid(row=4, column=4, padx=10, pady=10)
+            self.btn_submit.grid(row=6, column=4, padx=10, pady=10)
             
             # Poner foco en cantidad
             self.entry_cantidad_usuarios.focus_set()
         
         if self.radio_var.get() == "No":
-            self.btn_submit.grid(row=4, column=4, padx=10, pady=10)
+            self.btn_submit.grid(row=6, column=4, padx=10, pady=10)
         else:
             self.btn_submit.grid_remove()
 
@@ -227,12 +227,12 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
             label_hora_falla = ctk.CTkLabel(self, text=f"Hora de la falla {i+1}", font=("Century Gothic", 12.3, "bold"))
             time_falla = TimeInput(self)  # Usar TimeInput en vez de combo_hora y combo_minutos
 
-            label_nro_bien.grid(row=5+i, column=1, padx=10, pady=10)
-            entry_nro_bien.grid(row=5+i, column=2, padx=10, pady=10)
-            label_descripcion.grid(row=5+i, column=3, padx=10, pady=10)
-            entry_descripcion.grid(row=5+i, column=4, padx=10, pady=10)
-            label_hora_falla.grid(row=5+i, column=5, padx=10, pady=10)
-            time_falla.grid(row=5+i, column=6, columnspan=2, padx=5, pady=10)
+            label_nro_bien.grid(row=7+i, column=1, padx=10, pady=10)
+            entry_nro_bien.grid(row=7+i, column=2, padx=10, pady=10)
+            label_descripcion.grid(row=7+i, column=3, padx=10, pady=10)
+            entry_descripcion.grid(row=7+i, column=4, padx=10, pady=10)
+            label_hora_falla.grid(row=7+i, column=5, padx=10, pady=10)
+            time_falla.grid(row=7+i, column=6, columnspan=2, padx=5, pady=10)
             
             # Bind Enter en los campos dinámicos
             entry_nro_bien.bind("<Return>", lambda e: self.validate_and_submit())
@@ -241,7 +241,7 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
             time_falla.minute_entry.bind("<Return>", lambda e: self.validate_and_submit())
 
             self.equipos_entries.append((label_nro_bien, entry_nro_bien, label_descripcion, entry_descripcion, label_hora_falla, time_falla))
-        self.btn_submit.grid(row=5+cantidad, column=4, padx=10, pady=10)
+        self.btn_submit.grid(row=7+cantidad, column=4, padx=10, pady=10)
 
     def clear_equipos_entries(self):
         for widgets in self.equipos_entries:

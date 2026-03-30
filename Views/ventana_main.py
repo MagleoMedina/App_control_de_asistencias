@@ -95,18 +95,27 @@ class VentanaMain:
         tamaño_imagen = (42, 42)
         imagen_redimensionada = imagen_logo.resize(tamaño_imagen)
 
-        self.logo_ctk = ctk.CTkImage(
-            light_image=imagen_redimensionada,
-            dark_image=imagen_redimensionada,  
-            size=tamaño_imagen
-        )
+        try:
+            self.logo_ctk = ctk.CTkImage(
+                light_image=imagen_redimensionada,
+                dark_image=imagen_redimensionada,
+                size=tamaño_imagen
+            )
+            self.label_imagen = ctk.CTkLabel(
+                self.header_frame,
+                image=self.logo_ctk,
+                text=""  # Texto vacío para que solo muestre la imagen
+            )
+        except Exception as e:
+            print(f"Advertencia: no se pudo mostrar logo UNEG: {e}")
+            self.label_imagen = ctk.CTkLabel(
+                self.header_frame,
+                text="UNEG",
+                font=("Century Gothic", 20, "bold"),
+                text_color="navy"
+            )
 
-        self.label_imagen = ctk.CTkLabel(
-            self.header_frame,
-            image=self.logo_ctk,
-            text=""  # Texto vacío para que solo muestre la imagen
-        )
-        self.label_imagen.grid(row=0, column=0, padx=10, pady=5,sticky="w")  # Posición izquierda
+        self.label_imagen.grid(row=0, column=0, padx=10, pady=5, sticky="w")  # Posición izquierda
 
 
         # Label del encabezado - pady reducido para disminuir espacio vertical
@@ -134,24 +143,33 @@ class VentanaMain:
         tamaño_imagen2 = (43, 43) 
         imagen_redimensionada2 = imagen_logo2.resize(tamaño_imagen2)
 
-        self.logo2_ctk = ctk.CTkImage(
-            light_image=imagen_redimensionada2,
-            dark_image=imagen_redimensionada2,  
-            size=tamaño_imagen2
-        )
+        try:
+            self.logo2_ctk = ctk.CTkImage(
+                light_image=imagen_redimensionada2,
+                dark_image=imagen_redimensionada2,
+                size=tamaño_imagen2
+            )
+            self.label_imagen2 = ctk.CTkLabel(
+                self.header_frame,
+                image=self.logo2_ctk,
+                text=" "  # Texto vacío para que solo muestre la imagen
+            )
+        except Exception as e:
+            print(f"Advertencia: no se pudo mostrar logo CL: {e}")
+            self.label_imagen2 = ctk.CTkLabel(
+                self.header_frame,
+                text="CL",
+                font=("Century Gothic", 20, "bold"),
+                text_color="navy"
+            )
 
-        self.label_imagen2 = ctk.CTkLabel(
-            self.header_frame,
-            image=self.logo2_ctk,
-            text=" "  # Texto vacío para que solo muestre la imagen
-        )
         self.label_imagen2.grid(row=0, column=4, padx=10, pady=5, sticky="e")
 
         # Panel de Navegación
         self.nav_frame = ctk.CTkFrame(self.ventana, width=200, fg_color="gray99")
         self.nav_frame.grid(row=1, column=0, rowspan=2, sticky="nsw", padx=10, pady=10)
         
-        self.nav_label = ctk.CTkLabel(self.nav_frame, text="SALU", font=("Century Gothic", 20, "bold"), text_color="Blue2")
+        self.nav_label = ctk.CTkLabel(self.nav_frame, text="SALIU", font=("Century Gothic", 20, "bold"), text_color="Blue2")
         self.nav_label.pack(pady=10)
 
         # Botones del Panel de Navegación

@@ -5,15 +5,14 @@ import tkinter as tk  # Importar tkinter para la validación
 from Pdf.pdf import PDFGenerator
 import os
 from datetime import datetime  # Importar datetime para la fecha y hora actual
-from db_manager import DBManager
 
 class Equipos(ctk.CTkFrame):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, db_manager=None):
         super().__init__(parent)
         self.parent = parent
         # Cambiar el color del fondo a blanco
         self.configure(fg_color="white")
-        self.db_manager = DBManager()
+        self.db_manager = db_manager
         self.db_manager.set_parent(self.parent)
         
         # Configurar columnas para centrado
@@ -86,7 +85,7 @@ class Equipos(ctk.CTkFrame):
 
     def consultar_falla_equipo(self):
         self.clear_frame()
-        consultar_falla_frame = ConsultarFallaEquipo(self)
+        consultar_falla_frame = ConsultarFallaEquipo(self, db_manager=self.db_manager)
         consultar_falla_frame.grid(row=2, column=0, columnspan=4, pady=10)
 
     def agregar_equipo(self):
@@ -101,14 +100,14 @@ class Equipos(ctk.CTkFrame):
 
     def relacionar_equipos(self):
         self.clear_frame()
-        relacionar_equipos_frame = RelacionarEquipos(self)
+        relacionar_equipos_frame = RelacionarEquipos(self, db_manager=self.db_manager)
         relacionar_equipos_frame.grid(row=2, column=0, columnspan=4, pady=10)
 
 class ConsultarFallaEquipo(ctk.CTkFrame):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, db_manager=None):
         super().__init__(parent)
         self.parent = parent
-        self.db_manager = DBManager()  # Instanciar DBManager
+        self.db_manager = db_manager # Instanciar DBManager
         self.db_manager.set_parent(self.parent)
 
         # Cambiar el color del fondo a navy
@@ -645,10 +644,10 @@ class ModificarEquipo(ctk.CTkFrame):
         self.actualizar_button = None
 
 class RelacionarEquipos(ctk.CTkFrame):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, db_manager=None):
         super().__init__(parent)
         self.parent = parent
-        self.db_manager = DBManager()  # Instanciar DBManager
+        self.db_manager = db_manager  # Instanciar DBManager
         self.db_manager.set_parent(self.parent)
 
          # Cambiar el color del fondo a navy

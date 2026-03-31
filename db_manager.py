@@ -121,24 +121,51 @@ class DBManager:
         loading = None
         if parent is not None:
             import customtkinter as ctk
-            loading = ctk.CTkToplevel(parent)
-            # Tamaño de la ventana
-            ancho, alto = 250, 100
-            # Dimensiones de la pantalla
-            screen_width = parent.winfo_screenwidth()
-            screen_height = parent.winfo_screenheight()
-            # Coordenadas para centrar
-            x = (screen_width // 2) - (ancho // 2)
-            y = (screen_height // 2) - (alto // 2)
+            
+            # Si el parent es un Frame o widget interno, buscamos la ventana principal real
+            try:
+                ventana_raiz = parent.winfo_toplevel()
+            except Exception:
+                ventana_raiz = parent
+            
+            loading = ctk.CTkToplevel(ventana_raiz)
+            
+            # 1. Configuraciones de ventana modal
+            loading.overrideredirect(True) # Sin bordes
+            loading.attributes("-topmost", True) # Siempre al frente
+            
+            # 2. Tamaño del cuadro de carga
+            ancho_loading, alto_loading = 300, 120
+            
+            # Forzamos la actualización de la ventana raíz para leer su tamaño actual
+            ventana_raiz.update_idletasks()
+            
+            # Obtenemos posición y tamaño de la ventana
+            p_width = ventana_raiz.winfo_width()
+            p_height = ventana_raiz.winfo_height()
+            p_x = ventana_raiz.winfo_rootx()
+            p_y = ventana_raiz.winfo_rooty()
+            
+            # 4. Cálculo del centro relativo al área interna de la ventana
+            x = int(p_x + (p_width // 2) - (ancho_loading // 2))
+            y = int(p_y + (p_height // 2) - (alto_loading // 2))
+            
+            # Aplicamos la geometría
+            loading.geometry(f"{ancho_loading}x{alto_loading}+{x}+{y}")
+            loading.transient(ventana_raiz)
+            
+            # 3. Diseño estético (el que te gustó)
+            frame = ctk.CTkFrame(loading, border_width=2, border_color="DeepSkyBlue2", fg_color="gray95")
+            frame.pack(fill="both", expand=True)
+            
+            label = ctk.CTkLabel(frame, text="⌛ Procesando...", font=("Century Gothic", 16, "bold"), text_color="navy")
+            label.pack(pady=(25, 5))
+            
+            sub_label = ctk.CTkLabel(frame, text="Por favor, espere un momento", font=("Century Gothic", 12))
+            sub_label.pack()
 
-            loading.overrideredirect(True)
-            loading.geometry(f"{ancho}x{alto}+{x}+{y}")
-            loading.transient(parent)   # Mantener sobre la ventana padre
-            label = ctk.CTkLabel(loading, text="Procesando, por favor espere...")
-            label.pack(expand=True, padx=20, pady=20)
-            loading.deiconify() 
             loading.update()
-            loading.grab_set()   
+            loading.grab_set() # Bloquea la interacción con el programa mientras carga
         
         def _run_query():
             conn = self.get_db_connection()
@@ -171,12 +198,22 @@ class DBManager:
                 # El cursor se gestiona automáticamente por libsql, no es necesario cerrarlo explícitamente aquí.
                 pass
 
+        # Lanzamos la consulta al hilo
         future = self._executor.submit(_run_query)
         
-        if loading:
-            loading.destroy()
+        # ESPERAMOS el resultado antes de cerrar la ventana
+        # Esto evita que el cuadro desaparezca instantáneamente
+        resultado = future.result()
         
-        return future.result()  # Espera el resultado pero no bloquea la interfaz principal
+        # Destruimos el cuadro de carga
+        if loading:
+            try:
+                loading.grab_release()
+                loading.destroy()
+            except Exception:
+                pass
+        
+        return resultado 
 
     def init_database(self):
         """

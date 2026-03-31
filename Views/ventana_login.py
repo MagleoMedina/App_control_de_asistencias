@@ -96,9 +96,9 @@ class VentanaLogin:
         
 
         if hasattr(sys, '_MEIPASS'):
-            img_path3 = os.path.join(sys._MEIPASS, 'assets', 'login.png')
+            img_path3 = os.path.join(sys._MEIPASS, 'assets', 'login2.png')
         else:
-            img_path3 = os.path.join('assets', 'login.png')
+            img_path3 = os.path.join('assets', 'login2.png')
         # Cargar imagen original
         imagen_login = Image.open(img_path3)
 
@@ -182,11 +182,8 @@ class VentanaLogin:
 
         # Variable para controlar la visibilidad de la contraseña
         self.password_visible = False
-
-        # Bind Enter key to trigger ingresar
+        
         self.ventana.bind("<Return>", lambda event: self.ingresar())
-        self.entry_usuario.bind("<Return>", lambda event: self.ingresar())
-        self.entry_password.bind("<Return>", lambda event: self.ingresar())
     
     # Cambia el color cuando el mouse entra
     def on_hover(self, event, widget):
@@ -215,6 +212,9 @@ class VentanaLogin:
         if not usuario or not password:
             messagebox.showwarning("Error", "Por favor, completa todos los campos.")
             return
+        
+        # Deshabilitamos el botón un momento para evitar doble clic accidental
+        self.boton_ingresar.configure(state="disabled")
 
         # Consulta a la base de datos
         user_data = self.db.autenticar_usuario(usuario, password)
@@ -226,6 +226,7 @@ class VentanaLogin:
 
         else:
             messagebox.showerror("Error", "Usuario o contraseña incorrectos.")
+            self.boton_ingresar.configure(state="normal")
     
     def iniciar(self):
         """Inicia el bucle principal de la ventana."""

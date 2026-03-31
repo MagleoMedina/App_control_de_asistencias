@@ -4,16 +4,15 @@ from tkinter import ttk, messagebox
 from Pdf.pdf import PDFGenerator
 import os
 from datetime import datetime  # Added import for datetime
-from db_manager import DBManager  
 
 
 class ConsultarAsistencia(ctk.CTkFrame):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, db_manager=None):
         super().__init__(parent)
         self.parent = parent
 
          # Instanciar DBManager
-        self.db_manager = DBManager()
+        self.db_manager = db_manager
         self.db_manager.set_parent(self.parent)
 
         self.configure(fg_color="white")

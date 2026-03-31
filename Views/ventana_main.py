@@ -4,7 +4,7 @@ import os
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import messagebox
-from PIL import Image  # Necesario para manejar imágenes
+from PIL import Image, ImageTk  # Necesario para manejar imágenes
 from Views.carga_asistencia import CargaAsistencia
 from Views.carga_asistencia_estudiantes import CargaAsistenciaEstudiantes
 from Views.consultar_asistencia import ConsultarAsistencia
@@ -12,10 +12,12 @@ from Views.modulo_estadistico import ModuloEstadistico
 from Views.equipos import Equipos
 from Views.gestion_de_usuarios import GestionUsuarios
 from Views.eliminar_datos import EliminarDatos
+from db_manager import DBManager
 
 class VentanaMain:
     def __init__(self, user_data):
         self.user_data = user_data
+        self.db = DBManager()
         # Crear una instancia de la ventana principal
         self.ventana = ctk.CTk()
         self.ventana.geometry("1400x720+10+10")
@@ -26,9 +28,11 @@ class VentanaMain:
         if hasattr(sys, '_MEIPASS'):
             icon_png_path = os.path.join(sys._MEIPASS, 'assets', 'LogoSALIU.png')
             icon_ico_path = os.path.join(sys._MEIPASS, 'assets', 'LogoSALIU.ico')
+            bg_path = os.path.join(sys._MEIPASS, 'assets', 'gradiente.png')
         else:
             icon_png_path = os.path.join('assets', 'LogoSALIU.png')
             icon_ico_path = os.path.join('assets', 'LogoSALIU.ico')
+            bg_path = os.path.join('assets', 'gradiente.png')
         system = platform.system()
         if system == "Windows" and os.path.exists(icon_ico_path):
             try:
@@ -44,21 +48,18 @@ class VentanaMain:
                 print(f"Advertencia: No se pudo establecer el icono .png: {e}")
         else:
             print(f"Advertencia: No se encontró el icono en la ruta: {icon_png_path} o {icon_ico_path}")
-    
         
-        # Crear un Canvas para el gradiente
-        self.canvas = tk.Canvas(self.ventana, highlightthickness=0)
-        self.canvas.place(relwidth=1, relheight=1)  # Cubre toda la ventana
+        # Gradiente
+        self.bg_image_original = Image.open(bg_path)
+        
+        # Crear el label vacío inicialmente
+        self.bg_label = tk.Label(self.ventana)
+        self.bg_label.place(x=0, y=0, relwidth=1, relheight=1)
+        self.ventana.bind("<Configure>", self.redimensionar_fondo)
 
         # Definir colores del gradiente (azul claro a blanco)
         self.color1 = "#4B9CD3"  # Azul claro
         self.color2 = "#FFFFFF"  # Blanco
-        
-        # Dibujar gradiente inicial
-        self.dibujar_gradiente()
-        
-        # Vincular el evento de redimensionamiento
-        self.ventana.bind("<Configure>", lambda e: self.dibujar_gradiente())
         
         # Configuración del contenedor principal, donde estan los logos
         self.header_frame = ctk.CTkFrame(self.ventana, height=50, fg_color="gray99")
@@ -68,7 +69,7 @@ class VentanaMain:
         self.ventana.grid_columnconfigure(0, weight=0)  # Columna 0 (nav_frame) - ancho fijo
         self.ventana.grid_columnconfigure(1, weight=1)  # Columna 1 (main_frame) - se expande
         self.ventana.grid_rowconfigure(1, weight=1)     # Fila 1 (nav_frame + main_frame) - se expande
-       
+        
         # Frame superior (encabezado) 
         self.header_frame = ctk.CTkFrame(
             self.ventana, 
@@ -205,25 +206,27 @@ class VentanaMain:
         # Frame principal para mostrar las vistas
         self.main_frame = ctk.CTkFrame(self.ventana, fg_color="gray99")
         self.main_frame.grid(row=1, column=1, sticky="nsew", padx=10, pady=10)
-
-    def dibujar_gradiente(self):
-            """Dibuja el gradiente adaptándose al tamaño actual de la ventana."""
-            # Obtener dimensiones actuales
-            width = self.ventana.winfo_width()
-            height = self.ventana.winfo_height()
-            
-            # Limpiar el Canvas antes de redibujar
-            self.canvas.delete("all")
-            
-            # Crear gradiente vertical
-            for i in range(height):
-                ratio = i / height
-                r = int(int(self.color1[1:3], 16) * (1 - ratio) + int(int(self.color2[1:3], 16) * ratio))
-                g = int(int(self.color1[3:5], 16) * (1 - ratio) + int(int(self.color2[3:5], 16) * ratio))
-                b = int(int(self.color1[5:7], 16) * (1 - ratio) + int(int(self.color2[5:7], 16) * ratio))
-                color = f"#{r:02x}{g:02x}{b:02x}"
-                self.canvas.create_line(0, i, width, i, fill=color, width=1)
          
+    def redimensionar_fondo(self, event=None):
+        # Evitar procesar eventos que no sean de la ventana principal
+        if event and event.widget != self.ventana:
+            return
+
+        # Obtener el nuevo tamaño de la ventana
+        nuevo_ancho = self.ventana.winfo_width()
+        nuevo_alto = self.ventana.winfo_height()
+
+        # Solo redimensionar si el tamaño es válido (mayor a 1x1)
+        if nuevo_ancho > 1 and nuevo_alto > 1:
+            # Redimensionar la imagen original al nuevo tamaño
+            imagen_redimensionada = self.bg_image_original.resize((nuevo_ancho, nuevo_alto), Image.LANCZOS)
+            
+            # Convertir a formato Tkinter
+            self.bg_image_tk = ImageTk.PhotoImage(imagen_redimensionada)
+            
+            # Actualizar el label
+            self.bg_label.configure(image=self.bg_image_tk)
+            
     def limpiar_frame(self):
         # Limpiar el frame antes de mostrar el formulario de asistencia
         for widget in self.main_frame.winfo_children():
@@ -231,27 +234,27 @@ class VentanaMain:
 
     def carga_asistencia(self):
         self.limpiar_frame()
-        app = CargaAsistencia(self.main_frame, user_data=self.user_data)
+        app = CargaAsistencia(self.main_frame, user_data=self.user_data, db_manager=self.db)
         app.pack(fill="both", expand=True)
 
     def carga_asistencia_estudiantes(self):
         self.limpiar_frame()
-        app = CargaAsistenciaEstudiantes(self.main_frame, user_data=self.user_data)
+        app = CargaAsistenciaEstudiantes(self.main_frame, user_data=self.user_data, db_manager=self.db)
         app.pack(fill="both", expand=True)
 
     def consultar_asistencia(self):
         self.limpiar_frame()
-        app = ConsultarAsistencia(self.main_frame)
+        app = ConsultarAsistencia(self.main_frame, db_manager=self.db)
         app.pack(fill="both", expand=True)
 
     def gestion_equipos(self):
         self.limpiar_frame()
-        app = Equipos(self.main_frame)
+        app = Equipos(self.main_frame, db_manager=self.db)
         app.pack(fill="both", expand=True)
 
     def modulo_estadistico(self):
         self.limpiar_frame()
-        app = ModuloEstadistico(self.main_frame)
+        app = ModuloEstadistico(self.main_frame, db_manager=self.db)
         app.pack(fill="both", expand=True)
 
     def iniciar(self):
@@ -342,7 +345,7 @@ class VentanaMainAdmin(VentanaMain):
 
     def gestion_usuarios(self):
         self.limpiar_frame()
-        app = GestionUsuarios(self.main_frame)
+        app = GestionUsuarios(self.main_frame, db_manager=self.db)
         app.pack(fill="both", expand=True)
         app.pack(fill="both", expand=True)
         
@@ -352,4 +355,4 @@ class VentanaMainAdmin(VentanaMain):
             "¿Está seguro de que desea eliminar todos los datos?\nEsta acción no se puede deshacer."
         )
         if confirm:
-            EliminarDatos(self.ventana, self.user_data)
+            EliminarDatos(self.ventana, self.user_data, db_manager=self.db)

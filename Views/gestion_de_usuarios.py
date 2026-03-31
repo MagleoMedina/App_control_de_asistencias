@@ -1,14 +1,14 @@
 import customtkinter as ctk
 from tkinter import messagebox
-from db_manager import DBManager
 from Views.equipos import ModificarEquipo
 from tkinter import ttk, Canvas, Scrollbar, messagebox
 
 #Clase encargada de registrar nuevos usuarios
 class GestionUsuarios(ctk.CTkFrame):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, db_manager=None):
         super().__init__(parent)
         self.parent = parent
+        self.db_manager = db_manager
     
         self.configure(fg_color="white")
 
@@ -74,27 +74,27 @@ class GestionUsuarios(ctk.CTkFrame):
 
     def crear_usuario(self):
         self.limpiar_pantalla()
-        VentanaRegistro(self).grid(row=3, column=0, columnspan=4, pady=10)
+        VentanaRegistro(self, db_manager=self.db_manager).grid(row=3, column=0, columnspan=4, pady=10)
 
     def modificar_usuario(self):
         self.limpiar_pantalla()
-        ModificarDatos(self).grid(row=3, column=0, columnspan=4, pady=10)
+        ModificarDatos(self, db_manager=self.db_manager).grid(row=3, column=0, columnspan=4, pady=10)
 
     def recuperar_credenciales(self):
         self.limpiar_pantalla()
-        RecuperarDatosApp(self).grid(row=3, column=0, columnspan=4, pady=10)
+        RecuperarDatosApp(self, db_manager=self.db_manager).grid(row=3, column=0, columnspan=4, pady=10)
 
     def eliminar_usuario(self):
         self.limpiar_pantalla()
-        EliminarUsuario(self).grid(row=3, column=0, columnspan=4, pady=10)
+        EliminarUsuario(self, db_manager=self.db_manager).grid(row=3, column=0, columnspan=4, pady=10)
         
 
 #Clase encargada de registrar nuevos usuarios
 class VentanaRegistro(ctk.CTkFrame):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, db_manager=None):
         super().__init__(parent)
         self.parent = parent
-        self.db = DBManager()
+        self.db = db_manager
         self.db.set_parent(self.parent) 
         # Cambiar el color del fondo a navy
         self.configure(fg_color="navy")
@@ -254,10 +254,10 @@ class VentanaRegistro(ctk.CTkFrame):
 
 #Clase encargada de modificar los datos de un usuario
 class ModificarDatos(ctk.CTkFrame):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None,db_manager=None):
         super().__init__(parent)
         self.parent = parent
-        self.db = DBManager()  # Agregado para acceso a la base de datos
+        self.db = db_manager  # Agregado para acceso a la base de datos
         self.db.set_parent(self.parent)
         # Cambiar el color del fondo a navy
         self.configure(fg_color="navy")
@@ -573,10 +573,10 @@ class ModificarDatos(ctk.CTkFrame):
 
 #Clase encargada de recuperar los datos de un usuario
 class RecuperarDatosApp(ctk.CTkFrame):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, db_manager=None):
         super().__init__(parent)
         self.parent = parent
-        self.db = DBManager()  # Agrega la instancia de DBManager
+        self.db = db_manager  # Agrega la instancia de DBManager
         self.db.set_parent(self.parent)
         # Cambiar el color del fondo a navy
         self.configure(fg_color="navy")
@@ -640,8 +640,8 @@ class RecuperarDatosApp(ctk.CTkFrame):
         self.ventana.mainloop()
 
 class EliminarUsuario(RecuperarDatosApp):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, parent=None, db_manager=None):
+        super().__init__(parent, db_manager=db_manager)
 
     def buscar_click(self):
         numero_cedula = self.entry_cedula.get()

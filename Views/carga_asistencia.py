@@ -1,7 +1,6 @@
 import customtkinter as ctk
 from tkcalendar import DateEntry
 from tkinter import ttk, Canvas, Scrollbar, messagebox
-from db_manager import DBManager  # Importar DBManager
 import datetime
 
 class TimeInput(ctk.CTkFrame):
@@ -30,12 +29,13 @@ class TimeInput(ctk.CTkFrame):
         
 
 class CargaAsistencia(ctk.CTkFrame):
-    def __init__(self, parent=None, user_data=None):
+    def __init__(self, parent=None, user_data=None, db_manager=None):
         super().__init__(parent)
         self.parent = parent
         self.user_data = user_data
-        self.db_manager = DBManager()
+        self.db_manager = db_manager
         self.db_manager.set_parent(self.parent)
+
 
         # Obtener sedes de la base de datos
         self.sedes = self.db_manager.obtener_sedes()

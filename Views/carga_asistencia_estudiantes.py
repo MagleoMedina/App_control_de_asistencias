@@ -1,17 +1,16 @@
 import customtkinter as ctk
-from db_manager import DBManager
 from tkcalendar import DateEntry
 from tkinter import ttk  # Import ttk for Combobox
 from tkinter import messagebox  # Import messagebox for validation alerts
 from Views.carga_asistencia import TimeInput  # Importar TimeInput
 class CargaAsistenciaEstudiantes(ctk.CTkFrame):
-    def __init__(self, parent, user_data=None):
+    def __init__(self, parent, user_data=None, db_manager=None):
         super().__init__(parent)
         self.parent = parent
         self.user_data = user_data
 
         # Instanciar DBManager
-        self.db_manager = DBManager()
+        self.db_manager = db_manager
         self.db_manager.set_parent(self.parent)
 
         self.configure(fg_color="white")

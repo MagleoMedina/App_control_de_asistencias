@@ -303,24 +303,119 @@ class VentanaMain:
 
 
     def show_about_window(self):
-        # Crear ventana toplevel
+        # 1. Crear ventana toplevel robusta
         about_win = ctk.CTkToplevel(self.ventana)
         about_win.overrideredirect(True)
-        text = "hola"
-        #text = "pq presionas el boton sin saber para que sirve tu te imaginas que hubieras borrado la base de datos entera con este boton bersiales no ya retiro la carrera de una vez, Felicidades la base de datos ha sido borrada satisfactoriamente :O"
-        label = ctk.CTkLabel(about_win, text=text, font=("Century Gothic", 14), wraplength=350, justify="center")
-        label.pack(pady=(20, 10), fill="both", expand=True)
-        btn_cerrar = ctk.CTkButton(about_win, text="Cerrar", command=about_win.destroy)
-        btn_cerrar.pack(expand=True)
-        about_win.update_idletasks()
-        ancho = about_win.winfo_width()
-        alto = about_win.winfo_height()
-        screen_width = self.ventana.winfo_screenwidth()
-        screen_height = self.ventana.winfo_screenheight()
-        x = (screen_width // 2) - (ancho // 2)
-        y = (screen_height // 2) - (alto // 2)
-        about_win.geometry(f"{ancho}x{alto}+{x}+{y}")
+        about_win.attributes("-topmost", True)
+        about_win.configure(fg_color="dodger blue") 
 
+        # 2. Contenedor principal cuadrado
+        main_container = ctk.CTkFrame(
+            about_win, 
+            fg_color="white", 
+            corner_radius=0
+        )
+        main_container.pack(fill="both", expand=True, padx=2, pady=2)
+
+        # Título de la App
+        ctk.CTkLabel(
+            main_container, 
+            text="SALIU v1.0", 
+            font=("Century Gothic", 22, "bold"), 
+            text_color="navy"
+        ).pack(pady=(25, 10))
+
+        # ÁREA DE CONTENIDO
+        content_frame = ctk.CTkFrame(main_container, fg_color="transparent")
+        content_frame.pack(fill="both", expand=True, padx=30)
+
+        # Nombre completo del sistema
+        ctk.CTkLabel(
+            content_frame, 
+            text="Sistema de Administración de los Laboratorios\nde Informática UNEG", 
+            font=("Century Gothic", 15, "bold"),
+            text_color="dodger blue",
+            justify="center"
+        ).pack(pady=(0, 15))
+
+        # Descripción original
+        desc_text = (
+            "SALIU es una solución tecnológica integral diseñada para optimizar la gestión, "
+            "control y monitoreo de los Laboratorios de Informática de la UNEG. El sistema automatiza "
+            "el registro de usuarios, el control de inventario de equipos y la generación de métricas "
+            "estadísticas en tiempo real."
+        )
+        ctk.CTkLabel(
+            content_frame, text=desc_text, font=("Century Gothic", 12),
+            wraplength=400, justify="center", text_color="gray25"
+        ).pack(pady=(0, 15))
+
+        # Equipo de trabajo
+        equipo_text = (
+            "DESARROLLADO POR:\n\n"
+            "• Daniela Espinoza\n"
+            "• Franmari Garcia\n"
+            "• Magleo Medina\n"
+            "• Benjamín Travieso"
+        )
+        ctk.CTkLabel(
+            content_frame, text=equipo_text, font=("Century Gothic", 12, "bold"),
+            text_color="navy", justify="center"
+        ).pack(pady=(0, 15)) # Distancia hacia asesores
+
+        # Asesores
+        asesores_text = (
+            "Asesor Académico: Kelvin Carima\n"
+            "Asesor Comunitario: Joel Uricare"
+        )
+        # pady=(0, 25) le da "un poco más" de aire antes del footer
+        self.label_asesores = ctk.CTkLabel(
+            content_frame, text=asesores_text, font=("Century Gothic", 12, "bold"),
+            text_color="dodger blue", justify="center"
+        )
+        self.label_asesores.pack(pady=(0, 25)) 
+
+        # Footer Institucional
+        info_extra = (
+            "Universidad Nacional Experimental de Guayana (UNEG) - 2026\n"
+            "Tecnologías: Python, CustomTkinter & SQLite (Turso Cloud)"
+        )
+        self.label_footer = ctk.CTkLabel(
+            content_frame, text=info_extra, font=("Century Gothic", 11),
+            text_color="gray50", justify="center"
+        )
+        # Reducimos a 0 el espacio inferior para que el botón suba
+        self.label_footer.pack(pady=(0, 0))
+
+        # 3. Botón de cierre redondeado
+        btn_cerrar = ctk.CTkButton(
+            main_container, 
+            text="Entendido", 
+            text_color="white",
+            command=about_win.destroy,
+            fg_color="dodger blue",
+            hover_color="deep sky blue",
+            font=("Century Gothic", 14, "bold"),
+            corner_radius=20,
+            width=140,
+            height=35
+        )
+        # pady=(10, 20) lo separa 10px del footer y deja 20px al borde de la ventana
+        btn_cerrar.pack(pady=(10, 20))
+
+        # --- Lógica de Centrado y Tamaño ---
+        about_win.update_idletasks()
+        ancho, alto = 480, 480 # Reduje el alto de 640 a 620 para compactar todo
+        
+        v_width = self.ventana.winfo_width()
+        v_height = self.ventana.winfo_height()
+        v_x = self.ventana.winfo_x()
+        v_y = self.ventana.winfo_y()
+        
+        pos_x = v_x + (v_width // 2) - (ancho // 2)
+        pos_y = v_y + (v_height // 2) - (alto // 2)
+        
+        about_win.geometry(f"{ancho}x{alto}+{pos_x}+{pos_y}")
 
 class VentanaMainAdmin(VentanaMain):
     def __init__(self, user_data):

@@ -22,7 +22,7 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
 
         # Title
         self.label_title = ctk.CTkLabel(self, text="Carga de Asistencia Estudiantes", font=("Century Gothic", 21, "bold"),text_color="navy")
-        self.label_title.grid(row=0, column=3, columnspan=4, pady=20, sticky="ew")
+        self.label_title.grid(row=0, column=0, columnspan=8, pady=20, sticky="ew")
         
         # Sede
         self.label_sede = ctk.CTkLabel(self, text="Sede",font=("Century Gothic", 12.3, "bold"))
@@ -68,9 +68,9 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
         
         # Cantidad de usuarios atendidos
         self.label_cantidad_usuarios = ctk.CTkLabel(self, text="Cantidad de usuarios atendidos", font=("Century Gothic", 12.3,"bold"))
-        self.label_cantidad_usuarios.grid(row=3, column=1, padx=10, pady=10)
-        self.entry_cantidad_usuarios = ctk.CTkEntry(self, width=50,placeholder_text="Cantidad", font=("Century Gothic", 12), border_width=2,border_color="light blue")
-        self.entry_cantidad_usuarios.grid(row=3, column=2, padx=10, pady=10)
+        self.label_cantidad_usuarios.grid(row=3, column=3, padx=10, pady=10, sticky="e") 
+        self.entry_cantidad_usuarios = ctk.CTkEntry(self, width=100, placeholder_text="Ej: 20", font=("Century Gothic", 12), border_width=2, border_color="light blue")
+        self.entry_cantidad_usuarios.grid(row=3, column=4, padx=10, pady=10, sticky="w")
         # Agregar eventos para hover en nombre
         self.entry_cantidad_usuarios.bind("<Enter>", lambda event: self.on_hover(event, self.entry_cantidad_usuarios))
         self.entry_cantidad_usuarios.bind("<Leave>", lambda event: self.off_hover(event, self.entry_cantidad_usuarios))
@@ -132,18 +132,15 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
         self.radio_no.grid(row=5, column=3, padx=10, pady=10)
         
         # Button
-        self.btn_submit = ctk.CTkButton(self, text="Submit", command=self.validate_and_submit,
-        height=28,
-        fg_color="dodger blue",
-        hover_color="deep sky blue",  # Color cuando pasas el mouse
-        border_color="#ffffff",  # Color del borde
-        border_width=2,  # Grosor del borde
-        text_color="#ffffff",
-        font=("Century Gothic", 14, "bold"),
-        corner_radius=10)
-        # Initially hide the submit button
-        self.btn_submit.grid(row=2, column=4, padx=10, pady=10)
-        self.btn_submit.grid_remove()
+        self.container_btn_enviar = ctk.CTkFrame(self, fg_color="transparent", height=60)
+        self.container_btn_enviar.grid(row=20, column=0, columnspan=8, sticky="ew", pady=20)
+        
+        self.btn_submit = ctk.CTkButton(self.container_btn_enviar, text="Enviar", command=self.validate_and_submit,
+            height=32, fg_color="dodger blue", hover_color="deep sky blue",
+            border_color="#ffffff", border_width=2, text_color="#ffffff",
+            font=("Century Gothic", 14, "bold"), corner_radius=10)
+        self.btn_submit.place(relx=0.5, rely=0.5, anchor="center")
+        self.container_btn_enviar.grid_remove()
         
         # Additional widgets for "Si" option
         self.label_cantidad_equipos = ctk.CTkLabel(self, text="Cantidad de equipos", font=("Century Gothic", 12.3,"bold"))
@@ -188,25 +185,24 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
             return "break"  # Previene que haga nada
 
     def on_radio_change(self):
-        if self.radio_var.get() == "Si":
-            self.label_cantidad_equipos.grid(row=6, column=1, padx=10, pady=10)
-            self.combo_cantidad_equipos.grid(row=6, column=2, padx=10, pady=10)
+        opcion = self.radio_var.get()
+        if opcion == "Si":
+            self.label_cantidad_equipos.grid(row=6, column=2, padx=10, pady=10)
+            self.combo_cantidad_equipos.grid(row=6, column=3, padx=10, pady=10)
             self.combo_cantidad_equipos.bind("<<ComboboxSelected>>", self.on_cantidad_equipos_change)
-            self.btn_submit.grid_forget()
-            
+            self.container_btn_enviar.grid_remove()
+
+        elif opcion == "No":
+            self.label_cantidad_equipos.grid_forget()
+            self.combo_cantidad_equipos.grid_forget()
+            self.clear_equipos_entries()
+            self.container_btn_enviar.grid(row=7, column=0, columnspan=8, sticky="nsew", pady=30)
+            self.entry_cantidad_usuarios.focus_set()
         else:
             self.label_cantidad_equipos.grid_forget()
             self.combo_cantidad_equipos.grid_forget()
             self.clear_equipos_entries()
-            self.btn_submit.grid(row=6, column=4, padx=10, pady=10)
-            
-            # Poner foco en cantidad
-            self.entry_cantidad_usuarios.focus_set()
-        
-        if self.radio_var.get() == "No":
-            self.btn_submit.grid(row=6, column=4, padx=10, pady=10)
-        else:
-            self.btn_submit.grid_remove()
+            self.container_btn_enviar.grid_remove()
 
     def on_cantidad_equipos_change(self, event):
         self.clear_equipos_entries()
@@ -240,7 +236,7 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
             time_falla.minute_entry.bind("<Return>", lambda e: self.validate_and_submit())
 
             self.equipos_entries.append((label_nro_bien, entry_nro_bien, label_descripcion, entry_descripcion, label_hora_falla, time_falla))
-        self.btn_submit.grid(row=7+cantidad, column=4, padx=10, pady=10)
+        self.container_btn_enviar.grid(row=7 + cantidad, column=0, columnspan=8, sticky="nsew", pady=30)
 
     def clear_equipos_entries(self):
         for widgets in self.equipos_entries:
@@ -325,6 +321,8 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
     def reset_form(self):
         # Limpiar campos
         self.entry_cantidad_usuarios.delete(0, "end")
+        self.entry_profesor.delete(0, "end")
+        self.entry_materia.delete(0, "end")
         self.radio_var.set("")
         self.combo_cantidad_equipos.set("")
 
@@ -332,4 +330,4 @@ class CargaAsistenciaEstudiantes(ctk.CTkFrame):
         self.label_cantidad_equipos.grid_forget()
         self.combo_cantidad_equipos.grid_forget()
         self.clear_equipos_entries()
-        self.btn_submit.grid_remove()
+        self.container_btn_enviar.grid_remove()

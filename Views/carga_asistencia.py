@@ -531,7 +531,7 @@ class CargaAsistencia(ctk.CTkFrame):
             return
 
         # Si hubo fallas, registrar fallas con descripción y hora
-        if self.radio_var.get() == "si" and self.equipos_entries:
+        if self.radio_var.get() == "si" or self.radio_var.get() == "Si"  and self.equipos_entries:
             # Obtener IDs de asistencia (últimos N registros)
             asistencias = []
             num_asistencias = len(self.equipos_entries)

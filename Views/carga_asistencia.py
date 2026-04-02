@@ -432,6 +432,29 @@ class CargaAsistencia(ctk.CTkFrame):
         organizacion = self.entry_organizacion.get()
         telefono = self.entry_telefono.get()
         numero_bien = self.entry_numero_bien.get()
+
+        # Validar solo si la tabla está vacía
+        if len(self.tree.get_children()) == 0:
+            if not nombre:
+                messagebox.showerror("Error", "El campo 'Nombre' no puede estar vacío.")
+                return
+            if not apellido:
+                messagebox.showerror("Error", "El campo 'Apellido' no puede estar vacío.")
+                return
+            if not cedula:
+                messagebox.showerror("Error", "El campo 'Cédula' no puede estar vacío.")
+                return
+            if organizacion == "":
+                organizacion = "N/A"
+                self.entry_organizacion.delete(0, 'end')
+                self.entry_organizacion.insert(0, "N/A")
+            if telefono == "":
+                telefono = "0"
+                self.entry_telefono.delete(0, 'end')
+                self.entry_telefono.insert(0, "0")
+        if not numero_bien:
+            messagebox.showerror("Error", "El campo 'Número de bien' no puede estar vacío.")
+            return
         
         # Insert the data into the table with the counter
         self.tree.insert("", "end", values=(self.counter, tipo_usuario, nombre, apellido, cedula, organizacion, telefono, numero_bien))
@@ -448,7 +471,7 @@ class CargaAsistencia(ctk.CTkFrame):
         self.entry_numero_bien.delete(0, 'end')
 
         # Clear the failure fields if they were filled
-        if self.radio_var.get() == "si":
+        if self.radio_var.get() == "si" or self.radio_var.get() == "Si":
             self.entry_numero_bien_falla.delete(0, 'end')
             self.entry_descripcion_falla.delete(0, 'end')
             self.radio_var.set("")
@@ -482,19 +505,34 @@ class CargaAsistencia(ctk.CTkFrame):
             })
 
         # Validación de datos antes de enviar
-        if not laboratorio_id:
-            messagebox.showerror("Error", "laboratorio_id no seleccionado o inválido.")
-            return
-        if not tipo_uso:
-            messagebox.showerror("Error: tipo_uso no seleccionado o inválido.")
-            return
-        if not fecha or not hora_inicio or not hora_finalizacion:
-            messagebox.showerror("Error: fecha u hora no válidas.")
-            return
-        if not personas:
-            messagebox.showerror("Error: no hay personas para registrar asistencia.")
-            return
-
+        if len(self.tree.get_children()) == 0:
+            if not self.entry_nombre.get():
+                messagebox.showerror("Error", "El campo 'Nombre' no puede estar vacío.")
+                return
+            if not self.entry_apellido.get():
+                messagebox.showerror("Error", "El campo 'Apellido' no puede estar vacío.")
+                return
+            if not self.entry_cedula.get():
+                messagebox.showerror("Error", "El campo 'Cédula' no puede estar vacío.")
+                return
+            if not laboratorio_id:
+                messagebox.showerror("Error", "laboratorio_id no seleccionado o inválido.")
+                return
+            if not tipo_uso:
+                messagebox.showerror("Error: tipo_uso no seleccionado o inválido.")
+                return
+            if not fecha or not hora_inicio or not hora_finalizacion:
+                messagebox.showerror("Error: fecha u hora no válidas.")
+                return
+            if not personas:
+                messagebox.showerror("Error: no hay personas para registrar asistencia.")
+                return
+            if self.entry_organizacion.get() == "":
+                self.entry_organizacion.insert(0, "N/A")  # Rellenar con "N/A" si está vacío
+            
+            if self.entry_telefono.get() == "":
+                self.entry_telefono.insert(0, 0)  # Rellenar con "0" si está vacío
+            
         # Validar que todos los números de bien existan en la base de datos
         for persona in personas:
             nro_bien = persona["numero_bien"]
@@ -528,7 +566,7 @@ class CargaAsistencia(ctk.CTkFrame):
             return
 
         # Si hubo fallas, registrar fallas con descripción y hora
-        if self.radio_var.get() == "si" and self.equipos_entries:
+        if self.radio_var.get() == "si" or self.radio_var.get() == "Si"  and self.equipos_entries:
             # Obtener IDs de asistencia (últimos N registros)
             asistencias = []
             num_asistencias = len(self.equipos_entries)

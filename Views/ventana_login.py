@@ -71,9 +71,13 @@ class VentanaLogin:
         if hasattr(sys, '_MEIPASS'):
             icon_png_path = os.path.join(sys._MEIPASS, 'assets', 'LogoSALIU.png')
             icon_ico_path = os.path.join(sys._MEIPASS, 'assets', 'LogoSALIU.ico')
+            path_ver = os.path.join(sys._MEIPASS, 'assets', 'ojo-abierto.png')
+            path_ocultar = os.path.join(sys._MEIPASS, 'assets', 'ojo.cerrado.png')
         else:
             icon_png_path = os.path.join('assets', 'LogoSALIU.png')
             icon_ico_path = os.path.join('assets', 'LogoSALIU.ico')
+            path_ver = os.path.join('assets', 'ojo-abierto.png')
+            path_ocultar = os.path.join('assets', 'ojo-cerrado.png')
         system = platform.system()
         if system == "Windows" and os.path.exists(icon_ico_path):
             try:
@@ -94,6 +98,8 @@ class VentanaLogin:
         self.db = DBManager()  # Conexión a la BD
         self.db.set_parent(self.ventana) 
         
+        self.img_ver = ctk.CTkImage(Image.open(path_ver), size=(20, 20))
+        self.img_ocultar = ctk.CTkImage(Image.open(path_ocultar), size=(20, 20))
 
         if hasattr(sys, '_MEIPASS'):
             img_path3 = os.path.join(sys._MEIPASS, 'assets', 'login2.png')
@@ -140,9 +146,9 @@ class VentanaLogin:
 
         # Etiqueta y campo de entrada para el nombre de usuario
         self.label_usuario = ctk.CTkLabel(self.frame_principal, text="  Usuario:",font=("Century Gothic", 14))
-        self.label_usuario.grid(row=0, column=0, pady=10,padx=5, sticky='w')
+        self.label_usuario.grid(row=0, column=0, pady=10,padx=(6,5), sticky='w')
         self.entry_usuario = ctk.CTkEntry(self.frame_principal, width=200,placeholder_text="Nombre de Usuario",font=("Century Gothic", 14),corner_radius=10,border_color="light blue")
-        self.entry_usuario.grid(row=1, column=0,padx=5, sticky='w')
+        self.entry_usuario.grid(row=1, column=0,padx=(15,5), sticky='w')
 
          # Etiqueta para la contraseña
         self.label_password = ctk.CTkLabel(self.frame_principal, text="   Contraseña:", font=("Century Gothic", 14))
@@ -150,7 +156,7 @@ class VentanaLogin:
 
          # Campo de entrada para la contraseña con tamaño uniforme
         self.entry_password = ctk.CTkEntry(self.frame_principal, show="*", width=200,corner_radius=10,border_color="light blue")  # Ajusta el tamaño del campo
-        self.entry_password.grid(row=3, column=0,columnspan=1, padx=5, pady=5)
+        self.entry_password.grid(row=3, column=0,columnspan=1, padx=(15,5), pady=5)
         
         # Agregar eventos para hover en usuario
         self.entry_usuario.bind("<Enter>", lambda event: self.on_hover(event, self.entry_usuario))
@@ -160,13 +166,22 @@ class VentanaLogin:
         self.entry_password.bind("<Enter>", lambda event: self.on_hover(event, self.entry_password))
         self.entry_password.bind("<Leave>", lambda event: self.off_hover(event, self.entry_password))
         # Botón para mostrar/ocultar contraseña
-        self.boton_mostrar_ocultar = ctk.CTkButton(self.frame_principal, text="mostrar", command=self.mostrar_ocultar_password,width=70,  # Color de fondo del botón
-        fg_color="dodger blue",
-        hover_color="deep sky blue",  # Color cuando pasas el mouse
-        border_color="#ffffff",  # Color del borde
-        border_width=2,  # Grosor del borde
-        text_color="#ffffff" ,font=("Century Gothic", 14,"bold"),corner_radius=20 )
-        self.boton_mostrar_ocultar.grid(row=3, column=1, padx=5, pady=5)  # Desplazado un poco a la derecha
+        self.boton_mostrar_ocultar = ctk.CTkButton(
+            self.frame_principal, 
+            image=self.img_ver,
+            text="",
+            command=self.mostrar_ocultar_password,
+            width=30,
+            height=25,
+            fg_color="transparent",
+            hover_color="light gray",
+            border_color="light blue",
+            text_color="#ffffff",
+            font=("Century Gothic", 14, "bold"),
+            corner_radius=10,
+            border_width=2
+        )
+        self.boton_mostrar_ocultar.grid(row=3, column=1, padx=(5, 15), pady=5, sticky="w") # Desplazado un poco a la derecha
 
         # Frame para colocar los botones lado a lado
         self.frame_botones = ctk.CTkFrame(self.frame_principal,fg_color="gray99")
@@ -195,14 +210,17 @@ class VentanaLogin:
     
 
     def mostrar_ocultar_password(self):
-        """Función para mostrar u ocultar la contraseña."""
+        """Función para mostrar u ocultar la contraseña con iconos de ojo."""
         if self.password_visible:
-            self.entry_password.configure(show="*")  # Ocultar la contraseña
-            self.boton_mostrar_ocultar.configure(text="mostrar")  # Cambiar el símbolo a 'ocultar'
+            # Estado: Ocultando contraseña
+            self.entry_password.configure(show="*")
+            self.boton_mostrar_ocultar.configure(image=self.img_ver) # Cambia a ojo abierto
         else:
-            self.entry_password.configure(show="")  # Mostrar la contraseña
-            self.boton_mostrar_ocultar.configure(text="ocultar")  # Cambiar el símbolo a 'mostrar'
-        self.password_visible = not self.password_visible  # Cambiar el estado
+            # Estado: Mostrando contraseña
+            self.entry_password.configure(show="")
+            self.boton_mostrar_ocultar.configure(image=self.img_ocultar) # Cambia a ojo tachado/cerrado
+        
+        self.password_visible = not self.password_visible
 
     def ingresar(self):
         """Función que se ejecuta al hacer clic en el botón 'Ingresar'."""

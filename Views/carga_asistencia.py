@@ -217,7 +217,7 @@ class CargaAsistencia(ctk.CTkFrame):
         text_color="#ffffff",
         font=("Century Gothic", 14, "bold"),
         corner_radius=10)
-        self.button_añadir_persona.grid(row=12, column=2, columnspan=2, pady=20)
+        self.button_añadir_persona.grid(row=12, column=0, columnspan=6, pady=20)
         
         # Initialize counter
         self.counter = 1
@@ -299,18 +299,15 @@ class CargaAsistencia(ctk.CTkFrame):
         self.equipos_entries = []
 
 
-        # Submit button
-        self.btn_submit = ctk.CTkButton(self.scrollable_frame, text="Submit", command=self.submit,
-        height=28,
-        fg_color="dodger blue",
-        hover_color="deep sky blue",  # Color cuando pasas el mouse
-        border_color="#ffffff",  # Color del borde
-        border_width=2,  # Grosor del borde
-        text_color="#ffffff",
-        font=("Century Gothic", 14, "bold"),
-        corner_radius=10)
-        self.btn_submit.grid(row=20, column=4, padx=10, pady=10)
-        self.btn_submit.grid_remove()
+        # Enviar button
+        self.container_btn_enviar = ctk.CTkFrame(self.scrollable_frame, fg_color="transparent", height=60)
+
+        self.btn_submit = ctk.CTkButton(self.container_btn_enviar, text="Enviar", command=self.submit,
+            height=32, fg_color="dodger blue", hover_color="deep sky blue",
+            border_color="#ffffff", border_width=2, text_color="#ffffff",
+            font=("Century Gothic", 14, "bold"), corner_radius=10)
+        self.btn_submit.place(relx=0.5, rely=0.5, anchor="center")
+        self.container_btn_enviar.grid_remove()
     # Cambia el color cuando el mouse entra
     def on_hover(self, event, widget):
         widget.configure(border_color="light sky blue")
@@ -353,12 +350,12 @@ class CargaAsistencia(ctk.CTkFrame):
             self.label_cantidad_equipos.grid(row=15, column=0, padx=10, pady=10)
             self.combo_cantidad_equipos.grid(row=15, column=1, padx=10, pady=10)
             self.combo_cantidad_equipos.bind("<<ComboboxSelected>>", self.on_cantidad_equipos_change)
-            self.btn_submit.grid_remove()
+            self.container_btn_enviar.grid_remove()
         else:
             self.label_cantidad_equipos.grid_forget()
             self.combo_cantidad_equipos.grid_forget()
             self.clear_equipos_entries()
-            self.btn_submit.grid(row=16, column=4, padx=10, pady=10)
+            self.container_btn_enviar.grid(row=16, column=0, columnspan=6, sticky="ew", pady=30)
 
     def on_cantidad_equipos_change(self, event):
         self.clear_equipos_entries()
@@ -391,7 +388,7 @@ class CargaAsistencia(ctk.CTkFrame):
             time_falla.minute_entry.bind("<Return>", self._on_enter_pressed)
 
             self.equipos_entries.append((label_nro_bien, entry_nro_bien, label_descripcion, entry_descripcion, label_hora_falla, time_falla))
-        self.btn_submit.grid(row=16+cantidad, column=4, padx=10, pady=10)
+        self.container_btn_enviar.grid(row=16 + cantidad, column=0, columnspan=6, sticky="ew", pady=30)
     
     def clear_equipos_entries(self):
         for widgets in self.equipos_entries:

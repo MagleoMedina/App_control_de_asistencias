@@ -93,7 +93,7 @@ class ConsultarAsistencia(ctk.CTkFrame):
         text_color="#ffffff",
         font=("Century Gothic", 14, "bold"),
         corner_radius=10)
-        self.generar_reporte_btn.grid(row=3, column=3, columnspan=2, pady=20)
+        self.generar_reporte_btn.grid(row=3, column=2, columnspan=2, pady=20, padx=0, sticky="n")
 
     # Cambia el color cuando el mouse entra
     def on_hover(self, event, widget):

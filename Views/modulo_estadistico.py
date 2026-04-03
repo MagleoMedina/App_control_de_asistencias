@@ -9,16 +9,20 @@ class ModuloEstadistico(ctk.CTkFrame):
     def __init__(self, parent=None,  db_manager=None):
         super().__init__(parent)
         self.parent = parent
-        
-        # Título centrado
-        self.title_label = ctk.CTkLabel(self, text="Generar Reporte Estádistico", font=("Century Gothic", 21, "bold"),text_color="navy")
-        self.title_label.grid(row=1, column=3, columnspan=2, pady=10)
-
+       
         # Instanciar DBManager
         self.db_manager =  db_manager
         self.db_manager.set_parent(self.parent)
 
         self.configure(fg_color="white")
+        # Hacer que la columna 0 crezca para centrar
+        self.grid_columnconfigure(0, weight=1)  # izquierda: expande para centrar
+        self.grid_columnconfigure(1, weight=0)  # label: ancho fijo
+        self.grid_columnconfigure(2, weight=0)  # entry: ancho fijo
+        self.grid_columnconfigure(3, weight=1)  # derecha: expande para centrar
+        # Título centrado
+        self.title_label = ctk.CTkLabel(self, text="Generar Reporte Estádistico", font=("Century Gothic", 21, "bold"),text_color="navy")
+        self.title_label.grid(row=0, column=0,  columnspan=4, pady=(20, 40), sticky="n")
 
          # Obtener sedes de la base de datos
         self.sedes = self.db_manager.obtener_sedes()
@@ -26,7 +30,7 @@ class ModuloEstadistico(ctk.CTkFrame):
         
         # Labels y Entries
         self.sede_label = ctk.CTkLabel(self, text="Sede",font=("Century Gothic", 12.3,"bold"))
-        self.sede_label.grid(row=2, column=0, padx=10, pady=5, sticky="e")
+        self.sede_label.grid(row=1, column=1, sticky="w", pady=(5, 2),padx=(0, 10))
         self.sede_entry =ctk.CTkComboBox(self, values=sede_names, state="readonly", command=self.on_sede_selected,
         font=("Century Gothic", 12),
         border_color="dodger blue",
@@ -34,21 +38,21 @@ class ModuloEstadistico(ctk.CTkFrame):
         fg_color="white",
         button_hover_color="deep sky blue"
           )
-        self.sede_entry.grid(row=2, column=1, padx=10, pady=5, sticky="w")
+        self.sede_entry.grid(row=1, column=2, sticky="w", pady=(0, 10))
 
         # Inicializar laboratorios según la sede seleccionada
         self.laboratorios = []
         self.lab_names = []
         
         self.laboratorio_label = ctk.CTkLabel(self, text="Laboratorio", font=("Century Gothic", 12.3,"bold"))
-        self.laboratorio_label.grid(row=2, column=2, padx=10, pady=5, sticky="e")
+        self.laboratorio_label.grid(row=2, column=1, sticky="w", pady=(5, 2), padx=(0, 10))
         self.laboratorio_entry = ctk.CTkComboBox(self, values=[], state="readonly",
         font=("Century Gothic", 12),
         border_color="dodger blue",
         button_color="dodger blue",
         fg_color="white",
         button_hover_color="deep sky blue")
-        self.laboratorio_entry.grid(row=2, column=3, padx=10, pady=5, sticky="w")
+        self.laboratorio_entry.grid(row=2, column=2, sticky="w", pady=(0, 10))
 
         # Si hay sedes, selecciona la primera y actualiza laboratorios
         if sede_names:
@@ -62,14 +66,14 @@ class ModuloEstadistico(ctk.CTkFrame):
             self.on_sede_selected()
         
         self.fecha_inicio_label = ctk.CTkLabel(self, text="Fecha de inicio", font=("Century Gothic", 12.3,"bold"))
-        self.fecha_inicio_label.grid(row=2, column=4, padx=10, pady=5, sticky="e")
+        self.fecha_inicio_label.grid(row=3, column=1, sticky="w", pady=(5, 2),padx=(0, 10))
         self.fecha_inicio_entry = DateEntry(self, date_pattern="dd/mm/yyyy",font=("Century Gothic", 12, "bold"), background='deep sky blue',foreground='white',borderwidth=2,relief='sunken', width=20)
-        self.fecha_inicio_entry.grid(row=2, column=5, padx=10, pady=5, sticky="w")
+        self.fecha_inicio_entry.grid(row=3, column=2, sticky="w", pady=(0, 10))
         
         self.fecha_finalizacion_label = ctk.CTkLabel(self, text="Fecha de finalización",font=("Century Gothic", 12.3,"bold"))
-        self.fecha_finalizacion_label.grid(row=2, column=6, padx=10, pady=5, sticky="e")
+        self.fecha_finalizacion_label.grid(row=4, column=1, sticky="w", pady=(5, 2),padx=(0, 10))
         self.fecha_finalizacion_entry = DateEntry(self, date_pattern="dd/mm/yyyy",font=("Century Gothic", 12, "bold"), background='deep sky blue',foreground='white',borderwidth=2,relief='sunken', width=20)
-        self.fecha_finalizacion_entry.grid(row=2, column=7, padx=10, pady=5, sticky="w")
+        self.fecha_finalizacion_entry.grid(row=4, column=2, sticky="w", pady=(0, 15))
         
         # Foco inicial en la sede
         self.sede_entry.focus_set()
@@ -94,7 +98,7 @@ class ModuloEstadistico(ctk.CTkFrame):
         text_color="#ffffff",
         font=("Century Gothic", 14, "bold"),
         corner_radius=10)
-        self.generar_reporte_button.grid(row=3, column=3, columnspan=2, pady=20)
+        self.generar_reporte_button.grid(row=9, column=0,columnspan=4, pady=(20, 25),padx=0, sticky="n")
 
     def update_laboratorios(self):
         selected_sede_name = self.sede_entry.get()

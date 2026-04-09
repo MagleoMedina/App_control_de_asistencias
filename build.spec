@@ -23,24 +23,30 @@ datas_extra = (
     collect_data_files('reportlab') +  # fonts, encodings, etc.
     collect_data_files('xhtml2pdf') +  # templates/resources
     [
-        ('assets/logoUNEG.png', 'assets'),  
+          
         ('assets/CL.png', 'assets'),  
         ('assets/Circular-CL.png', 'assets'), 
-        ('assets/Circular-CL.ico', 'assets'), 
-        ('assets/Login.png, 'assets'), 
+        ('assets/Circular-CL.ico', 'assets'),  
+        ('assets/login2.png', 'assets'),
+        ('assets/logo_uneg.png', 'assets'),
+        ('assets/gradiente.png', 'assets'),
+        ('assets/LogoSALIU.ico', 'assets'),
+        ('assets/LogoSALIU.png', 'assets'),
+        ('assets/ojo-abierto.png', 'assets'),
+        ('assets/ojo-cerrado.png', 'assets'),
         ('Pdf/modulo_estadistico.html', 'Pdf'),  
         ('Pdf/consultar_asistencia.html', 'Pdf'),
         ('Pdf/consultar_falla_equipo.html', 'Pdf'),
         ('Pdf/estilos.css', 'Pdf'),  
-        (db.zip)
+        ('db.zip', '.')
     ]
 )
 
 block_cipher = None
 
 a = Analysis(
-    ['d:\\App_control_de_asistencias\\main.py'],#Solo sera compatible si esta en esta ruta
-    pathex=['d:\\App_control_de_asistencias'], #igual aqui
+    ['d:\\codes\\App_control_de_asistencias\\main.py'],#Solo sera compatible si esta en esta ruta
+    pathex=['d:\\codes\\App_control_de_asistencias'], #igual aqui
     binaries=[],
     datas=datas_extra,  
     hiddenimports=[
@@ -72,5 +78,6 @@ exe = EXE(
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    console=True
+    console=False,
+    icon=['assets/LogoSALIU.ico']
 )

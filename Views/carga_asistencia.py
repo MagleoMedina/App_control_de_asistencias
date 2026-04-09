@@ -1,7 +1,6 @@
 import customtkinter as ctk
 from tkcalendar import DateEntry
 from tkinter import ttk, Canvas, Scrollbar, messagebox
-from db_manager import DBManager  # Importar DBManager
 import datetime
 
 class TimeInput(ctk.CTkFrame):
@@ -21,6 +20,7 @@ class TimeInput(ctk.CTkFrame):
         
     def get_time(self):
         return f"{self.hour_var.get()}:{self.minute_var.get()}"
+    
     def on_hover(self, event, widget):
         widget.configure(border_color="light sky blue")
 
@@ -29,12 +29,13 @@ class TimeInput(ctk.CTkFrame):
         
 
 class CargaAsistencia(ctk.CTkFrame):
-    def __init__(self, parent=None, user_data=None):
+    def __init__(self, parent=None, user_data=None, db_manager=None):
         super().__init__(parent)
         self.parent = parent
         self.user_data = user_data
-        self.db_manager = DBManager()
+        self.db_manager = db_manager
         self.db_manager.set_parent(self.parent)
+
 
         # Obtener sedes de la base de datos
         self.sedes = self.db_manager.obtener_sedes()
@@ -135,7 +136,7 @@ class CargaAsistencia(ctk.CTkFrame):
         self.time_finalizacion.grid(row=3, column=4, columnspan=2, padx=5, pady=10)
 
         # Add title
-        self.label_titulo = ctk.CTkLabel(self.scrollable_frame, text="Datos de persona",font=("Century Gothic", 21, "bold"),text_color="navy")
+        self.label_titulo = ctk.CTkLabel(self.scrollable_frame, text="Datos de Persona",font=("Century Gothic", 21, "bold"),text_color="navy")
         self.label_titulo.grid(row=5, column=0, columnspan=6, pady=20)
         
         # Add labels and entries for personal data
@@ -216,27 +217,20 @@ class CargaAsistencia(ctk.CTkFrame):
         text_color="#ffffff",
         font=("Century Gothic", 14, "bold"),
         corner_radius=10)
-        self.button_añadir_persona.grid(row=12, column=2, columnspan=2, pady=20)
+        self.button_añadir_persona.grid(row=12, column=0, columnspan=6, pady=20)
         
         # Initialize counter
         self.counter = 1
        
         # Create a style
         style = ttk.Style()
-        style.configure("Custom.Treeview", 
-                        background="white",  # Background color
+        style.configure("Custom.Treeview",
+                        background="#D3D3D3",  # Background color
                         foreground="black",   # Text color
                         rowheight=25,         # Row height
-                        fieldbackground="white")  # Field background color
-        # Fondo de los encabezados
-        style.configure("Custom.Treeview.Heading",
-        background="white",        # Cambia aquí el color del encabezado
-        foreground="navy",         # Color del texto del encabezado
-        font=("Century Gothic", 9, "bold")
-    )
-
-        style.map('Custom.Treeview', background=[('selected', 'white')])  # Selected row color
-
+                        fieldbackground="#D3D3D3")  # Field background color
+        style.map('Custom.Treeview', background=[('selected', '#347083')])  # Selected row color
+        
         # Create table to display added persons
         self.tree = ttk.Treeview(self.scrollable_frame, columns=("no", "tipo_usuario", "nombre", "apellido", "cedula", "organizacion", "telefono", "numero_bien"), show='headings', style="Custom.Treeview")
         self.tree.heading("no", text="No")
@@ -305,18 +299,15 @@ class CargaAsistencia(ctk.CTkFrame):
         self.equipos_entries = []
 
 
-        # Submit button
-        self.btn_submit = ctk.CTkButton(self.scrollable_frame, text="Submit", command=self.submit,
-        height=28,
-        fg_color="dodger blue",
-        hover_color="deep sky blue",  # Color cuando pasas el mouse
-        border_color="#ffffff",  # Color del borde
-        border_width=2,  # Grosor del borde
-        text_color="#ffffff",
-        font=("Century Gothic", 14, "bold"),
-        corner_radius=10)
-        self.btn_submit.grid(row=20, column=4, padx=10, pady=10)
-        self.btn_submit.grid_remove()
+        # Enviar button
+        self.container_btn_enviar = ctk.CTkFrame(self.scrollable_frame, fg_color="transparent", height=60)
+
+        self.btn_submit = ctk.CTkButton(self.container_btn_enviar, text="Enviar", command=self.submit,
+            height=32, fg_color="dodger blue", hover_color="deep sky blue",
+            border_color="#ffffff", border_width=2, text_color="#ffffff",
+            font=("Century Gothic", 14, "bold"), corner_radius=10)
+        self.btn_submit.place(relx=0.5, rely=0.5, anchor="center")
+        self.container_btn_enviar.grid_remove()
     # Cambia el color cuando el mouse entra
     def on_hover(self, event, widget):
         widget.configure(border_color="light sky blue")
@@ -359,12 +350,12 @@ class CargaAsistencia(ctk.CTkFrame):
             self.label_cantidad_equipos.grid(row=15, column=0, padx=10, pady=10)
             self.combo_cantidad_equipos.grid(row=15, column=1, padx=10, pady=10)
             self.combo_cantidad_equipos.bind("<<ComboboxSelected>>", self.on_cantidad_equipos_change)
-            self.btn_submit.grid_remove()
+            self.container_btn_enviar.grid_remove()
         else:
             self.label_cantidad_equipos.grid_forget()
             self.combo_cantidad_equipos.grid_forget()
             self.clear_equipos_entries()
-            self.btn_submit.grid(row=16, column=4, padx=10, pady=10)
+            self.container_btn_enviar.grid(row=16, column=0, columnspan=6, sticky="ew", pady=30)
 
     def on_cantidad_equipos_change(self, event):
         self.clear_equipos_entries()
@@ -397,7 +388,7 @@ class CargaAsistencia(ctk.CTkFrame):
             time_falla.minute_entry.bind("<Return>", self._on_enter_pressed)
 
             self.equipos_entries.append((label_nro_bien, entry_nro_bien, label_descripcion, entry_descripcion, label_hora_falla, time_falla))
-        self.btn_submit.grid(row=16+cantidad, column=4, padx=10, pady=10)
+        self.container_btn_enviar.grid(row=16 + cantidad, column=0, columnspan=6, sticky="ew", pady=30)
     
     def clear_equipos_entries(self):
         for widgets in self.equipos_entries:
@@ -441,6 +432,29 @@ class CargaAsistencia(ctk.CTkFrame):
         organizacion = self.entry_organizacion.get()
         telefono = self.entry_telefono.get()
         numero_bien = self.entry_numero_bien.get()
+
+        # Validar solo si la tabla está vacía
+        if len(self.tree.get_children()) == 0:
+            if not nombre:
+                messagebox.showerror("Error", "El campo 'Nombre' no puede estar vacío.")
+                return
+            if not apellido:
+                messagebox.showerror("Error", "El campo 'Apellido' no puede estar vacío.")
+                return
+            if not cedula:
+                messagebox.showerror("Error", "El campo 'Cédula' no puede estar vacío.")
+                return
+            if organizacion == "":
+                organizacion = "N/A"
+                self.entry_organizacion.delete(0, 'end')
+                self.entry_organizacion.insert(0, "N/A")
+            if telefono == "":
+                telefono = "0"
+                self.entry_telefono.delete(0, 'end')
+                self.entry_telefono.insert(0, "0")
+        if not numero_bien:
+            messagebox.showerror("Error", "El campo 'Número de bien' no puede estar vacío.")
+            return
         
         # Insert the data into the table with the counter
         self.tree.insert("", "end", values=(self.counter, tipo_usuario, nombre, apellido, cedula, organizacion, telefono, numero_bien))
@@ -457,7 +471,7 @@ class CargaAsistencia(ctk.CTkFrame):
         self.entry_numero_bien.delete(0, 'end')
 
         # Clear the failure fields if they were filled
-        if self.radio_var.get() == "si":
+        if self.radio_var.get() == "si" or self.radio_var.get() == "Si":
             self.entry_numero_bien_falla.delete(0, 'end')
             self.entry_descripcion_falla.delete(0, 'end')
             self.radio_var.set("")
@@ -491,19 +505,34 @@ class CargaAsistencia(ctk.CTkFrame):
             })
 
         # Validación de datos antes de enviar
-        if not laboratorio_id:
-            messagebox.showerror("Error", "laboratorio_id no seleccionado o inválido.")
-            return
-        if not tipo_uso:
-            messagebox.showerror("Error: tipo_uso no seleccionado o inválido.")
-            return
-        if not fecha or not hora_inicio or not hora_finalizacion:
-            messagebox.showerror("Error: fecha u hora no válidas.")
-            return
-        if not personas:
-            messagebox.showerror("Error: no hay personas para registrar asistencia.")
-            return
-
+        if len(self.tree.get_children()) == 0:
+            if not self.entry_nombre.get():
+                messagebox.showerror("Error", "El campo 'Nombre' no puede estar vacío.")
+                return
+            if not self.entry_apellido.get():
+                messagebox.showerror("Error", "El campo 'Apellido' no puede estar vacío.")
+                return
+            if not self.entry_cedula.get():
+                messagebox.showerror("Error", "El campo 'Cédula' no puede estar vacío.")
+                return
+            if not laboratorio_id:
+                messagebox.showerror("Error", "laboratorio_id no seleccionado o inválido.")
+                return
+            if not tipo_uso:
+                messagebox.showerror("Error: tipo_uso no seleccionado o inválido.")
+                return
+            if not fecha or not hora_inicio or not hora_finalizacion:
+                messagebox.showerror("Error: fecha u hora no válidas.")
+                return
+            if not personas:
+                messagebox.showerror("Error: no hay personas para registrar asistencia.")
+                return
+            if self.entry_organizacion.get() == "":
+                self.entry_organizacion.insert(0, "N/A")  # Rellenar con "N/A" si está vacío
+            
+            if self.entry_telefono.get() == "":
+                self.entry_telefono.insert(0, 0)  # Rellenar con "0" si está vacío
+            
         # Validar que todos los números de bien existan en la base de datos
         for persona in personas:
             nro_bien = persona["numero_bien"]
@@ -537,7 +566,7 @@ class CargaAsistencia(ctk.CTkFrame):
             return
 
         # Si hubo fallas, registrar fallas con descripción y hora
-        if self.radio_var.get() == "si" and self.equipos_entries:
+        if self.radio_var.get() == "si" or self.radio_var.get() == "Si"  and self.equipos_entries:
             # Obtener IDs de asistencia (últimos N registros)
             asistencias = []
             num_asistencias = len(self.equipos_entries)

@@ -1,15 +1,14 @@
 import customtkinter as ctk
 from tkinter import messagebox
-from db_manager import DBManager
 
 class EliminarDatos(ctk.CTkToplevel):
-    def __init__(self, parent, user_data):
+    def __init__(self, parent, user_data, db_manager=None):
         super().__init__(parent)
         self.title("Confirmar eliminación")
         self.geometry("400x200")
         self.parent = parent
         self.user_data = user_data
-        self.db = DBManager()
+        self.db = db_manager
         self.db.set_parent(self.parent) 
         
         ancho, alto = 400, 200

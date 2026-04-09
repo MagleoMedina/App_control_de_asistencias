@@ -4,16 +4,15 @@ from tkinter import ttk, messagebox
 from Pdf.pdf import PDFGenerator
 import os
 from datetime import datetime  # Added import for datetime
-from db_manager import DBManager  
 
 
 class ConsultarAsistencia(ctk.CTkFrame):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, db_manager=None):
         super().__init__(parent)
         self.parent = parent
 
          # Instanciar DBManager
-        self.db_manager = DBManager()
+        self.db_manager = db_manager
         self.db_manager.set_parent(self.parent)
 
         self.configure(fg_color="white")
@@ -94,7 +93,7 @@ class ConsultarAsistencia(ctk.CTkFrame):
         text_color="#ffffff",
         font=("Century Gothic", 14, "bold"),
         corner_radius=10)
-        self.generar_reporte_btn.grid(row=3, column=3, columnspan=2, pady=20)
+        self.generar_reporte_btn.grid(row=3, column=2, columnspan=2, pady=20, padx=0, sticky="n")
 
     # Cambia el color cuando el mouse entra
     def on_hover(self, event, widget):
@@ -147,12 +146,31 @@ class ConsultarAsistencia(ctk.CTkFrame):
         # Genera el HTML para cada bloque, separando por salto de página si hay más de uno
         bloques_html = ""
         for idx, bloque in enumerate(bloques):
-            tabla_consulta_asistencia = "".join(
-                f"<tr><td style='width: 40px'>{i+1}</td><td style='width: 100px'>{fila['Tipo de uso']}</td><td>{fila['Nombre']}</td>"
-                f"<td>{fila['Apellido']}</td><td>{fila['Cédula']}</td><td>{fila['Organización']}</td>"
-                f"<td>{fila['Teléfono']}</td><td>{fila['Número de bien']}</td></tr>"
-                for i, fila in enumerate(bloque["personas"])
-            )
+            filas_lista = []
+            for i, fila in enumerate(bloque["personas"]):
+                # Validación: Si el campo es None o vacío, poner "N/A"
+                tipo = fila.get('Tipo de uso') or "-"
+                nombre = fila.get('Nombre') or "-"
+                apellido = fila.get('Apellido') or "-"
+                cedula = fila.get('Cédula') or "-"
+                org = fila.get('Organización') or "-"
+                telf = fila.get('Teléfono') or "-"
+                bien = fila.get('Número de bien') or "-"
+
+                filas_lista.append(
+                    f"<tr>"
+                    f"<td style='width: 40px'>{i+1}</td>"
+                    f"<td style='width: 100px'>{tipo}</td>"
+                    f"<td>{nombre}</td>"
+                    f"<td>{apellido}</td>"
+                    f"<td>{cedula}</td>"
+                    f"<td>{org}</td>"
+                    f"<td>{telf}</td>"
+                    f"<td>{bien}</td>"
+                    f"</tr>"
+                )
+            
+            tabla_consulta_asistencia = "".join(filas_lista)
             html_content = html_content_template
             html_content = html_content.replace("{{sede}}", sede)
             html_content = html_content.replace("{{laboratorio}}", laboratorio)

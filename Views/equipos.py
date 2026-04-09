@@ -5,21 +5,23 @@ import tkinter as tk  # Importar tkinter para la validación
 from Pdf.pdf import PDFGenerator
 import os
 from datetime import datetime  # Importar datetime para la fecha y hora actual
-from db_manager import DBManager
 
 class Equipos(ctk.CTkFrame):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, db_manager=None):
         super().__init__(parent)
         self.parent = parent
         # Cambiar el color del fondo a blanco
         self.configure(fg_color="white")
-        self.db_manager = DBManager()
+        self.db_manager = db_manager
         self.db_manager.set_parent(self.parent)
-
         
+        # Configurar columnas para centrado
+        for i in range(4):
+            self.grid_columnconfigure(i, weight=1)
+
         # Título centrado
-        self.title_label = ctk.CTkLabel(self, text="Gestion de Equipos", font=("Century Gothic", 20, "bold"),text_color="navy")
-        self.title_label.grid(row=0, column=0, columnspan=5, pady=10, sticky="nsew")
+        self.title_label = ctk.CTkLabel(self, text="Gestion de Equipos", font=("Century Gothic", 20, "bold"), text_color="navy")
+        self.title_label.grid(row=0, column=0, columnspan=4, pady=(20, 40), sticky="n")
         
         # Botón "Consultar Falla de Equipo"
         self.consultar_falla_button = ctk.CTkButton(self, text="Consultar Equipo", command=self.consultar_falla_equipo,width=120,
@@ -31,7 +33,7 @@ class Equipos(ctk.CTkFrame):
         text_color="#ffffff",
         font=("Century Gothic", 14, "bold"),
         corner_radius=10)
-        self.consultar_falla_button.grid(row=1, column=0, padx=10, pady=10)
+        self.consultar_falla_button.grid(row=1, column=0, padx=10, pady=(0, 30))
 
         # Botón "Agregar Equipo"
         self.agregar_equipo_button = ctk.CTkButton(self, text="Agregar Equipo", command=self.agregar_equipo,width=120,
@@ -43,7 +45,7 @@ class Equipos(ctk.CTkFrame):
         text_color="#ffffff",
         font=("Century Gothic", 14, "bold"),
         corner_radius=10)
-        self.agregar_equipo_button.grid(row=1, column=1, padx=10, pady=10)
+        self.agregar_equipo_button.grid(row=1, column=1, padx=10, pady=(0, 30))
 
         # Botón "Modificar Equipo"
         self.modificar_equipo_button = ctk.CTkButton(self, text="Modificar Equipo", command=self.modificar_equipo,width=120,
@@ -55,7 +57,7 @@ class Equipos(ctk.CTkFrame):
         text_color="#ffffff",
         font=("Century Gothic", 14, "bold"),
         corner_radius=10)
-        self.modificar_equipo_button.grid(row=1, column=2, padx=10, pady=10)
+        self.modificar_equipo_button.grid(row=1, column=2, padx=10, pady=(0, 30))
 
         # Botón "Relacionar Equipos"
         self.relacionar_equipos_button = ctk.CTkButton(self, text="Relacionar Equipos", command=self.relacionar_equipos,width=120,
@@ -67,7 +69,7 @@ class Equipos(ctk.CTkFrame):
         text_color="#ffffff",
         font=("Century Gothic", 14, "bold"),
         corner_radius=10)
-        self.relacionar_equipos_button.grid(row=1, column=3, padx=10, pady=10)
+        self.relacionar_equipos_button.grid(row=1, column=3, padx=10, pady=(0, 30))
 
     def clear_frame(self):
         # Remove all widgets except the buttons
@@ -83,7 +85,7 @@ class Equipos(ctk.CTkFrame):
 
     def consultar_falla_equipo(self):
         self.clear_frame()
-        consultar_falla_frame = ConsultarFallaEquipo(self)
+        consultar_falla_frame = ConsultarFallaEquipo(self, db_manager=self.db_manager)
         consultar_falla_frame.grid(row=2, column=0, columnspan=4, pady=10)
 
     def agregar_equipo(self):
@@ -98,33 +100,39 @@ class Equipos(ctk.CTkFrame):
 
     def relacionar_equipos(self):
         self.clear_frame()
-        relacionar_equipos_frame = RelacionarEquipos(self)
+        relacionar_equipos_frame = RelacionarEquipos(self, db_manager=self.db_manager)
         relacionar_equipos_frame.grid(row=2, column=0, columnspan=4, pady=10)
 
 class ConsultarFallaEquipo(ctk.CTkFrame):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, db_manager=None):
         super().__init__(parent)
         self.parent = parent
-        self.db_manager = DBManager()  # Instanciar DBManager
+        self.db_manager = db_manager # Instanciar DBManager
         self.db_manager.set_parent(self.parent)
 
         # Cambiar el color del fondo a navy
         self.configure(fg_color="navy")
 
         # Título centrado
-        self.title_label = ctk.CTkLabel(self, text="Consultar equipo", font=("Century Gothic", 14, "bold"),text_color="white")
+        self.title_label = ctk.CTkLabel(self, text="Consultar equipo", font=("Century Gothic", 13.5, "bold"),text_color="white")
         self.title_label.grid(row=0, column=1, columnspan=2, pady=10)
         
         # Label "Nro de bien"
-        self.nro_bien_label = ctk.CTkLabel(self, text="Nro de bien",font=("Century Gothic", 14, "bold"),text_color="white")
+        self.nro_bien_label = ctk.CTkLabel(self, text="Nro de bien",font=("Century Gothic", 13.5, "bold"),text_color="white")
         self.nro_bien_label.grid(row=1, column=1, padx=10, pady=5)
         
         # Entry para "Nro de bien"
-        self.nro_bien_entry = ctk.CTkEntry(self)
+        self.nro_bien_entry = ctk.CTkEntry(self, border_width=2,border_color="light blue")
         self.nro_bien_entry.grid(row=2, column=1, padx=10, pady=10)
+        self.nro_bien_entry.bind("<Enter>", lambda event: self.on_hover(event, self.nro_bien_entry))
+        self.nro_bien_entry.bind("<Leave>", lambda event: self.off_hover(event, self.nro_bien_entry))
+
         
-        # Validación para que solo se puedan tipear números
-        self.nro_bien_entry.configure(validate="key", validatecommand=(self.register(self.validate_numeric), "%S"))
+        # Dar foco automático
+        self.nro_bien_entry.focus_set()
+        
+        # Permitir que se ejecute con la tecla Enter
+        self.nro_bien_entry.bind("<Return>", lambda event: self.on_buscar_click())
         
         # Botón "Buscar"
         self.buscar_button = ctk.CTkButton(self, text="Buscar", command=self.on_buscar_click, fg_color="dodger blue",
@@ -152,6 +160,13 @@ class ConsultarFallaEquipo(ctk.CTkFrame):
             return
 
         self.crear_pdf(nro_bien)
+
+    def on_hover(self, event, widget):
+        widget.configure(border_color="light sky blue")
+
+    def off_hover(self, event, widget):
+        widget.configure(border_color="light blue")   
+
 
     def crear_pdf(self, nro_bien=None):
         # Read the HTML template
@@ -215,7 +230,8 @@ class AgregarEquipo(ctk.CTkFrame):
         # Label and Dropdown for "Sede"
         self.sede_label = ctk.CTkLabel(self, text="Sede",font=("Century Gothic", 12, "bold"),text_color="white")
         self.sede_label.grid(row=0, column=0, padx=10, pady=5)
-        self.sede_dropdown = ctk.CTkComboBox(self, values=sede_names, command=self.on_sede_selected) 
+        self.sede_dropdown = ctk.CTkComboBox(self, values=sede_names, command=self.on_sede_selected, font=("Century Gothic", 12), border_color="dodger blue",
+        button_color="dodger blue", fg_color="white",button_hover_color="deep sky blue") 
         self.sede_dropdown.grid(row=0, column=1, padx=10, pady=5)
 
         # Inicializar laboratorios según la sede seleccionada (si existe)
@@ -224,7 +240,8 @@ class AgregarEquipo(ctk.CTkFrame):
         # Crear el ComboBox de laboratorio con valores vacíos
         self.laboratorio_label = ctk.CTkLabel(self, text="Laboratorio", font=("Century Gothic", 12, "bold"),text_color="white")
         self.laboratorio_label.grid(row=1, column=0, padx=10, pady=5)
-        self.laboratorio_dropdown = ctk.CTkComboBox(self, values=[], state="readonly")
+        self.laboratorio_dropdown = ctk.CTkComboBox(self, values=[], state="readonly", font=("Century Gothic", 12), border_color="dodger blue",
+        button_color="dodger blue", fg_color="white",button_hover_color="deep sky blue")
         self.laboratorio_dropdown.grid(row=1, column=1, padx=10, pady=5)
 
         # Si hay sedes, selecciona la primera y actualiza laboratorios
@@ -244,24 +261,37 @@ class AgregarEquipo(ctk.CTkFrame):
         # Label and Dropdown for "Equipo"
         self.equipo_label = ctk.CTkLabel(self, text="Equipo",font=("Century Gothic", 12, "bold"),text_color="white")
         self.equipo_label.grid(row=2, column=0, padx=10, pady=5)
-        self.equipo_dropdown = ctk.CTkComboBox(self, values=self.tipos_equipo, state="readonly")
+        self.equipo_dropdown = ctk.CTkComboBox(self, values=self.tipos_equipo, state="readonly", font=("Century Gothic", 12), border_color="dodger blue",
+        button_color="dodger blue", fg_color="white",button_hover_color="deep sky blue")
+
         self.equipo_dropdown.grid(row=2, column=1, padx=10, pady=5)
 
         # Label and Dropdown for "Status"
         self.status_label = ctk.CTkLabel(self, text="Status",font=("Century Gothic", 12, "bold"),text_color="white")
         self.status_label.grid(row=3, column=0, padx=10, pady=5)
         values_status = ["Operativo", "No operativo"]
-        self.status_dropdown = ctk.CTkComboBox(self, values=values_status, state="readonly")
+        self.status_dropdown = ctk.CTkComboBox(self, values=values_status, state="readonly", font=("Century Gothic", 12), border_color="dodger blue",
+        button_color="dodger blue", fg_color="white",button_hover_color="deep sky blue")
         self.status_dropdown.grid(row=3, column=1, padx=10, pady=5)
 
         # Label and Entry for "Número de bien"
         self.nro_bien_label = ctk.CTkLabel(self, text="Número de bien", font=("Century Gothic", 12, "bold"),text_color="white")
         self.nro_bien_label.grid(row=4, column=0, padx=10, pady=5)
-        self.nro_bien_entry = ctk.CTkEntry(self)
+        self.nro_bien_entry = ctk.CTkEntry(self,border_width=2,border_color="light blue")
         self.nro_bien_entry.grid(row=4, column=1, padx=10, pady=5)
-
-        # Add validation for numeric input
-        self.nro_bien_entry.configure(validate="key", validatecommand=(self.register(self.validate_numeric), "%S"))
+        self.nro_bien_entry.focus_set()
+        # Botón al lado del entry de número de bien
+        self.nro_bien_button = ctk.CTkButton(self, text="S/N", width=50, command=self.generar_sn_bien,fg_color="dodger blue",
+        hover_color="deep sky blue",  # Color cuando pasas el mouse
+        border_color="#ffffff",  # Color del borde
+        border_width=2,  # Grosor del borde
+        text_color="#ffffff",
+        font=("Century Gothic", 14, "bold"),
+        corner_radius=10)
+        self.nro_bien_button.grid(row=4, column=2, padx=5, pady=5)
+       
+        self.nro_bien_entry.bind("<Enter>", lambda event: self.on_hover(event, self.nro_bien_entry))
+        self.nro_bien_entry.bind("<Leave>", lambda event: self.off_hover(event, self.nro_bien_entry)) 
 
         # Botón "Guardar"
         self.guardar_button = ctk.CTkButton(self, text="Guardar", command=self.guardar_datos,fg_color="dodger blue",
@@ -272,6 +302,16 @@ class AgregarEquipo(ctk.CTkFrame):
         font=("Century Gothic", 14, "bold"),
         corner_radius=10)
         self.guardar_button.grid(row=5, column=0, columnspan=2, pady=10)
+        
+        # Hacer que ENTER dispare guardar_datos
+        for widget in [
+            self.sede_dropdown, 
+            self.laboratorio_dropdown, 
+            self.equipo_dropdown, 
+            self.status_dropdown, 
+            self.nro_bien_entry
+        ]:
+            widget.bind("<Return>", lambda e: self.guardar_datos())
 
     def validate_numeric(self, char):
         return char.isdigit()
@@ -307,6 +347,12 @@ class AgregarEquipo(ctk.CTkFrame):
         else:
             messagebox.showerror("Error", "No se pudo guardar el equipo. Puede que ya exista.")
 
+    def on_hover(self, event, widget):
+        widget.configure(border_color="light sky blue")
+
+    def off_hover(self, event, widget):
+        widget.configure(border_color="light blue")
+
     def limpiar_campos(self):
         # Limpiar todos los campos de entrada y restablecer los dropdowns
         if self.sede_dropdown.cget("values"):
@@ -319,6 +365,7 @@ class AgregarEquipo(ctk.CTkFrame):
        
         self.equipo_dropdown.set("")
         self.status_dropdown.set("")
+        self.nro_bien_entry.configure(state="normal")
         self.nro_bien_entry.delete(0, tk.END)
 
     def update_laboratorios(self):
@@ -343,6 +390,13 @@ class AgregarEquipo(ctk.CTkFrame):
         else:
             self.laboratorio_dropdown.set("")
 
+    def generar_sn_bien(self):
+        sn = self.db_manager.get_next_sn_bien()
+        self.nro_bien_entry.configure(state="normal")
+        self.nro_bien_entry.delete(0, tk.END)
+        self.nro_bien_entry.insert(0, sn)
+        self.nro_bien_entry.configure(state="readonly")
+
 class ModificarEquipo(ctk.CTkFrame):
     def __init__(self, parent=None, db_manager=None):
         super().__init__(parent)
@@ -353,15 +407,19 @@ class ModificarEquipo(ctk.CTkFrame):
         self.configure(fg_color="navy")
 
         # Label "Número de bien del equipo"
-        self.nro_bien_label = ctk.CTkLabel(self, text="Número de bien del equipo",font=("Century Gothic", 14, "bold"),text_color="white")
+        self.nro_bien_label = ctk.CTkLabel(self, text="Número de bien del equipo",font=("Century Gothic", 13.5, "bold"),text_color="white")
         self.nro_bien_label.grid(row=0, column=0, padx=10, pady=5)
 
         # Entry for "Número de bien del equipo"
-        self.nro_bien_entry = ctk.CTkEntry(self)
+        self.nro_bien_entry = ctk.CTkEntry(self,border_color="light blue")
         self.nro_bien_entry.grid(row=0, column=1, padx=10, pady=5)
-
+        self.nro_bien_entry.bind("<Enter>", lambda event: self.on_hover(event, self.nro_bien_entry))
+        self.nro_bien_entry.bind("<Leave>", lambda event: self.off_hover(event, self.nro_bien_entry))
         # Add validation for numeric input
         self.nro_bien_entry.configure(validate="key", validatecommand=(self.register(self.validate_numeric), "%S"))
+        
+        # Permitir que se ejecute con Enter
+        self.nro_bien_entry.bind("<Return>", lambda event: self.buscar_equipo())
 
         # Button "Buscar"
         self.buscar_button = ctk.CTkButton(self, text="Buscar", command=self.buscar_equipo, fg_color="dodger blue",
@@ -385,6 +443,13 @@ class ModificarEquipo(ctk.CTkFrame):
         self.nuevo_nro_bien_label = None
         self.nuevo_nro_bien_entry = None
         self.actualizar_button = None
+    
+    def on_hover(self, event, widget):
+             widget.configure(border_color="light sky blue")
+
+    def off_hover(self, event, widget):
+             widget.configure(border_color="light blue")
+
 
     def validate_numeric(self, char):
         return char.isdigit()
@@ -415,19 +480,25 @@ class ModificarEquipo(ctk.CTkFrame):
         sede_names = [s[1] for s in self.sedes] if self.sedes else []
 
         # Sede
-        self.sede_label = ctk.CTkLabel(self, text="Sede", font=("Century Gothic", 14, "bold"),text_color="white")
+        self.sede_label = ctk.CTkLabel(self, text="Sede", font=("Century Gothic", 13.5, "bold"),text_color="white")
         self.sede_label.grid(row=1, column=0, padx=10, pady=5)
-        self.sede_dropdown = ctk.CTkComboBox(self, values=sede_names, state="readonly", command=self.on_sede_selected)
+        self.sede_dropdown = ctk.CTkComboBox(self, values=sede_names, state="readonly", command=self.on_sede_selected,font=("Century Gothic", 12), border_color="dodger blue",
+        button_color="dodger blue", fg_color="white",button_hover_color="deep sky blue")
         self.sede_dropdown.grid(row=1, column=1, padx=10, pady=5)
         self.sede_dropdown.set(equipo_data["sede_nombre"])
+        self.bind_focus_to_combobox(self.sede_dropdown)
+        self.sede_dropdown.bind("<Return>", lambda e: self.actualizar_datos())
 
         # Laboratorios para la sede seleccionada
         self.update_laboratorios()
-        self.laboratorio_label = ctk.CTkLabel(self, text="Laboratorio",font=("Century Gothic", 14, "bold"),text_color="white")
+        self.laboratorio_label = ctk.CTkLabel(self, text="Laboratorio",font=("Century Gothic", 13.5, "bold"),text_color="white")
         self.laboratorio_label.grid(row=2, column=0, padx=10, pady=5)
-        self.laboratorio_dropdown = ctk.CTkComboBox(self, values=self.lab_names, state="readonly")
+        self.laboratorio_dropdown = ctk.CTkComboBox(self, values=self.lab_names, state="readonly",font=("Century Gothic", 12), border_color="dodger blue",
+        button_color="dodger blue", fg_color="white",button_hover_color="deep sky blue")
         self.laboratorio_dropdown.grid(row=2, column=1, padx=10, pady=5)
         self.laboratorio_dropdown.set(equipo_data["laboratorio_nombre"])
+        self.bind_focus_to_combobox(self.laboratorio_dropdown)
+        self.laboratorio_dropdown.bind("<Return>", lambda e: self.actualizar_datos())
 
         # Tipos de equipo
         tipos_por_defecto = ["Computadora", "Teclado", "Ratón", "Monitor"]
@@ -436,38 +507,47 @@ class ModificarEquipo(ctk.CTkFrame):
         tipos_set = set(self.tipos_equipo) | set(tipos_por_defecto)
         self.tipos_equipo = list(tipos_set)
 
-        self.equipo_label = ctk.CTkLabel(self, text="Equipo",font=("Century Gothic", 14, "bold"),text_color="white")
+        self.equipo_label = ctk.CTkLabel(self, text="Equipo",font=("Century Gothic", 13.5, "bold"),text_color="white")
         self.equipo_label.grid(row=3, column=0, padx=10, pady=5)
-        self.equipo_dropdown = ctk.CTkComboBox(self, values=self.tipos_equipo, state="readonly")
+        self.equipo_dropdown = ctk.CTkComboBox(self, values=self.tipos_equipo, state="readonly",font=("Century Gothic", 12), border_color="dodger blue",
+        button_color="dodger blue", fg_color="white",button_hover_color="deep sky blue")
         self.equipo_dropdown.grid(row=3, column=1, padx=10, pady=5)
         self.equipo_dropdown.set(equipo_data["descripcion_equipo"])
+        self.bind_focus_to_combobox(self.equipo_dropdown)
+        self.equipo_dropdown.bind("<Return>", lambda e: self.actualizar_datos())
 
         # Status
-        self.status_label = ctk.CTkLabel(self, text="Status",font=("Century Gothic", 14, "bold"),text_color="white")
+        self.status_label = ctk.CTkLabel(self, text="Status",font=("Century Gothic", 13.5, "bold"),text_color="white")
         self.status_label.grid(row=4, column=0, padx=10, pady=5)
         values_status = ["Operativo", "No operativo"]
-        self.status_dropdown = ctk.CTkComboBox(self, values=values_status, state="readonly")
+        self.status_dropdown = ctk.CTkComboBox(self, values=values_status, state="readonly",font=("Century Gothic", 12), border_color="dodger blue",
+        button_color="dodger blue", fg_color="white",button_hover_color="deep sky blue")
         self.status_dropdown.grid(row=4, column=1, padx=10, pady=5)
         self.status_dropdown.set(equipo_data["status"])
+        self.bind_focus_to_combobox(self.status_dropdown)
+        self.status_dropdown.bind("<Return>", lambda e: self.actualizar_datos())
 
         # Número de bien
-        self.nuevo_nro_bien_label = ctk.CTkLabel(self, text="Nuevo número de bien",font=("Century Gothic", 14, "bold"),text_color="white")
+        self.nuevo_nro_bien_label = ctk.CTkLabel(self, text="Nuevo número de bien",font=("Century Gothic", 13.5, "bold"),text_color="white")
         self.nuevo_nro_bien_label.grid(row=5, column=0, padx=10, pady=5)
-        self.nuevo_nro_bien_entry = ctk.CTkEntry(self)
+        self.nuevo_nro_bien_entry = ctk.CTkEntry(self,border_color="light blue",border_width=2,font=("Century Gothic", 12))
         self.nuevo_nro_bien_entry.grid(row=5, column=1, padx=10, pady=5)
         self.nuevo_nro_bien_entry.insert(0, str(equipo_data["nro_bien"]))
-        
-
-        # Botón Actualizar
-        if not self.actualizar_button:
-            self.actualizar_button = ctk.CTkButton(self, text="Actualizar", command=self.actualizar_datos, fg_color="dodger blue",
-            hover_color="deep sky blue",  # Color cuando pasas el mouse
-            border_color="#ffffff",  # Color del borde
-            border_width=2,  # Grosor del borde
+        self.nuevo_nro_bien_entry.bind("<Return>", lambda e: self.actualizar_datos())
+            
+        # Botón Actualizar 
+        self.actualizar_button = ctk.CTkButton(
+            self, text="Actualizar", command=self.actualizar_datos,
+            fg_color="dodger blue",
+            hover_color="deep sky blue",
+            border_color="#ffffff",
+            border_width=2,
             text_color="#ffffff",
             font=("Century Gothic", 14, "bold"),
-            corner_radius=10)
-            self.actualizar_button.grid(row=6, column=0, columnspan=2, pady=10)
+            corner_radius=10
+        )
+        self.actualizar_button.grid(row=6, column=0, columnspan=2, pady=10)
+
 
     def update_laboratorios(self):
         selected_sede_name = self.sede_dropdown.get()
@@ -489,6 +569,25 @@ class ModificarEquipo(ctk.CTkFrame):
             self.laboratorio_dropdown.set(self.lab_names[0])
         else:
             self.laboratorio_dropdown.set("")
+    
+    @staticmethod    
+    def bind_focus_to_combobox(combo):
+        """Asegura que el combobox gane el foco cuando se interactúe con él (clic en campo, flechita o selección)."""
+        def give_focus(event=None):
+            try:
+                combo.focus_set()
+            except Exception:
+                pass
+
+        # Enlaza varios eventos: click, liberación de click y selección de item
+        combo.bind("<Button-1>", give_focus, add="+")
+        combo.bind("<ButtonRelease-1>", give_focus, add="+")
+        combo.bind("<<ComboboxSelected>>", give_focus, add="+")
+
+        # Enlaza los hijos (si existen) — cubre la mayoria de implementaciones internas
+        for child in combo.winfo_children():
+            child.bind("<Button-1>", give_focus, add="+")
+            child.bind("<ButtonRelease-1>", give_focus, add="+")
 
     def actualizar_datos(self):
         # Recoger datos de los campos
@@ -545,10 +644,10 @@ class ModificarEquipo(ctk.CTkFrame):
         self.actualizar_button = None
 
 class RelacionarEquipos(ctk.CTkFrame):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, db_manager=None):
         super().__init__(parent)
         self.parent = parent
-        self.db_manager = DBManager()  # Instanciar DBManager
+        self.db_manager = db_manager  # Instanciar DBManager
         self.db_manager.set_parent(self.parent)
 
          # Cambiar el color del fondo a navy
@@ -556,35 +655,47 @@ class RelacionarEquipos(ctk.CTkFrame):
 
         # Title
         self.title_label = ctk.CTkLabel(self, text="Ingresa los números de bien a relacionar", font=("Century Gothic", 20, "bold"),text_color="white")
-        self.title_label.grid(row=0, column=0, columnspan=2, pady=10)
+        self.title_label.grid(row=0, column=0, columnspan=2, pady=10,padx=(20,20))
 
         # Label and Entry for "Computadora"
         self.computadora_label = ctk.CTkLabel(self, text="Computadora",font=("Century Gothic", 12, "bold"),text_color="white")
         self.computadora_label.grid(row=1, column=0, padx=10, pady=5)
-        self.computadora_entry = ctk.CTkEntry(self)
+        self.computadora_entry = ctk.CTkEntry(self,border_width=2,border_color="light blue")
         self.computadora_entry.grid(row=1, column=1, padx=10, pady=5)
         self.computadora_entry.configure(validate="key", validatecommand=(self.register(self.validate_numeric), "%S"))
+        self.computadora_entry.bind("<Enter>", lambda event: self.on_hover(event, self.computadora_entry))
+        self.computadora_entry.bind("<Leave>", lambda event: self.off_hover(event, self.computadora_entry)) 
+
 
         # Label and Entry for "Teclado"
         self.teclado_label = ctk.CTkLabel(self, text="Teclado",font=("Century Gothic", 12, "bold"),text_color="white")
         self.teclado_label.grid(row=2, column=0, padx=10, pady=5)
-        self.teclado_entry = ctk.CTkEntry(self)
+        self.teclado_entry = ctk.CTkEntry(self,border_width=2,border_color="light blue")
         self.teclado_entry.grid(row=2, column=1, padx=10, pady=5)
         self.teclado_entry.configure(validate="key", validatecommand=(self.register(self.validate_numeric), "%S"))
+        self.teclado_entry.bind("<Enter>", lambda event: self.on_hover(event, self.teclado_entry))
+        self.teclado_entry.bind("<Leave>", lambda event: self.off_hover(event, self.teclado_entry)) 
+
 
         # Label and Entry for "Monitor"
         self.monitor_label = ctk.CTkLabel(self, text="Monitor",font=("Century Gothic", 12, "bold"),text_color="white")
         self.monitor_label.grid(row=3, column=0, padx=10, pady=5)
-        self.monitor_entry = ctk.CTkEntry(self)
+        self.monitor_entry = ctk.CTkEntry(self,border_width=2,border_color="light blue")
         self.monitor_entry.grid(row=3, column=1, padx=10, pady=5)
         self.monitor_entry.configure(validate="key", validatecommand=(self.register(self.validate_numeric), "%S"))
+        self.monitor_entry.bind("<Enter>", lambda event: self.on_hover(event, self.monitor_entry))
+        self.monitor_entry.bind("<Leave>", lambda event: self.off_hover(event, self.monitor_entry)) 
 
         # Label and Entry for "Ratón"
         self.raton_label = ctk.CTkLabel(self, text="Ratón",font=("Century Gothic", 12, "bold"),text_color="white")
         self.raton_label.grid(row=4, column=0, padx=10, pady=5)
-        self.raton_entry = ctk.CTkEntry(self)
+        self.raton_entry = ctk.CTkEntry(self,border_width=2,border_color="light blue")
         self.raton_entry.grid(row=4, column=1, padx=10, pady=5)
         self.raton_entry.configure(validate="key", validatecommand=(self.register(self.validate_numeric), "%S"))
+        self.raton_entry.bind("<Enter>", lambda event: self.on_hover(event, self.raton_entry))
+        self.raton_entry.bind("<Leave>", lambda event: self.off_hover(event, self.raton_entry)) 
+
+     
 
         # Button "Relacionar"
         self.relacionar_button = ctk.CTkButton(self, text="Relacionar", command=self.relacionar_equipos, fg_color="dodger blue",
@@ -595,7 +706,17 @@ class RelacionarEquipos(ctk.CTkFrame):
         font=("Century Gothic", 14, "bold"),
         corner_radius=10)
         self.relacionar_button.grid(row=5, column=0, columnspan=2, pady=10)
+        
+        # Hacer que ENTER ejecute relacionar
+        for entry in [self.computadora_entry, self.teclado_entry, self.monitor_entry, self.raton_entry]:
+            entry.bind("<Return>", lambda e: self.relacionar_equipos())
 
+    def on_hover(self, event, widget):
+         widget.configure(border_color="light sky blue")
+
+    def off_hover(self, event, widget):
+        widget.configure(border_color="light blue") 
+    
     def validate_numeric(self, char):
         return char.isdigit()
 

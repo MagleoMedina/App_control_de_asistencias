@@ -1,10 +1,47 @@
 # App_control_de_asistencias/db_manager.py
 
 import libsql
+import platform
 import os
 import sys
 from dotenv import load_dotenv
 from concurrent.futures import ThreadPoolExecutor
+import zipfile  
+
+
+def get_salu_folder():
+    system = platform.system()
+    user_home = os.path.expanduser("~")
+
+    if system == "Windows":
+        base_path = os.environ.get("LOCALAPPDATA", user_home) # C:\Users\<user>\AppData\Local
+    elif system == "Linux":
+        base_path = user_home # /home/<user>
+    else:
+        base_path = user_home  # fallback
+
+    salu_path = os.path.join(base_path, ".salu")
+    os.makedirs(salu_path, exist_ok=True)  # crear si no existe
+
+    if system == "Linux":
+        if hasattr(sys, '_MEIPASS'):
+            # Si se ejecuta como un ejecutable empaquetado
+            db_zip_path = os.path.join(sys._MEIPASS, "db.zip")
+        else:
+            # Si se ejecuta como script normal
+            db_zip_path = os.path.join(os.path.dirname(__file__), "db.zip")
+        # Solo descomprimir si existe el zip y faltan archivos en la carpeta destino
+        if os.path.exists(db_zip_path):
+            # Verifica si la base de datos principal no existe
+            db_main_file = os.path.join(salu_path, "salu-db.db")
+            if not os.path.exists(db_main_file):
+                try:
+                    with zipfile.ZipFile(db_zip_path, "r") as zip_ref:
+                        zip_ref.extractall(salu_path)
+                    print(f"db.zip descomprimido en {salu_path}")
+                except Exception as e:
+                    print(f"Error al descomprimir db.zip: {e}")
+    return salu_path
 
 class DBManager:
     """
@@ -34,11 +71,90 @@ class DBManager:
         print("DBManager inicializado. Credenciales cargadas.")
         
         self.default_parent = None 
+        
+        self.salu_path = get_salu_folder()
+        self.db_file = os.path.join(self.salu_path, "salu-db.db")
+
+        # --- NUEVAS VARIABLES PARA CONTROL DE MODAL ---
+        self._modal_contador = 0
+        self._loading_modal = None
     
     def set_parent(self, parent):
         """Define el parent por defecto para mostrar la pantalla de carga."""
         self.default_parent = parent
+        
+    def _mostrar_modal_cargando(self, parent):
+        """Muestra el modal, o lo mantiene si ya existe."""
+        self._modal_contador += 1
+        
+        # Si ya existe un modal activo en pantalla, simplemente no hacemos nada y lo reusamos
+        if self._loading_modal is not None and self._loading_modal.winfo_exists():
+            return
 
+        import customtkinter as ctk
+        
+        try:
+            ventana_raiz = parent.winfo_toplevel()
+        except Exception:
+            ventana_raiz = parent
+        
+        self._loading_modal = ctk.CTkToplevel(ventana_raiz)
+        
+        # 1. Configuraciones de ventana modal
+        self._loading_modal.overrideredirect(True) # Sin bordes
+        self._loading_modal.attributes("-topmost", True) # Siempre al frente
+        
+        # 2. Tamaño del cuadro de carga
+        ancho_loading, alto_loading = 300, 120
+        ventana_raiz.update_idletasks()
+        
+        p_width = ventana_raiz.winfo_width()
+        p_height = ventana_raiz.winfo_height()
+        p_x = ventana_raiz.winfo_rootx()
+        p_y = ventana_raiz.winfo_rooty()
+        
+        x = int(p_x + (p_width // 2) - (ancho_loading // 2))
+        y = int(p_y + (p_height // 2) - (alto_loading // 2))
+        
+        self._loading_modal.geometry(f"{ancho_loading}x{alto_loading}+{x}+{y}")
+        self._loading_modal.transient(ventana_raiz)
+        
+        # 3. Diseño estético
+        frame = ctk.CTkFrame(self._loading_modal, border_width=2, border_color="DeepSkyBlue2", fg_color="gray95")
+        frame.pack(fill="both", expand=True)
+        
+        label = ctk.CTkLabel(frame, text="⌛ Procesando...", font=("Century Gothic", 16, "bold"), text_color="navy")
+        label.pack(pady=(25, 5))
+        
+        sub_label = ctk.CTkLabel(frame, text="Por favor, espere un momento", font=("Century Gothic", 12))
+        sub_label.pack()
+
+        self._loading_modal.update()
+        self._loading_modal.grab_set()
+
+    def _ocultar_modal_cargando(self):
+        """Disminuye el contador y programa la destrucción con un ligero retraso."""
+        self._modal_contador -= 1
+        
+        # Por seguridad, evitamos números negativos
+        if self._modal_contador <= 0:
+            self._modal_contador = 0
+            
+            # En lugar de destruir instantáneamente, esperamos 150 milisegundos.
+            # Si entra otra consulta rapidísimo, el contador volverá a subir a 1.
+            if self._loading_modal is not None and self._loading_modal.winfo_exists():
+                self._loading_modal.after(150, self._destruir_modal_seguro)
+
+    def _destruir_modal_seguro(self):
+        """Destruye el modal SOLO si el contador sigue en 0 después del tiempo de gracia."""
+        if self._modal_contador == 0 and self._loading_modal is not None:
+            try:
+                self._loading_modal.grab_release()
+                self._loading_modal.destroy()
+            except Exception:
+                pass
+            self._loading_modal = None
+            
     def get_db_connection(self):
         """
         Establece y devuelve una conexión a la base de datos Turso.
@@ -47,7 +163,7 @@ class DBManager:
         if self._connection is None:
             try:
                 # Conecta a la réplica local ("salu-db.db" en este caso) y la sincroniza con Turso
-                self._connection = libsql.connect("salu-db.db", sync_url=self.url, auth_token=self.auth_token)
+                self._connection = libsql.connect(self.db_file, sync_url=self.url, auth_token=self.auth_token)
                 self._connection.sync()
                 print("Conexión a la base de datos Turso establecida y sincronizada.")
             except Exception as e:
@@ -77,29 +193,13 @@ class DBManager:
         """
         
         if parent is None:
-            parent = self.default_parent  # usa el parent global por defecto
+            parent = self.default_parent
         
-        loading = None
-        if parent is not None:
-            import customtkinter as ctk
-            loading = ctk.CTkToplevel(parent)
-            loading.title("Cargando...")
-            # Tamaño de la ventana
-            ancho, alto = 250, 100
-            # Dimensiones de la pantalla
-            screen_width = parent.winfo_screenwidth()
-            screen_height = parent.winfo_screenheight()
-            # Coordenadas para centrar
-            x = (screen_width // 2) - (ancho // 2)
-            y = (screen_height // 2) - (alto // 2)
+        usar_modal = parent is not None
 
-            loading.geometry(f"{ancho}x{alto}+{x}+{y}")
-            loading.transient(parent)   # Mantener sobre la ventana padre
-            label = ctk.CTkLabel(loading, text="Procesando, por favor espere...")
-            label.pack(expand=True, padx=20, pady=20)
-            loading.deiconify() 
-            loading.update()
-            loading.grab_set()   
+        # Si hay un parent, evaluamos si mostrar o mantener el modal
+        if usar_modal:
+            self._mostrar_modal_cargando(parent)
         
         def _run_query():
             conn = self.get_db_connection()
@@ -116,7 +216,7 @@ class DBManager:
 
                 if commit:
                     conn.commit()
-                    conn.sync() # Sincroniza después de un commit para enviar los cambios a Turso
+                    conn.sync()
                     return True
                 else:
                     if fetch_one:
@@ -126,18 +226,18 @@ class DBManager:
             except Exception as e:
                 print(f"Error al ejecutar la consulta '{query}': {e}")
                 if conn:
-                    conn.rollback() # Revierte la transacción en caso de error
+                    conn.rollback()
                 return None
-            finally:
-                # El cursor se gestiona automáticamente por libsql, no es necesario cerrarlo explícitamente aquí.
-                pass
 
+        # Lanzamos la consulta al hilo
         future = self._executor.submit(_run_query)
+        resultado = future.result()
         
-        if loading:
-            loading.destroy()
+        # Ocultamos el modal (o simplemente restamos 1 al contador si hay más en cola)
+        if usar_modal:
+            self._ocultar_modal_cargando()
         
-        return future.result()  # Espera el resultado pero no bloquea la interfaz principal
+        return resultado
 
     def init_database(self):
         """
@@ -316,7 +416,7 @@ class DBManager:
 
         print("Inicializando base de datos...")
         for sql in create_tables_sql:
-            # Usamos execute_query con commit=True para cada sentencia CREATE TABLE
+            # Usamos execute_query with commit=True para cada sentencia CREATE TABLE
             result = self.execute_query(sql, commit=True)
             if result is None:
                 print(f"Advertencia: Falló la creación de tabla con la consulta: {sql[:50]}...")
@@ -1183,3 +1283,44 @@ class DBManager:
                 "Tipo_usuario":result[6],
             }
         return None
+
+    def get_next_sn_bien(self):
+        """
+        Obtiene el siguiente número de bien disponible con formato S/N-00000,
+        autoincrementando el mayor existente en la base de datos.
+        """
+        query = """
+        SELECT Nro_de_bien FROM Equipo WHERE Nro_de_bien LIKE 'S/N-%'
+        """
+        result = self.execute_query(query)
+        max_num = 0
+        if result:
+            for row in result:
+                nro = row[0]
+                try:
+                    num = int(nro.split('-')[1])
+                    if num > max_num:
+                        max_num = num
+                except (IndexError, ValueError):
+                    continue
+        next_num = max_num + 1
+        return f"S/N-{next_num:05d}"
+    
+    def limpiar_datos(self):
+        """
+        Elimina todos los registros de las tablas principales, desactiva temporalmente las FK.
+        Retorna True si fue exitoso, False si hubo error.
+        """
+        try:
+            self.execute_query("PRAGMA foreign_keys = OFF;", commit=True)
+            self.execute_query("DELETE FROM Falla_equipo_estudiante;", commit=True)
+            self.execute_query("DELETE FROM Falla_equipo_usr;", commit=True)
+            self.execute_query("DELETE FROM Asistencia_usr;", commit=True)
+            self.execute_query("DELETE FROM Uso_laboratorio_estudiante;", commit=True)
+            self.execute_query("DELETE FROM Uso_laboratorio_usr;", commit=True)
+            self.execute_query("DELETE FROM Falla_equipo;", commit=True)
+            self.execute_query("PRAGMA foreign_keys = ON;", commit=True)
+            return True
+        except Exception as e:
+            print("Error al limpiar datos:", e)
+            return False

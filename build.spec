@@ -26,13 +26,14 @@ datas_extra = (
           
         ('assets/CL.png', 'assets'),  
         ('assets/Circular-CL.png', 'assets'), 
-        ('assets/Circular-CL.ico', 'assets'), 
-        ('assets/Login.png', 'assets'), 
+        ('assets/Circular-CL.ico', 'assets'),  
         ('assets/login2.png', 'assets'),
         ('assets/logo_uneg.png', 'assets'),
         ('assets/gradiente.png', 'assets'),
         ('assets/LogoSALIU.ico', 'assets'),
         ('assets/LogoSALIU.png', 'assets'),
+        ('assets/ojo-abierto.png', 'assets'),
+        ('assets/ojo-cerrado.png', 'assets'),
         ('Pdf/modulo_estadistico.html', 'Pdf'),  
         ('Pdf/consultar_asistencia.html', 'Pdf'),
         ('Pdf/consultar_falla_equipo.html', 'Pdf'),
@@ -77,5 +78,6 @@ exe = EXE(
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    console=True
+    console=False,
+    icon=['assets/LogoSALIU.ico']
 )

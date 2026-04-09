@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from concurrent.futures import ThreadPoolExecutor
 import zipfile  
 
+
 def get_salu_folder():
     system = platform.system()
     user_home = os.path.expanduser("~")
@@ -73,11 +74,87 @@ class DBManager:
         
         self.salu_path = get_salu_folder()
         self.db_file = os.path.join(self.salu_path, "salu-db.db")
+
+        # --- NUEVAS VARIABLES PARA CONTROL DE MODAL ---
+        self._modal_contador = 0
+        self._loading_modal = None
     
     def set_parent(self, parent):
         """Define el parent por defecto para mostrar la pantalla de carga."""
         self.default_parent = parent
+        
+    def _mostrar_modal_cargando(self, parent):
+        """Muestra el modal, o lo mantiene si ya existe."""
+        self._modal_contador += 1
+        
+        # Si ya existe un modal activo en pantalla, simplemente no hacemos nada y lo reusamos
+        if self._loading_modal is not None and self._loading_modal.winfo_exists():
+            return
 
+        import customtkinter as ctk
+        
+        try:
+            ventana_raiz = parent.winfo_toplevel()
+        except Exception:
+            ventana_raiz = parent
+        
+        self._loading_modal = ctk.CTkToplevel(ventana_raiz)
+        
+        # 1. Configuraciones de ventana modal
+        self._loading_modal.overrideredirect(True) # Sin bordes
+        self._loading_modal.attributes("-topmost", True) # Siempre al frente
+        
+        # 2. Tamaño del cuadro de carga
+        ancho_loading, alto_loading = 300, 120
+        ventana_raiz.update_idletasks()
+        
+        p_width = ventana_raiz.winfo_width()
+        p_height = ventana_raiz.winfo_height()
+        p_x = ventana_raiz.winfo_rootx()
+        p_y = ventana_raiz.winfo_rooty()
+        
+        x = int(p_x + (p_width // 2) - (ancho_loading // 2))
+        y = int(p_y + (p_height // 2) - (alto_loading // 2))
+        
+        self._loading_modal.geometry(f"{ancho_loading}x{alto_loading}+{x}+{y}")
+        self._loading_modal.transient(ventana_raiz)
+        
+        # 3. Diseño estético
+        frame = ctk.CTkFrame(self._loading_modal, border_width=2, border_color="DeepSkyBlue2", fg_color="gray95")
+        frame.pack(fill="both", expand=True)
+        
+        label = ctk.CTkLabel(frame, text="⌛ Procesando...", font=("Century Gothic", 16, "bold"), text_color="navy")
+        label.pack(pady=(25, 5))
+        
+        sub_label = ctk.CTkLabel(frame, text="Por favor, espere un momento", font=("Century Gothic", 12))
+        sub_label.pack()
+
+        self._loading_modal.update()
+        self._loading_modal.grab_set()
+
+    def _ocultar_modal_cargando(self):
+        """Disminuye el contador y programa la destrucción con un ligero retraso."""
+        self._modal_contador -= 1
+        
+        # Por seguridad, evitamos números negativos
+        if self._modal_contador <= 0:
+            self._modal_contador = 0
+            
+            # En lugar de destruir instantáneamente, esperamos 150 milisegundos.
+            # Si entra otra consulta rapidísimo, el contador volverá a subir a 1.
+            if self._loading_modal is not None and self._loading_modal.winfo_exists():
+                self._loading_modal.after(150, self._destruir_modal_seguro)
+
+    def _destruir_modal_seguro(self):
+        """Destruye el modal SOLO si el contador sigue en 0 después del tiempo de gracia."""
+        if self._modal_contador == 0 and self._loading_modal is not None:
+            try:
+                self._loading_modal.grab_release()
+                self._loading_modal.destroy()
+            except Exception:
+                pass
+            self._loading_modal = None
+            
     def get_db_connection(self):
         """
         Establece y devuelve una conexión a la base de datos Turso.
@@ -116,56 +193,13 @@ class DBManager:
         """
         
         if parent is None:
-            parent = self.default_parent  # usa el parent global por defecto
+            parent = self.default_parent
         
-        loading = None
-        if parent is not None:
-            import customtkinter as ctk
-            
-            # Si el parent es un Frame o widget interno, buscamos la ventana principal real
-            try:
-                ventana_raiz = parent.winfo_toplevel()
-            except Exception:
-                ventana_raiz = parent
-            
-            loading = ctk.CTkToplevel(ventana_raiz)
-            
-            # 1. Configuraciones de ventana modal
-            loading.overrideredirect(True) # Sin bordes
-            loading.attributes("-topmost", True) # Siempre al frente
-            
-            # 2. Tamaño del cuadro de carga
-            ancho_loading, alto_loading = 300, 120
-            
-            # Forzamos la actualización de la ventana raíz para leer su tamaño actual
-            ventana_raiz.update_idletasks()
-            
-            # Obtenemos posición y tamaño de la ventana
-            p_width = ventana_raiz.winfo_width()
-            p_height = ventana_raiz.winfo_height()
-            p_x = ventana_raiz.winfo_rootx()
-            p_y = ventana_raiz.winfo_rooty()
-            
-            # 4. Cálculo del centro relativo al área interna de la ventana
-            x = int(p_x + (p_width // 2) - (ancho_loading // 2))
-            y = int(p_y + (p_height // 2) - (alto_loading // 2))
-            
-            # Aplicamos la geometría
-            loading.geometry(f"{ancho_loading}x{alto_loading}+{x}+{y}")
-            loading.transient(ventana_raiz)
-            
-            # 3. Diseño estético (el que te gustó)
-            frame = ctk.CTkFrame(loading, border_width=2, border_color="DeepSkyBlue2", fg_color="gray95")
-            frame.pack(fill="both", expand=True)
-            
-            label = ctk.CTkLabel(frame, text="⌛ Procesando...", font=("Century Gothic", 16, "bold"), text_color="navy")
-            label.pack(pady=(25, 5))
-            
-            sub_label = ctk.CTkLabel(frame, text="Por favor, espere un momento", font=("Century Gothic", 12))
-            sub_label.pack()
+        usar_modal = parent is not None
 
-            loading.update()
-            loading.grab_set() # Bloquea la interacción con el programa mientras carga
+        # Si hay un parent, evaluamos si mostrar o mantener el modal
+        if usar_modal:
+            self._mostrar_modal_cargando(parent)
         
         def _run_query():
             conn = self.get_db_connection()
@@ -182,7 +216,7 @@ class DBManager:
 
                 if commit:
                     conn.commit()
-                    conn.sync() # Sincroniza después de un commit para enviar los cambios a Turso
+                    conn.sync()
                     return True
                 else:
                     if fetch_one:
@@ -192,28 +226,18 @@ class DBManager:
             except Exception as e:
                 print(f"Error al ejecutar la consulta '{query}': {e}")
                 if conn:
-                    conn.rollback() # Revierte la transacción en caso de error
+                    conn.rollback()
                 return None
-            finally:
-                # El cursor se gestiona automáticamente por libsql, no es necesario cerrarlo explícitamente aquí.
-                pass
 
         # Lanzamos la consulta al hilo
         future = self._executor.submit(_run_query)
-        
-        # ESPERAMOS el resultado antes de cerrar la ventana
-        # Esto evita que el cuadro desaparezca instantáneamente
         resultado = future.result()
         
-        # Destruimos el cuadro de carga
-        if loading:
-            try:
-                loading.grab_release()
-                loading.destroy()
-            except Exception:
-                pass
+        # Ocultamos el modal (o simplemente restamos 1 al contador si hay más en cola)
+        if usar_modal:
+            self._ocultar_modal_cargando()
         
-        return resultado 
+        return resultado
 
     def init_database(self):
         """

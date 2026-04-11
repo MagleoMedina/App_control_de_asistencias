@@ -842,26 +842,111 @@ class DBManager:
             return False, f"No se encuentra {descripcion} con el número de bien {nro_bien} en el sistema."
         return True, None
 
+    def verificar_conflictos_asignacion(self, computadora, teclado, monitor, raton):
+        """
+        Verifica si hay conflictos (reemplazo en la misma PC o robo a otra PC).
+        Retorna (True, "mensaje de advertencia") si hay conflicto, o (False, "") si todo está libre.
+        """
+        computadora = computadora.strip()
+        nuevos_componentes = {
+            "Teclado": teclado.strip(), 
+            "Monitor": monitor.strip(), 
+            "Ratón": raton.strip()
+        }
+
+        # 1. Averiguar qué tiene ESTA computadora actualmente
+        query_actuales = """
+            SELECT a.Componente, c.Descripcion
+            FROM Asignacion a
+            JOIN Componente c ON a.Componente = c.Nro_de_bien
+            WHERE a.Equipo = ?
+        """
+        actuales = self.execute_query(query_actuales, (computadora,))
+        componentes_actuales_dict = {desc: nro for nro, desc in (actuales or [])}
+
+        for tipo, nuevo_comp in nuevos_componentes.items():
+            # A. Detectar Robo: ¿El componente nuevo ya pertenece a OTRA computadora?
+            existe = self.execute_query(
+                "SELECT Equipo FROM Asignacion WHERE Componente = ?", (nuevo_comp,), fetch_one=True
+            )
+            if existe and existe[0].strip() != computadora:
+                equipo_dueño = existe[0].strip()
+                mensaje = f"Advertencia: El {tipo} '{nuevo_comp}' ya está registrado en el equipo '{equipo_dueño}'.\n\n¿Desea proceder y transferirlo a este equipo?"
+                return True, mensaje
+
+            # B. Detectar Reemplazo: ¿Esta computadora ya tiene un componente de este tipo y lo estamos pisando?
+            comp_viejo = componentes_actuales_dict.get(tipo)
+            if comp_viejo and comp_viejo != nuevo_comp:
+                mensaje = f"La computadora '{computadora}' ya tiene un {tipo} asignado (Nro: {comp_viejo}).\n\n¿Desea desvincular el viejo y reemplazarlo por el nuevo ({nuevo_comp})?"
+                return True, mensaje
+
+        # Si llegamos aquí, los componentes están libres y la PC no tiene nada previo que estorbe
+        return False, ""
+
     def relacionar_equipos(self, computadora, teclado, monitor, raton):
         """
-        Registra la relación de los equipos en la tabla Asignacion.
-        Cada componente se relaciona con la computadora.
-        Retorna True si todas las asignaciones fueron exitosas, False si hubo error.
+        Registra o actualiza la relación de los equipos en la tabla Asignacion.
+        Si la computadora ya tiene un componente de ese tipo (ej. un Monitor viejo),
+        desvincula el viejo y asigna el nuevo.
         """
-        # Relacionar cada componente con la computadora
-        componentes = [teclado, monitor, raton]
-        for componente in componentes:
-            # Verifica si ya existe la relación para evitar duplicados
-            existe = self.execute_query(
-                "SELECT 1 FROM Asignacion WHERE Equipo = ? AND Componente = ?", (computadora, componente), fetch_one=True
-            )
-            if not existe:
-                sql = "INSERT INTO Asignacion (Equipo, Componente) VALUES (?, ?)"
-                result = self.execute_query(sql, (computadora, componente), commit=True)
-                if result is None:
-                    return False
-        return True
+        computadora = computadora.strip()
+        
+        # Diccionario para emparejar el tipo exacto con el número de serie ingresado
+        nuevos_componentes = {
+            "Teclado": teclado.strip(),
+            "Monitor": monitor.strip(),
+            "Ratón": raton.strip()
+        }
+        # 1. Averiguar qué componentes tiene EXACTAMENTE esta computadora ahorita
+        query_actuales = """
+            SELECT a.Componente, c.Descripcion
+            FROM Asignacion a
+            JOIN Componente c ON a.Componente = c.Nro_de_bien
+            WHERE a.Equipo = ?
+        """
+        actuales = self.execute_query(query_actuales, (computadora,))
+        
+        # Lo guardamos en un diccionario para fácil lectura, ej: {'Monitor': '4', 'Teclado': '2'}
+        componentes_actuales_dict = {}
+        if actuales:
+            for nro_bien, descripcion in actuales:
+                componentes_actuales_dict[descripcion] = nro_bien
 
+        # 2. Procesar cada componente nuevo que ingresó el usuario
+        for tipo, nuevo_comp in nuevos_componentes.items():
+            
+            # A. Verificamos si la computadora ya tenía un componente de este tipo (ej. un monitor viejo)
+            comp_viejo = componentes_actuales_dict.get(tipo)
+            if comp_viejo and comp_viejo != nuevo_comp:
+                
+                # ELIMINAMOS la asignación del viejo. Así queda "sin asignar" en el sistema.
+                self.execute_query(
+                    "DELETE FROM Asignacion WHERE Equipo = ? AND Componente = ?", 
+                    (computadora, comp_viejo), 
+                    commit=True
+                )
+                
+            # B. Ahora sí, asignamos el componente nuevo
+            # Verificamos si este componente nuevo ya pertenece a otra computadora en la base de datos
+            existe = self.execute_query(
+                "SELECT ID, Equipo FROM Asignacion WHERE Componente = ?", 
+                (nuevo_comp,), 
+                fetch_one=True
+            )
+
+            if existe:
+                # Si existe, le hacemos UPDATE para "robárselo" a la otra computadora y dárselo a esta
+                equipo_previo = existe[1]
+                sql_update = "UPDATE Asignacion SET Equipo = ? WHERE Componente = ?"
+                result = self.execute_query(sql_update, (computadora, nuevo_comp), commit=True)
+                if result is None: return False
+            else:
+                # Si no existe en la tabla de asignaciones, es totalmente nuevo. Hacemos INSERT.
+                sql_insert = "INSERT INTO Asignacion (Equipo, Componente) VALUES (?, ?)"
+                result = self.execute_query(sql_insert, (computadora, nuevo_comp), commit=True)
+                if result is None: return False
+        return True
+    
     def registrar_asistencia_laboratorio_usr(self, laboratorio_id, tipo_uso, fecha, hora_inicio, hora_finalizacion, personas, admin_id):
         """
         Registra el uso del laboratorio y la asistencia de usuarios.

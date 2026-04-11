@@ -441,9 +441,10 @@ class CargaAsistencia(ctk.CTkFrame):
             if not apellido:
                 messagebox.showerror("Error", "El campo 'Apellido' no puede estar vacío.")
                 return
-            if not cedula:
-                messagebox.showerror("Error", "El campo 'Cédula' no puede estar vacío.")
-                return
+            if cedula == "":
+                cedula = "0"
+                self.entry_cedula.delete(0, 'end')
+                self.entry_cedula.insert(0, "0")
             if organizacion == "":
                 organizacion = "N/A"
                 self.entry_organizacion.delete(0, 'end')
@@ -512,9 +513,9 @@ class CargaAsistencia(ctk.CTkFrame):
             if not self.entry_apellido.get():
                 messagebox.showerror("Error", "El campo 'Apellido' no puede estar vacío.")
                 return
-            if not self.entry_cedula.get():
-                messagebox.showerror("Error", "El campo 'Cédula' no puede estar vacío.")
-                return
+            if self.entry_cedula.get():
+                self.entry_cedula.insert(0,0)
+                
             if not laboratorio_id:
                 messagebox.showerror("Error", "laboratorio_id no seleccionado o inválido.")
                 return

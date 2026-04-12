@@ -749,11 +749,21 @@ class RelacionarEquipos(ctk.CTkFrame):
             return
 
         # Registrar la relación en la base de datos
+        hay_conflicto, mensaje_alerta = self.db_manager.verificar_conflictos_asignacion(computadora, teclado, monitor, raton)
+        
+        if hay_conflicto:
+            # Si hay conflicto, mostramos el mensaje dinámico que nos mandó la BD
+            respuesta = messagebox.askyesno("Advertencia de Asignación", mensaje_alerta)
+            if not respuesta:
+                messagebox.showinfo("Cancelado", "Operación cancelada")
+                return
+
+        # Registrar la relación en la base de datos (con sobreescritura/reemplazo)
         exito = self.db_manager.relacionar_equipos(computadora, teclado, monitor, raton)
         if exito:
             messagebox.showinfo(
                 "Éxito",
-                f"Equipos relacionados:\nComputadora: {computadora}\nTeclado: {teclado}\nMonitor: {monitor}\nRatón: {raton}"
+                f"Equipos relacionados correctamente:\nComputadora: {computadora}\nTeclado: {teclado}\nMonitor: {monitor}\nRatón: {raton}"
             )
             self.limpiar_campos()
         else:

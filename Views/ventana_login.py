@@ -56,7 +56,14 @@ class VentanaLogin:
         # Crear la ventana principal
         self.ventana = ctk.CTk()
         self.ventana.title("Login")
-        self.ventana.geometry("1400x720+10+10")
+
+        #self.ventana.geometry("1400x720+10+10")
+        
+        # 1. Forzar el inicio en pantalla completa (Maximizado)
+        self.ventana.state("zoomed")
+        
+        # 2. Bloquear el cambio de tamaño y el botón de maximizar
+        self.ventana.resizable(False, False)
         
         screen_w, screen_h = obtener_dimensiones_pantalla()
         win_w, win_h = 1400, 720

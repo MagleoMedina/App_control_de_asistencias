@@ -59,19 +59,29 @@ class VentanaLogin:
 
         #self.ventana.geometry("1400x720+10+10")
         
-        # 1. Forzar el inicio en pantalla completa (Maximizado)
-        self.ventana.state("zoomed")
+        system_os = platform.system()
+        if system_os == "Linux":
+            try:
+                self.ventana.attributes("-zoomed", True)
+            except Exception:
+                self.ventana.state("zoomed")
+        else:
+            self.ventana.state("zoomed")
+            
+        # 2. Darle un instante a la ventana para que se dibuje maximizada
+        self.ventana.update()
         
-        # 2. Bloquear el cambio de tamaño y el botón de maximizar
+        # 3. Capturar el ancho, alto y posición exactos de la ventana ya maximizada
+        max_w = self.ventana.winfo_width()
+        max_h = self.ventana.winfo_height()
+        max_x = self.ventana.winfo_x()
+        max_y = self.ventana.winfo_y()
+        
+        # 4. Fijar esa geometría gigante para que no se encoja
+        self.ventana.geometry(f"{max_w}x{max_h}+{max_x}+{max_y}")
+        
+        # 5. Finalmente, bloquear la ventana (deshabilita el botón maximizar)
         self.ventana.resizable(False, False)
-        
-        screen_w, screen_h = obtener_dimensiones_pantalla()
-        win_w, win_h = 1400, 720
-        win_w = min(win_w, screen_w)
-        win_h = min(win_h, screen_h)
-        x = (screen_w - win_w) // 2
-        y = (screen_h - win_h) // 2
-        self.ventana.geometry(f"{win_w}x{win_h}+{x}+{y}")     
         # --- Establecer icono personalizado multiplataforma ---
 
         

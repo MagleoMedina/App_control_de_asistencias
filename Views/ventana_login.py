@@ -58,7 +58,10 @@ class VentanaLogin:
         self.ventana.title("Login")
 
         #self.ventana.geometry("1400x720+10+10")
-        
+
+        # 0. Hacer la ventana totalmente transparente (invisible) mientras se configura
+        self.ventana.attributes("-alpha", 0.0)
+
         system_os = platform.system()
         if system_os == "Linux":
             try:
@@ -82,6 +85,10 @@ class VentanaLogin:
         
         # 5. Finalmente, bloquear la ventana (deshabilita el botón maximizar)
         self.ventana.resizable(False, False)
+        
+        #6. Devolverle la opacidad al 100% después de un delay de 500 milisegundos
+        self.ventana.after(500, lambda: self.ventana.attributes("-alpha", 1.0))
+
         # --- Establecer icono personalizado multiplataforma ---
 
         

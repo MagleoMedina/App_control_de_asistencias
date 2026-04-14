@@ -16,7 +16,7 @@ class Equipos(ctk.CTkFrame):
         self.db_manager.set_parent(self.parent)
         
         # Configurar columnas para centrado
-        for i in range(4):
+        for i in range(5):
             self.grid_columnconfigure(i, weight=1)
 
         # Título centrado
@@ -70,6 +70,12 @@ class Equipos(ctk.CTkFrame):
         font=("Century Gothic", 14, "bold"),
         corner_radius=10)
         self.relacionar_equipos_button.grid(row=1, column=3, padx=10, pady=(0, 30))
+        
+        # Botón "Reporte de Fallas por Fecha" (Fila 1, Columna 4)
+        self.reporte_fallas_button = ctk.CTkButton(self, text="Reporte de Fallas", command=self.reporte_fallas_rango, width=120,
+            height=28, fg_color="dodger blue", hover_color="deep sky blue", border_color="#ffffff", border_width=2,
+            text_color="#ffffff", font=("Century Gothic", 14, "bold"), corner_radius=10)
+        self.reporte_fallas_button.grid(row=1, column=4, padx=10, pady=(0, 30))
 
     def clear_frame(self):
         # Remove all widgets except the buttons
@@ -80,6 +86,7 @@ class Equipos(ctk.CTkFrame):
                 self.agregar_equipo_button,
                 self.modificar_equipo_button,
                 self.relacionar_equipos_button,
+                self.reporte_fallas_button,
             ]:
                 widget.destroy()
 
@@ -102,6 +109,11 @@ class Equipos(ctk.CTkFrame):
         self.clear_frame()
         relacionar_equipos_frame = RelacionarEquipos(self, db_manager=self.db_manager)
         relacionar_equipos_frame.grid(row=2, column=0, columnspan=4, pady=10)
+        
+    def reporte_fallas_rango(self):
+        self.clear_frame()
+        reporte_frame = ReporteFallasRango(self, db_manager=self.db_manager)
+        reporte_frame.grid(row=2, column=0, columnspan=5, pady=10)
 
 class ConsultarFallaEquipo(ctk.CTkFrame):
     def __init__(self, parent=None, db_manager=None):
@@ -783,3 +795,116 @@ class RelacionarEquipos(ctk.CTkFrame):
         self.teclado_entry.delete(0, tk.END)
         self.monitor_entry.delete(0, tk.END)
         self.raton_entry.delete(0, tk.END)
+        
+class ReporteFallasRango(ctk.CTkFrame):
+    def __init__(self, parent=None, db_manager=None):
+        super().__init__(parent)
+        self.parent = parent
+        self.db_manager = db_manager
+        self.configure(fg_color="navy")
+
+        # Título
+        self.title_label = ctk.CTkLabel(self, text="Generar Reporte de Fallas", font=("Century Gothic", 15, "bold"), text_color="white")
+        self.title_label.grid(row=0, column=0, columnspan=4, pady=15)
+
+        # --- Fecha Inicio (Desde) ---
+        self.lbl_desde = ctk.CTkLabel(self, text="Desde", font=("Century Gothic", 12.3, "bold"), text_color="white")
+        self.lbl_desde.grid(row=1, column=0, padx=10, pady=10)
+        
+        self.entry_desde = DateEntry(self, date_pattern='dd/mm/y', 
+                                     font=("Century Gothic", 12, "bold"), 
+                                     background='deep sky blue', 
+                                     foreground='white', 
+                                     borderwidth=2, 
+                                     relief='sunken', 
+                                     width=15)
+        self.entry_desde.grid(row=1, column=1, padx=10, pady=10)
+
+        # --- Fecha Fin (Hasta) ---
+        self.lbl_hasta = ctk.CTkLabel(self, text="Hasta", font=("Century Gothic", 12.3, "bold"), text_color="white")
+        self.lbl_hasta.grid(row=1, column=2, padx=10, pady=10)
+        
+        self.entry_hasta = DateEntry(self, date_pattern='dd/mm/y', 
+                                     font=("Century Gothic", 12, "bold"), 
+                                     background='deep sky blue', 
+                                     foreground='white', 
+                                     borderwidth=2, 
+                                     relief='sunken', 
+                                     width=15)
+        self.entry_hasta.grid(row=1, column=3, padx=10, pady=10)
+
+        # Botón Generar
+        self.btn_generar = ctk.CTkButton(self, text="Generar Reporte", command=self.procesar_reporte,
+            fg_color="dodger blue", hover_color="deep sky blue", border_color="#ffffff", border_width=2,
+            font=("Century Gothic", 13, "bold"), text_color="white", corner_radius=10)
+        self.btn_generar.grid(row=2, column=0, columnspan=4, pady=20)
+
+    def procesar_reporte(self):
+        # 1. Obtener los textos de los DateEntry
+        f_inicio_str = self.entry_desde.get()
+        f_fin_str = self.entry_hasta.get()
+        
+        # 2. Convertirlos a objetos de fecha reales para compararlos
+        try:
+            d_inicio = datetime.strptime(f_inicio_str, "%d/%m/%Y").date()
+            d_fin = datetime.strptime(f_fin_str, "%d/%m/%Y").date()
+        except ValueError:
+            messagebox.showerror("Error", "Formato de fecha inválido.")
+            return
+
+        # --- VALIDACIÓN CRÍTICA ---
+        if d_inicio > d_fin:
+            messagebox.showwarning("Rango Inválido", 
+                                   "La fecha 'Desde' no puede ser posterior a la fecha 'Hasta'.\n"
+                                   f"Seleccionaste: {f_inicio_str} > {f_fin_str}")
+            return
+
+        # 3. Si pasa la validación, consultar a la DB
+        fallas = self.db_manager.consultar_fallas_por_rango(f_inicio_str, f_fin_str)
+
+        if not fallas:
+            messagebox.showinfo("Reporte Vacío", f"No se registraron fallas entre el {f_inicio_str} y el {f_fin_str}.")
+            return
+
+        self.crear_pdf_fallas(fallas, f_inicio_str, f_fin_str)
+
+    def crear_pdf_fallas(self, fallas, f1, f2):
+        # 1. Rutas de archivos
+        html_template_path = os.path.join(os.path.dirname(__file__), "..", "Pdf", "reporte_fallas_historico.html")
+        css_path = os.path.join(os.path.dirname(__file__), "..", "Pdf", "estilos.css")
+
+        try:
+            with open(html_template_path, "r", encoding="utf-8") as file:
+                html_content = file.read()
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudo leer la plantilla HTML: {e}")
+            return
+
+        # 2. Generar las filas de la tabla alineadas con los nuevos nombres
+        rows_html = ""
+        for f in fallas:
+            rows_html += f"""
+                <tr>
+                    <td>{f['Nro_Bien']}</td>
+                    <td>{f['Tipo']}</td>
+                    <td>{f['Fecha']}</td>
+                    <td>{f['Hora']}</td>
+                    <td style="text-align: left;">{f['Descripcion']}</td>
+                    <td>{f['Laboratorio']} - {f['Sede']}</td>
+                </tr>
+            """
+
+        # 3. Reemplazos en el HTML
+        html_content = html_content.replace("{{fecha_actual}}", datetime.now().strftime("%d/%m/%Y"))
+        html_content = html_content.replace("{{rango_fechas}}", f"{f1} hasta {f2}")
+        html_content = html_content.replace("{{tabla_fallas}}", rows_html)
+
+        # 4. Generar el PDF
+        current_datetime = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
+        pdf_filename = f"Reporte_Fallas_{current_datetime}.pdf"
+        pdf_generator = PDFGenerator(pdf_filename)
+
+        if pdf_generator.generate_pdf(html_content, css_path=css_path):
+            messagebox.showinfo("Éxito", f"Reporte generado: {pdf_filename}")
+        else:
+            messagebox.showerror("Error", "No se pudo generar el archivo PDF.")

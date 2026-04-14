@@ -7,7 +7,7 @@ import sys
 from dotenv import load_dotenv
 from concurrent.futures import ThreadPoolExecutor
 import zipfile  
-
+from datetime import datetime
 
 def get_salu_folder():
     system = platform.system()
@@ -1409,3 +1409,57 @@ class DBManager:
         except Exception as e:
             print("Error al limpiar datos:", e)
             return False
+        
+    def consultar_fallas_por_rango(self, fecha_inicio, fecha_fin):
+        # Traemos todas las fallas sin filtrar en SQL para evitar el error del texto
+        query = """
+            SELECT 
+                c.Descripcion AS Tipo_Equipo, 
+                f.Equipo AS Nro_Bien, 
+                f.Fecha_falla, 
+                f.Hora_de_la_falla, 
+                f.Descripcion_falla,
+                l.Nombre AS Laboratorio,
+                s.Nombre AS Sede
+            FROM Falla_equipo f
+            JOIN Componente c ON f.Equipo = c.Nro_de_bien
+            JOIN Equipo e ON f.Equipo = e.Nro_de_bien
+            JOIN Laboratorio l ON e.Laboratorio = l.ID
+            JOIN Sede s ON l.Sede = s.ID
+        """
+        result = self.execute_query(query)
+        if not result: return []
+
+        # Convertimos los límites del rango (los que vienen del DateEntry)
+        try:
+            d_inicio = datetime.strptime(fecha_inicio, "%d/%m/%Y").date()
+            d_fin = datetime.strptime(fecha_fin, "%d/%m/%Y").date()
+        except ValueError:
+            # Si el formato que llega es distinto, esto evita que el programa muera
+            return []
+
+        fallas_filtradas = []
+        for row in result:
+            try:
+                # Convertimos la fecha que viene de la BD ("13/04/2026") a objeto fecha real
+                fecha_db = datetime.strptime(row[2], "%d/%m/%Y").date()
+                
+                # COMPARACIÓN REAL (Día, Mes y Año)
+                if d_inicio <= fecha_db <= d_fin:
+                    fallas_filtradas.append({
+                        "Tipo": row[0],
+                        "Nro_Bien": row[1],
+                        "Fecha": row[2],
+                        "Hora": row[3],
+                        "Descripcion": row[4],
+                        "Laboratorio": row[5],
+                        "Sede": row[6]
+                    })
+            except (ValueError, TypeError):
+                # Si hay una fecha mal escrita en la BD, la saltamos
+                continue
+
+        # Ordenar el resultado por fecha para que el PDF se vea profesional
+        fallas_filtradas.sort(key=lambda x: datetime.strptime(x['Fecha'], "%d/%m/%Y"))
+        
+        return fallas_filtradas

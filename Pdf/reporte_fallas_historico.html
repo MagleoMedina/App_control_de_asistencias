@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="estilos.css">
+</head>
+<body>
+    <div>
+        <div class="header">
+            <img src="../assets/logo_uneg.png" alt="Logo UNEG" class="logo">
+            <div class="title">
+                <h2 class="espacio2">UNIVERSIDAD NACIONAL EXPERIMENTAL DE GUAYANA</h2>
+                <h2>SISTEMA DE ADMINISTRACION DE LABORATORIOS UNEG</h2>
+                <h2 class="espacio3">REPORTE DE FALLAS - FECHA: {{fecha_actual}}</h2>
+            </div>
+        </div>
+        
+        <div class="info">
+            <h3 class="">Historial de fallas registradas en el rango: {{rango_fechas}}</h3>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 120px">Nro. de Bien</th>
+                    <th style="width: 100px">Equipo</th>
+                    <th style="width: 90px">Fecha</th>
+                    <th style="width: 70px">Hora</th>
+                    <th style="width: 200px">Descripción de la Falla</th>
+                    <th style="width: 200px">Laboratorio / Sede</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{tabla_fallas}}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

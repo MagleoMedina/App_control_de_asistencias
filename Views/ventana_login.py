@@ -91,7 +91,6 @@ class VentanaLogin:
 
         # --- Establecer icono personalizado multiplataforma ---
 
-        
         if hasattr(sys, '_MEIPASS'):
             icon_png_path = os.path.join(sys._MEIPASS, 'assets', 'LogoSALIU.png')
             icon_ico_path = os.path.join(sys._MEIPASS, 'assets', 'LogoSALIU.ico')

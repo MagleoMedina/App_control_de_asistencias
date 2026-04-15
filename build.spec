@@ -38,7 +38,8 @@ datas_extra = (
         ('Pdf/consultar_asistencia.html', 'Pdf'),
         ('Pdf/consultar_falla_equipo.html', 'Pdf'),
         ('Pdf/estilos.css', 'Pdf'),  
-        ('db.zip', '.')
+        ('db.zip', '.'),
+        ('.env', '.')
     ]
 )
 

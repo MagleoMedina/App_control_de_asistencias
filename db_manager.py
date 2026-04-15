@@ -1312,32 +1312,51 @@ class DBManager:
         if not sede:
             return [], 0
         sede_id = sede[0]
+
         lab = self.execute_query("SELECT ID FROM Laboratorio WHERE Nombre = ? AND Sede = ?", (laboratorio_nombre, sede_id), fetch_one=True)
         if not lab:
             return [], 0
         lab_id = lab[0]
-
         # Obtener todos los tipos de uso
         tipos_uso = self.execute_query("SELECT ID, Descripcion FROM Tipo_de_uso", fetch_one=False)
         if not tipos_uso:
             return [], 0
-
+        
         estadisticas = []
         total_personas = 0
 
         for tipo_id, descripcion in tipos_uso:
-            # Contar la cantidad de personas atendidas para este tipo de uso en el intervalo de fechas
+           
+            # 1. Transformamos las fechas de entrada (DD/MM/YYYY) a formato ISO (YYYY-MM-DD)
+            # Ejemplo: "14/04/2026" se convierte en "2026-04-14" para poder compararlas matemáticamente
+            f_inicio_iso = f"{fecha_inicio[6:10]}-{fecha_inicio[3:5]}-{fecha_inicio[0:2]}"
+            f_fin_iso = f"{fecha_finalizacion[6:10]}-{fecha_finalizacion[3:5]}-{fecha_finalizacion[0:2]}"
+            
+            # 2. La consulta usa substr() para recortar y voltear u.Fecha al vuelo (Año-Mes-Día)
             query = """
                 SELECT COUNT(a.ID)
                 FROM Uso_laboratorio_usr u
                 LEFT JOIN Asistencia_usr a ON a.Uso_laboratorio_usr = u.ID
                 WHERE u.Laboratorio = ?
                 AND u.Tipo_de_uso = ?
-                AND u.Fecha >= ? AND u.Fecha <= ?
+                AND (substr(u.Fecha, 7, 4) || '-' || substr(u.Fecha, 4, 2) || '-' || substr(u.Fecha, 1, 2)) >= ?
+                AND (substr(u.Fecha, 7, 4) || '-' || substr(u.Fecha, 4, 2) || '-' || substr(u.Fecha, 1, 2)) <= ?
             """
-            result = self.execute_query(query, (lab_id, tipo_id, fecha_inicio, fecha_finalizacion), fetch_one=True)
+            
+            # 3. Pasamos las fechas ya volteadas como parámetros
+            result = self.execute_query(
+                query, 
+                (lab_id, tipo_id, f_inicio_iso, f_fin_iso), 
+                fetch_one=True
+            )
+            
             cantidad = result[0] if result else 0
+            
+
+            # Guardamos el resultado individual para la gráfica/tabla
             estadisticas.append({"nombre": descripcion, "cantidad": cantidad})
+            
+            # Acumulador global en Python: Sumamos la cantidad actual al total histórico del ciclo
             total_personas += cantidad
 
         return estadisticas, total_personas

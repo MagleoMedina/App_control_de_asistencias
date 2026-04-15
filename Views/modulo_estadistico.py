@@ -137,12 +137,16 @@ class ModuloEstadistico(ctk.CTkFrame):
         fecha_inicio = self.fecha_inicio_entry.get()
         fecha_finalizacion = self.fecha_finalizacion_entry.get()
 
+        # 1. Convertir fechas de entrada (DD/MM/YYYY) a formato ISO (YYYY-MM-DD) para la comparación
+        f_inicio_iso = f"{fecha_inicio[6:10]}-{fecha_inicio[3:5]}-{fecha_inicio[0:2]}"
+        f_fin_iso = f"{fecha_finalizacion[6:10]}-{fecha_finalizacion[3:5]}-{fecha_finalizacion[0:2]}"
+
         # Obtener actividades reales desde la base de datos
         actividades, total_cantidad = self.db_manager.obtener_estadisticas_actividades(
             sede, laboratorio, fecha_inicio, fecha_finalizacion
         )
 
-         # Obtener cantidad de estudiantes atendidos en el rango de fechas
+        # Obtener cantidad de estudiantes atendidos en el rango de fechas
         # Sede y laboratorio ya validados arriba
         sede_id = None
         lab_id = None
@@ -159,14 +163,14 @@ class ModuloEstadistico(ctk.CTkFrame):
         estudiantes_atendidos = 0
         if sede_id is not None and lab_id is not None:
             query = """
-                SELECT SUM(Cantidad)
-                FROM Uso_laboratorio_estudiante
-                WHERE Laboratorio = ?
-                AND Fecha >= ? AND Fecha <= ?
-            """
-            result = self.db_manager.execute_query(query, (lab_id, fecha_inicio, fecha_finalizacion), fetch_one=True)
-            estudiantes_atendidos = result[0] if result and result[0] is not None else 0
-
+            SELECT SUM(Cantidad)
+            FROM Uso_laboratorio_estudiante
+            WHERE Laboratorio = ?
+            AND (substr(Fecha, 7, 4) || '-' || substr(Fecha, 4, 2) || '-' || substr(Fecha, 1, 2)) >= ?
+            AND (substr(Fecha, 7, 4) || '-' || substr(Fecha, 4, 2) || '-' || substr(Fecha, 1, 2)) <= ?
+        """
+        result = self.db_manager.execute_query(query, (lab_id, f_inicio_iso, f_fin_iso), fetch_one=True)
+        estudiantes_atendidos = result[0] if result and result[0] is not None else 0
         # Insertar "Estudiantes atendidos" antes de "Otro"
         actividades_mod = []
         otro_idx = None

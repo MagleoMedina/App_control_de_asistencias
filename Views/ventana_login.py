@@ -245,11 +245,24 @@ class VentanaLogin:
         
         self.password_visible = not self.password_visible
 
+    def verificar_conexion_internet(self):
+        import socket
+        """Verifica si hay conexión a internet conectando al DNS de Google."""
+        try:
+            # Intenta conectar a 8.8.8.8 en el puerto 53 con un máximo de 5 segundos de espera
+            socket.create_connection(("8.8.8.8", 53), timeout=5)
+            return True
+        except OSError:
+            return False
+
     def ingresar(self):
         """Función que se ejecuta al hacer clic en el botón 'Ingresar'."""
         usuario = self.entry_usuario.get()
         password = self.entry_password.get()
 
+        if not self.verificar_conexion_internet():
+            messagebox.showerror("Error de conexión", "No se pudo conectar a Internet. Por favor, verifica tu conexión e intenta nuevamente.")
+            return
         if not usuario or not password:
             messagebox.showwarning("Error", "Por favor, completa todos los campos.")
             return

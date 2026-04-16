@@ -12,7 +12,6 @@ from Views.modulo_estadistico import ModuloEstadistico
 from Views.equipos import Equipos
 from Views.gestion_de_usuarios import GestionUsuarios
 from Views.eliminar_datos import EliminarDatos
-from Views.sedes import Sedes
 from db_manager import DBManager
 
 class VentanaMain:
@@ -195,7 +194,7 @@ class VentanaMain:
             self.botones_nav.append(boton)
         
         username = f"{self.user_data['Username']}"
-        self.nav_label_user = ctk.CTkLabel(self.nav_frame, text="Bienvenido \n"+ username, font=("Century Gothic", 20, "bold"), text_color="Blue2")
+        self.nav_label_user = ctk.CTkLabel(self.nav_frame, text="Bienvenido /n"+ username, font=("Century Gothic", 20, "bold"), text_color="Blue2")
         self.nav_label_user.pack(pady=10)
 
         # Botón de ayuda al final del sidebar
@@ -439,17 +438,6 @@ class VentanaMainAdmin(VentanaMain):
         boton_eliminar_bd.pack(pady=5)
         self.botones_nav.append(boton_eliminar_bd)
 
-        #Boton para las sedes
-        # Botón para limpiar la bd
-        boton_sedes = ctk.CTkButton(self.nav_frame, text="Sedes", width=200,height=40, command=self.sedes, fg_color="black",
-            hover_color="#FF315E",  # Color cuando pasas el mouse
-            border_color="#ffffff",  # Color del borde
-            border_width=2,  # Grosor del borde
-            text_color="#ffffff" ,font=("Century Gothic", 14,"bold"),corner_radius=10)
-        boton_sedes.pack(pady=5)
-        self.botones_nav.append(boton_sedes)
-
-
     def gestion_usuarios(self):
         self.limpiar_frame()
         app = GestionUsuarios(self.main_frame, db_manager=self.db)
@@ -463,9 +451,3 @@ class VentanaMainAdmin(VentanaMain):
         )
         if confirm:
             EliminarDatos(self.ventana, self.user_data, db_manager=self.db)
-    
-    def sedes(self):
-        self.limpiar_frame()
-        app = Sedes(self.main_frame, db_manager=self.db)
-        app.pack(fill="both", expand=True)
-        app.pack(fill="both", expand=True)

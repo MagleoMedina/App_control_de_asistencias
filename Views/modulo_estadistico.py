@@ -209,13 +209,44 @@ class ModuloEstadistico(ctk.CTkFrame):
             messagebox.showerror("Error", "No se pudo generar el reporte")
 
     def generar_reporte(self):
-        if not self.sede_entry.get() or not self.laboratorio_entry.get() or not self.fecha_inicio_entry.get() or not self.fecha_finalizacion_entry.get():
+        str_inicio = self.fecha_inicio_entry.get()
+        str_fin = self.fecha_finalizacion_entry.get()
+        sede = self.sede_entry.get()
+        laboratorio = self.laboratorio_entry.get()
+
+        # 1. Validar campos vacíos
+        if not sede or not laboratorio or not str_inicio or not str_fin:
             messagebox.showerror("Error", "Todos los campos deben estar llenos")
-        
-        elif self.fecha_inicio_entry.get() > datetime.now().strftime("%d/%m/%Y") or self.fecha_finalizacion_entry.get() > datetime.now().strftime("%d/%m/%Y"):
-            messagebox.showerror("Error", "La fecha no puede ser mayor a la actual")
-        
-        # colocar un elif no existe reportes para esa fecha
-        else:
-            # Lógica para generar el reporte
-            self.crear_pdf()
+            return
+
+        try:
+            # Parsear los strings a objetos datetime reales
+            dt_inicio = datetime.strptime(str_inicio, "%d/%m/%Y")
+            dt_fin = datetime.strptime(str_fin, "%d/%m/%Y")
+            
+            # Obtener la fecha de hoy a la medianoche (sin horas/minutos) para una comparación justa
+            dt_actual = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+
+            # 2. Validar que no sean fechas en el futuro
+            if dt_inicio > dt_actual or dt_fin > dt_actual:
+                messagebox.showerror("Error", "La fecha no puede ser mayor a la actual")
+                return
+
+            # 3. Validar si la fecha de inicio es mayor que la de finalización 
+            # (Esto también cubre lógicamente cuando la de finalización es menor a la de inicio)
+            if dt_inicio > dt_fin:
+                messagebox.showerror("Error", "La fecha de inicio no puede ser mayor a la fecha de finalización.")
+                return
+
+            # 4. Validar si ambas fechas son exactamente iguales
+            if dt_inicio == dt_fin:
+                messagebox.showerror("Error", "La fecha de inicio y la fecha de finalización no pueden ser iguales.")
+                return
+
+        except ValueError:
+            # Esta validación extra te protege por si el usuario escribe letras o un formato raro
+            messagebox.showerror("Error", "Formato de fecha inválido. Asegúrese de usar DD/MM/YYYY.")
+            return
+
+        # Si superó todas las validaciones (no entró a ningún return), generamos el PDF
+        self.crear_pdf()

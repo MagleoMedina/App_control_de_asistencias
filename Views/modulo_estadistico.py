@@ -238,11 +238,6 @@ class ModuloEstadistico(ctk.CTkFrame):
                 messagebox.showerror("Error", "La fecha de inicio no puede ser mayor a la fecha de finalización.")
                 return
 
-            # 4. Validar si ambas fechas son exactamente iguales
-            if dt_inicio == dt_fin:
-                messagebox.showerror("Error", "La fecha de inicio y la fecha de finalización no pueden ser iguales.")
-                return
-
         except ValueError:
             # Esta validación extra te protege por si el usuario escribe letras o un formato raro
             messagebox.showerror("Error", "Formato de fecha inválido. Asegúrese de usar DD/MM/YYYY.")

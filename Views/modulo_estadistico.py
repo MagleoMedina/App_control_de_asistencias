@@ -137,12 +137,16 @@ class ModuloEstadistico(ctk.CTkFrame):
         fecha_inicio = self.fecha_inicio_entry.get()
         fecha_finalizacion = self.fecha_finalizacion_entry.get()
 
+        # 1. Convertir fechas de entrada (DD/MM/YYYY) a formato ISO (YYYY-MM-DD) para la comparación
+        f_inicio_iso = f"{fecha_inicio[6:10]}-{fecha_inicio[3:5]}-{fecha_inicio[0:2]}"
+        f_fin_iso = f"{fecha_finalizacion[6:10]}-{fecha_finalizacion[3:5]}-{fecha_finalizacion[0:2]}"
+
         # Obtener actividades reales desde la base de datos
         actividades, total_cantidad = self.db_manager.obtener_estadisticas_actividades(
             sede, laboratorio, fecha_inicio, fecha_finalizacion
         )
 
-         # Obtener cantidad de estudiantes atendidos en el rango de fechas
+        # Obtener cantidad de estudiantes atendidos en el rango de fechas
         # Sede y laboratorio ya validados arriba
         sede_id = None
         lab_id = None
@@ -159,14 +163,14 @@ class ModuloEstadistico(ctk.CTkFrame):
         estudiantes_atendidos = 0
         if sede_id is not None and lab_id is not None:
             query = """
-                SELECT SUM(Cantidad)
-                FROM Uso_laboratorio_estudiante
-                WHERE Laboratorio = ?
-                AND Fecha >= ? AND Fecha <= ?
-            """
-            result = self.db_manager.execute_query(query, (lab_id, fecha_inicio, fecha_finalizacion), fetch_one=True)
-            estudiantes_atendidos = result[0] if result and result[0] is not None else 0
-
+            SELECT SUM(Cantidad)
+            FROM Uso_laboratorio_estudiante
+            WHERE Laboratorio = ?
+            AND (substr(Fecha, 7, 4) || '-' || substr(Fecha, 4, 2) || '-' || substr(Fecha, 1, 2)) >= ?
+            AND (substr(Fecha, 7, 4) || '-' || substr(Fecha, 4, 2) || '-' || substr(Fecha, 1, 2)) <= ?
+        """
+        result = self.db_manager.execute_query(query, (lab_id, f_inicio_iso, f_fin_iso), fetch_one=True)
+        estudiantes_atendidos = result[0] if result and result[0] is not None else 0
         # Insertar "Estudiantes atendidos" antes de "Otro"
         actividades_mod = []
         otro_idx = None
@@ -205,13 +209,39 @@ class ModuloEstadistico(ctk.CTkFrame):
             messagebox.showerror("Error", "No se pudo generar el reporte")
 
     def generar_reporte(self):
-        if not self.sede_entry.get() or not self.laboratorio_entry.get() or not self.fecha_inicio_entry.get() or not self.fecha_finalizacion_entry.get():
+        str_inicio = self.fecha_inicio_entry.get()
+        str_fin = self.fecha_finalizacion_entry.get()
+        sede = self.sede_entry.get()
+        laboratorio = self.laboratorio_entry.get()
+
+        # 1. Validar campos vacíos
+        if not sede or not laboratorio or not str_inicio or not str_fin:
             messagebox.showerror("Error", "Todos los campos deben estar llenos")
-        
-        elif self.fecha_inicio_entry.get() > datetime.now().strftime("%d/%m/%Y") or self.fecha_finalizacion_entry.get() > datetime.now().strftime("%d/%m/%Y"):
-            messagebox.showerror("Error", "La fecha no puede ser mayor a la actual")
-        
-        # colocar un elif no existe reportes para esa fecha
-        else:
-            # Lógica para generar el reporte
-            self.crear_pdf()
+            return
+
+        try:
+            # Parsear los strings a objetos datetime reales
+            dt_inicio = datetime.strptime(str_inicio, "%d/%m/%Y")
+            dt_fin = datetime.strptime(str_fin, "%d/%m/%Y")
+            
+            # Obtener la fecha de hoy a la medianoche (sin horas/minutos) para una comparación justa
+            dt_actual = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+
+            # 2. Validar que no sean fechas en el futuro
+            if dt_inicio > dt_actual or dt_fin > dt_actual:
+                messagebox.showerror("Error", "La fecha no puede ser mayor a la actual")
+                return
+
+            # 3. Validar si la fecha de inicio es mayor que la de finalización 
+            # (Esto también cubre lógicamente cuando la de finalización es menor a la de inicio)
+            if dt_inicio > dt_fin:
+                messagebox.showerror("Error", "La fecha de inicio no puede ser mayor a la fecha de finalización.")
+                return
+
+        except ValueError:
+            # Esta validación extra te protege por si el usuario escribe letras o un formato raro
+            messagebox.showerror("Error", "Formato de fecha inválido. Asegúrese de usar DD/MM/YYYY.")
+            return
+
+        # Si superó todas las validaciones (no entró a ningún return), generamos el PDF
+        self.crear_pdf()

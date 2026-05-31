@@ -183,7 +183,7 @@ class VentanaMain:
             self.botones_nav.append(boton)
         
         username = f"{self.user_data['Username']}"
-        self.nav_label_user = ctk.CTkLabel(self.nav_frame, text="Bienvenido /n"+ username, font=("Century Gothic", 20, "bold"), text_color="Blue2")
+        self.nav_label_user = ctk.CTkLabel(self.nav_frame, text="Bienvenido\n"+username, font=("Century Gothic", 20, "bold"), text_color="Blue2")
         self.nav_label_user.pack(pady=10)
 
         # Botón de ayuda al final del sidebar

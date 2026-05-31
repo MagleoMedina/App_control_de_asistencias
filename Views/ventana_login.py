@@ -56,18 +56,41 @@ class VentanaLogin:
         # Crear la ventana principal
         self.ventana = ctk.CTk()
         self.ventana.title("Login")
-        self.ventana.geometry("1400x720+10+10")
+
+        #self.ventana.geometry("1400x720+10+10")
+
+        # 0. Hacer la ventana totalmente transparente (invisible) mientras se configura
+        self.ventana.attributes("-alpha", 0.0)
+
+        system_os = platform.system()
+        if system_os == "Linux":
+            try:
+                self.ventana.attributes("-zoomed", True)
+            except Exception:
+                self.ventana.state("zoomed")
+        else:
+            self.ventana.state("zoomed")
+            
+        # 2. Darle un instante a la ventana para que se dibuje maximizada
+        self.ventana.update()
         
-        screen_w, screen_h = obtener_dimensiones_pantalla()
-        win_w, win_h = 1400, 720
-        win_w = min(win_w, screen_w)
-        win_h = min(win_h, screen_h)
-        x = (screen_w - win_w) // 2
-        y = (screen_h - win_h) // 2
-        self.ventana.geometry(f"{win_w}x{win_h}+{x}+{y}")     
+        # 3. Capturar el ancho, alto y posición exactos de la ventana ya maximizada
+        max_w = self.ventana.winfo_width()
+        max_h = self.ventana.winfo_height()
+        max_x = self.ventana.winfo_x()
+        max_y = self.ventana.winfo_y()
+        
+        # 4. Fijar esa geometría gigante para que no se encoja
+        self.ventana.geometry(f"{max_w}x{max_h}+{max_x}+{max_y}")
+        
+        # 5. Finalmente, bloquear la ventana (deshabilita el botón maximizar)
+        self.ventana.resizable(False, False)
+        
+        #6. Devolverle la opacidad al 100% después de un delay de 500 milisegundos
+        self.ventana.after(500, lambda: self.ventana.attributes("-alpha", 1.0))
+
         # --- Establecer icono personalizado multiplataforma ---
 
-        
         if hasattr(sys, '_MEIPASS'):
             icon_png_path = os.path.join(sys._MEIPASS, 'assets', 'LogoSALIU.png')
             icon_ico_path = os.path.join(sys._MEIPASS, 'assets', 'LogoSALIU.ico')
@@ -222,11 +245,24 @@ class VentanaLogin:
         
         self.password_visible = not self.password_visible
 
+    def verificar_conexion_internet(self):
+        import socket
+        """Verifica si hay conexión a internet conectando al DNS de Google."""
+        try:
+            # Intenta conectar a 8.8.8.8 en el puerto 53 con un máximo de 5 segundos de espera
+            socket.create_connection(("8.8.8.8", 53), timeout=5)
+            return True
+        except OSError:
+            return False
+
     def ingresar(self):
         """Función que se ejecuta al hacer clic en el botón 'Ingresar'."""
         usuario = self.entry_usuario.get()
         password = self.entry_password.get()
 
+        if not self.verificar_conexion_internet():
+            messagebox.showerror("Error de conexión", "No se pudo conectar a Internet. Por favor, verifica tu conexión e intenta nuevamente.")
+            return
         if not usuario or not password:
             messagebox.showwarning("Error", "Por favor, completa todos los campos.")
             return

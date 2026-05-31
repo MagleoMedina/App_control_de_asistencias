@@ -7,6 +7,7 @@ import sys
 from dotenv import load_dotenv
 from concurrent.futures import ThreadPoolExecutor
 import zipfile  
+from datetime import datetime
 
 def get_salu_folder():
     system = platform.system()
@@ -73,11 +74,87 @@ class DBManager:
         
         self.salu_path = get_salu_folder()
         self.db_file = os.path.join(self.salu_path, "salu-db.db")
+
+        # --- NUEVAS VARIABLES PARA CONTROL DE MODAL ---
+        self._modal_contador = 0
+        self._loading_modal = None
     
     def set_parent(self, parent):
         """Define el parent por defecto para mostrar la pantalla de carga."""
         self.default_parent = parent
+        
+    def _mostrar_modal_cargando(self, parent):
+        """Muestra el modal, o lo mantiene si ya existe."""
+        self._modal_contador += 1
+        
+        # Si ya existe un modal activo en pantalla, simplemente no hacemos nada y lo reusamos
+        if self._loading_modal is not None and self._loading_modal.winfo_exists():
+            return
 
+        import customtkinter as ctk
+        
+        try:
+            ventana_raiz = parent.winfo_toplevel()
+        except Exception:
+            ventana_raiz = parent
+        
+        self._loading_modal = ctk.CTkToplevel(ventana_raiz)
+        
+        # 1. Configuraciones de ventana modal
+        self._loading_modal.overrideredirect(True) # Sin bordes
+        self._loading_modal.attributes("-topmost", True) # Siempre al frente
+        
+        # 2. Tamaño del cuadro de carga
+        ancho_loading, alto_loading = 300, 120
+        ventana_raiz.update_idletasks()
+        
+        p_width = ventana_raiz.winfo_width()
+        p_height = ventana_raiz.winfo_height()
+        p_x = ventana_raiz.winfo_rootx()
+        p_y = ventana_raiz.winfo_rooty()
+        
+        x = int(p_x + (p_width // 2) - (ancho_loading // 2))
+        y = int(p_y + (p_height // 2) - (alto_loading // 2))
+        
+        self._loading_modal.geometry(f"{ancho_loading}x{alto_loading}+{x}+{y}")
+        self._loading_modal.transient(ventana_raiz)
+        
+        # 3. Diseño estético
+        frame = ctk.CTkFrame(self._loading_modal, border_width=2, border_color="DeepSkyBlue2", fg_color="gray95")
+        frame.pack(fill="both", expand=True)
+        
+        label = ctk.CTkLabel(frame, text="⌛ Procesando...", font=("Century Gothic", 16, "bold"), text_color="navy")
+        label.pack(pady=(25, 5))
+        
+        sub_label = ctk.CTkLabel(frame, text="Por favor, espere un momento", font=("Century Gothic", 12))
+        sub_label.pack()
+
+        self._loading_modal.update()
+        self._loading_modal.grab_set()
+
+    def _ocultar_modal_cargando(self):
+        """Disminuye el contador y programa la destrucción con un ligero retraso."""
+        self._modal_contador -= 1
+        
+        # Por seguridad, evitamos números negativos
+        if self._modal_contador <= 0:
+            self._modal_contador = 0
+            
+            # En lugar de destruir instantáneamente, esperamos 150 milisegundos.
+            # Si entra otra consulta rapidísimo, el contador volverá a subir a 1.
+            if self._loading_modal is not None and self._loading_modal.winfo_exists():
+                self._loading_modal.after(150, self._destruir_modal_seguro)
+
+    def _destruir_modal_seguro(self):
+        """Destruye el modal SOLO si el contador sigue en 0 después del tiempo de gracia."""
+        if self._modal_contador == 0 and self._loading_modal is not None:
+            try:
+                self._loading_modal.grab_release()
+                self._loading_modal.destroy()
+            except Exception:
+                pass
+            self._loading_modal = None
+            
     def get_db_connection(self):
         """
         Establece y devuelve una conexión a la base de datos Turso.
@@ -116,56 +193,13 @@ class DBManager:
         """
         
         if parent is None:
-            parent = self.default_parent  # usa el parent global por defecto
+            parent = self.default_parent
         
-        loading = None
-        if parent is not None:
-            import customtkinter as ctk
-            
-            # Si el parent es un Frame o widget interno, buscamos la ventana principal real
-            try:
-                ventana_raiz = parent.winfo_toplevel()
-            except Exception:
-                ventana_raiz = parent
-            
-            loading = ctk.CTkToplevel(ventana_raiz)
-            
-            # 1. Configuraciones de ventana modal
-            loading.overrideredirect(True) # Sin bordes
-            loading.attributes("-topmost", True) # Siempre al frente
-            
-            # 2. Tamaño del cuadro de carga
-            ancho_loading, alto_loading = 300, 120
-            
-            # Forzamos la actualización de la ventana raíz para leer su tamaño actual
-            ventana_raiz.update_idletasks()
-            
-            # Obtenemos posición y tamaño de la ventana
-            p_width = ventana_raiz.winfo_width()
-            p_height = ventana_raiz.winfo_height()
-            p_x = ventana_raiz.winfo_rootx()
-            p_y = ventana_raiz.winfo_rooty()
-            
-            # 4. Cálculo del centro relativo al área interna de la ventana
-            x = int(p_x + (p_width // 2) - (ancho_loading // 2))
-            y = int(p_y + (p_height // 2) - (alto_loading // 2))
-            
-            # Aplicamos la geometría
-            loading.geometry(f"{ancho_loading}x{alto_loading}+{x}+{y}")
-            loading.transient(ventana_raiz)
-            
-            # 3. Diseño estético (el que te gustó)
-            frame = ctk.CTkFrame(loading, border_width=2, border_color="DeepSkyBlue2", fg_color="gray95")
-            frame.pack(fill="both", expand=True)
-            
-            label = ctk.CTkLabel(frame, text="⌛ Procesando...", font=("Century Gothic", 16, "bold"), text_color="navy")
-            label.pack(pady=(25, 5))
-            
-            sub_label = ctk.CTkLabel(frame, text="Por favor, espere un momento", font=("Century Gothic", 12))
-            sub_label.pack()
+        usar_modal = parent is not None
 
-            loading.update()
-            loading.grab_set() # Bloquea la interacción con el programa mientras carga
+        # Si hay un parent, evaluamos si mostrar o mantener el modal
+        if usar_modal:
+            self._mostrar_modal_cargando(parent)
         
         def _run_query():
             conn = self.get_db_connection()
@@ -182,7 +216,7 @@ class DBManager:
 
                 if commit:
                     conn.commit()
-                    conn.sync() # Sincroniza después de un commit para enviar los cambios a Turso
+                    conn.sync()
                     return True
                 else:
                     if fetch_one:
@@ -192,28 +226,18 @@ class DBManager:
             except Exception as e:
                 print(f"Error al ejecutar la consulta '{query}': {e}")
                 if conn:
-                    conn.rollback() # Revierte la transacción en caso de error
+                    conn.rollback()
                 return None
-            finally:
-                # El cursor se gestiona automáticamente por libsql, no es necesario cerrarlo explícitamente aquí.
-                pass
 
         # Lanzamos la consulta al hilo
         future = self._executor.submit(_run_query)
-        
-        # ESPERAMOS el resultado antes de cerrar la ventana
-        # Esto evita que el cuadro desaparezca instantáneamente
         resultado = future.result()
         
-        # Destruimos el cuadro de carga
-        if loading:
-            try:
-                loading.grab_release()
-                loading.destroy()
-            except Exception:
-                pass
+        # Ocultamos el modal (o simplemente restamos 1 al contador si hay más en cola)
+        if usar_modal:
+            self._ocultar_modal_cargando()
         
-        return resultado 
+        return resultado
 
     def init_database(self):
         """
@@ -964,26 +988,111 @@ class DBManager:
             return False, f"No se encuentra {descripcion} con el número de bien {nro_bien} en el sistema."
         return True, None
 
+    def verificar_conflictos_asignacion(self, computadora, teclado, monitor, raton):
+        """
+        Verifica si hay conflictos (reemplazo en la misma PC o robo a otra PC).
+        Retorna (True, "mensaje de advertencia") si hay conflicto, o (False, "") si todo está libre.
+        """
+        computadora = computadora.strip()
+        nuevos_componentes = {
+            "Teclado": teclado.strip(), 
+            "Monitor": monitor.strip(), 
+            "Ratón": raton.strip()
+        }
+
+        # 1. Averiguar qué tiene ESTA computadora actualmente
+        query_actuales = """
+            SELECT a.Componente, c.Descripcion
+            FROM Asignacion a
+            JOIN Componente c ON a.Componente = c.Nro_de_bien
+            WHERE a.Equipo = ?
+        """
+        actuales = self.execute_query(query_actuales, (computadora,))
+        componentes_actuales_dict = {desc: nro for nro, desc in (actuales or [])}
+
+        for tipo, nuevo_comp in nuevos_componentes.items():
+            # A. Detectar Robo: ¿El componente nuevo ya pertenece a OTRA computadora?
+            existe = self.execute_query(
+                "SELECT Equipo FROM Asignacion WHERE Componente = ?", (nuevo_comp,), fetch_one=True
+            )
+            if existe and existe[0].strip() != computadora:
+                equipo_dueño = existe[0].strip()
+                mensaje = f"Advertencia: El {tipo} '{nuevo_comp}' ya está registrado en el equipo '{equipo_dueño}'.\n\n¿Desea proceder y transferirlo a este equipo?"
+                return True, mensaje
+
+            # B. Detectar Reemplazo: ¿Esta computadora ya tiene un componente de este tipo y lo estamos pisando?
+            comp_viejo = componentes_actuales_dict.get(tipo)
+            if comp_viejo and comp_viejo != nuevo_comp:
+                mensaje = f"La computadora '{computadora}' ya tiene un {tipo} asignado (Nro: {comp_viejo}).\n\n¿Desea desvincular el viejo y reemplazarlo por el nuevo ({nuevo_comp})?"
+                return True, mensaje
+
+        # Si llegamos aquí, los componentes están libres y la PC no tiene nada previo que estorbe
+        return False, ""
+
     def relacionar_equipos(self, computadora, teclado, monitor, raton):
         """
-        Registra la relación de los equipos en la tabla Asignacion.
-        Cada componente se relaciona con la computadora.
-        Retorna True si todas las asignaciones fueron exitosas, False si hubo error.
+        Registra o actualiza la relación de los equipos en la tabla Asignacion.
+        Si la computadora ya tiene un componente de ese tipo (ej. un Monitor viejo),
+        desvincula el viejo y asigna el nuevo.
         """
-        # Relacionar cada componente con la computadora
-        componentes = [teclado, monitor, raton]
-        for componente in componentes:
-            # Verifica si ya existe la relación para evitar duplicados
-            existe = self.execute_query(
-                "SELECT 1 FROM Asignacion WHERE Equipo = ? AND Componente = ?", (computadora, componente), fetch_one=True
-            )
-            if not existe:
-                sql = "INSERT INTO Asignacion (Equipo, Componente) VALUES (?, ?)"
-                result = self.execute_query(sql, (computadora, componente), commit=True)
-                if result is None:
-                    return False
-        return True
+        computadora = computadora.strip()
+        
+        # Diccionario para emparejar el tipo exacto con el número de serie ingresado
+        nuevos_componentes = {
+            "Teclado": teclado.strip(),
+            "Monitor": monitor.strip(),
+            "Ratón": raton.strip()
+        }
+        # 1. Averiguar qué componentes tiene EXACTAMENTE esta computadora ahorita
+        query_actuales = """
+            SELECT a.Componente, c.Descripcion
+            FROM Asignacion a
+            JOIN Componente c ON a.Componente = c.Nro_de_bien
+            WHERE a.Equipo = ?
+        """
+        actuales = self.execute_query(query_actuales, (computadora,))
+        
+        # Lo guardamos en un diccionario para fácil lectura, ej: {'Monitor': '4', 'Teclado': '2'}
+        componentes_actuales_dict = {}
+        if actuales:
+            for nro_bien, descripcion in actuales:
+                componentes_actuales_dict[descripcion] = nro_bien
 
+        # 2. Procesar cada componente nuevo que ingresó el usuario
+        for tipo, nuevo_comp in nuevos_componentes.items():
+            
+            # A. Verificamos si la computadora ya tenía un componente de este tipo (ej. un monitor viejo)
+            comp_viejo = componentes_actuales_dict.get(tipo)
+            if comp_viejo and comp_viejo != nuevo_comp:
+                
+                # ELIMINAMOS la asignación del viejo. Así queda "sin asignar" en el sistema.
+                self.execute_query(
+                    "DELETE FROM Asignacion WHERE Equipo = ? AND Componente = ?", 
+                    (computadora, comp_viejo), 
+                    commit=True
+                )
+                
+            # B. Ahora sí, asignamos el componente nuevo
+            # Verificamos si este componente nuevo ya pertenece a otra computadora en la base de datos
+            existe = self.execute_query(
+                "SELECT ID, Equipo FROM Asignacion WHERE Componente = ?", 
+                (nuevo_comp,), 
+                fetch_one=True
+            )
+
+            if existe:
+                # Si existe, le hacemos UPDATE para "robárselo" a la otra computadora y dárselo a esta
+                equipo_previo = existe[1]
+                sql_update = "UPDATE Asignacion SET Equipo = ? WHERE Componente = ?"
+                result = self.execute_query(sql_update, (computadora, nuevo_comp), commit=True)
+                if result is None: return False
+            else:
+                # Si no existe en la tabla de asignaciones, es totalmente nuevo. Hacemos INSERT.
+                sql_insert = "INSERT INTO Asignacion (Equipo, Componente) VALUES (?, ?)"
+                result = self.execute_query(sql_insert, (computadora, nuevo_comp), commit=True)
+                if result is None: return False
+        return True
+    
     def registrar_asistencia_laboratorio_usr(self, laboratorio_id, tipo_uso, fecha, hora_inicio, hora_finalizacion, personas, admin_id):
         """
         Registra el uso del laboratorio y la asistencia de usuarios.
@@ -1349,32 +1458,51 @@ class DBManager:
         if not sede:
             return [], 0
         sede_id = sede[0]
+
         lab = self.execute_query("SELECT ID FROM Laboratorio WHERE Nombre = ? AND Sede = ?", (laboratorio_nombre, sede_id), fetch_one=True)
         if not lab:
             return [], 0
         lab_id = lab[0]
-
         # Obtener todos los tipos de uso
         tipos_uso = self.execute_query("SELECT ID, Descripcion FROM Tipo_de_uso", fetch_one=False)
         if not tipos_uso:
             return [], 0
-
+        
         estadisticas = []
         total_personas = 0
 
         for tipo_id, descripcion in tipos_uso:
-            # Contar la cantidad de personas atendidas para este tipo de uso en el intervalo de fechas
+           
+            # 1. Transformamos las fechas de entrada (DD/MM/YYYY) a formato ISO (YYYY-MM-DD)
+            # Ejemplo: "14/04/2026" se convierte en "2026-04-14" para poder compararlas matemáticamente
+            f_inicio_iso = f"{fecha_inicio[6:10]}-{fecha_inicio[3:5]}-{fecha_inicio[0:2]}"
+            f_fin_iso = f"{fecha_finalizacion[6:10]}-{fecha_finalizacion[3:5]}-{fecha_finalizacion[0:2]}"
+            
+            # 2. La consulta usa substr() para recortar y voltear u.Fecha al vuelo (Año-Mes-Día)
             query = """
                 SELECT COUNT(a.ID)
                 FROM Uso_laboratorio_usr u
                 LEFT JOIN Asistencia_usr a ON a.Uso_laboratorio_usr = u.ID
                 WHERE u.Laboratorio = ?
                 AND u.Tipo_de_uso = ?
-                AND u.Fecha >= ? AND u.Fecha <= ?
+                AND (substr(u.Fecha, 7, 4) || '-' || substr(u.Fecha, 4, 2) || '-' || substr(u.Fecha, 1, 2)) >= ?
+                AND (substr(u.Fecha, 7, 4) || '-' || substr(u.Fecha, 4, 2) || '-' || substr(u.Fecha, 1, 2)) <= ?
             """
-            result = self.execute_query(query, (lab_id, tipo_id, fecha_inicio, fecha_finalizacion), fetch_one=True)
+            
+            # 3. Pasamos las fechas ya volteadas como parámetros
+            result = self.execute_query(
+                query, 
+                (lab_id, tipo_id, f_inicio_iso, f_fin_iso), 
+                fetch_one=True
+            )
+            
             cantidad = result[0] if result else 0
+            
+
+            # Guardamos el resultado individual para la gráfica/tabla
             estadisticas.append({"nombre": descripcion, "cantidad": cantidad})
+            
+            # Acumulador global en Python: Sumamos la cantidad actual al total histórico del ciclo
             total_personas += cantidad
 
         return estadisticas, total_personas
@@ -1446,3 +1574,57 @@ class DBManager:
         except Exception as e:
             print("Error al limpiar datos:", e)
             return False
+        
+    def consultar_fallas_por_rango(self, fecha_inicio, fecha_fin):
+        # Traemos todas las fallas sin filtrar en SQL para evitar el error del texto
+        query = """
+            SELECT 
+                c.Descripcion AS Tipo_Equipo, 
+                f.Equipo AS Nro_Bien, 
+                f.Fecha_falla, 
+                f.Hora_de_la_falla, 
+                f.Descripcion_falla,
+                l.Nombre AS Laboratorio,
+                s.Nombre AS Sede
+            FROM Falla_equipo f
+            JOIN Componente c ON f.Equipo = c.Nro_de_bien
+            JOIN Equipo e ON f.Equipo = e.Nro_de_bien
+            JOIN Laboratorio l ON e.Laboratorio = l.ID
+            JOIN Sede s ON l.Sede = s.ID
+        """
+        result = self.execute_query(query)
+        if not result: return []
+
+        # Convertimos los límites del rango (los que vienen del DateEntry)
+        try:
+            d_inicio = datetime.strptime(fecha_inicio, "%d/%m/%Y").date()
+            d_fin = datetime.strptime(fecha_fin, "%d/%m/%Y").date()
+        except ValueError:
+            # Si el formato que llega es distinto, esto evita que el programa muera
+            return []
+
+        fallas_filtradas = []
+        for row in result:
+            try:
+                # Convertimos la fecha que viene de la BD ("13/04/2026") a objeto fecha real
+                fecha_db = datetime.strptime(row[2], "%d/%m/%Y").date()
+                
+                # COMPARACIÓN REAL (Día, Mes y Año)
+                if d_inicio <= fecha_db <= d_fin:
+                    fallas_filtradas.append({
+                        "Tipo": row[0],
+                        "Nro_Bien": row[1],
+                        "Fecha": row[2],
+                        "Hora": row[3],
+                        "Descripcion": row[4],
+                        "Laboratorio": row[5],
+                        "Sede": row[6]
+                    })
+            except (ValueError, TypeError):
+                # Si hay una fecha mal escrita en la BD, la saltamos
+                continue
+
+        # Ordenar el resultado por fecha para que el PDF se vea profesional
+        fallas_filtradas.sort(key=lambda x: datetime.strptime(x['Fecha'], "%d/%m/%Y"))
+        
+        return fallas_filtradas

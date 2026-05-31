@@ -24,8 +24,8 @@ class Equipos(ctk.CTkFrame):
         self.title_label.grid(row=0, column=0, columnspan=4, pady=(20, 40), sticky="n")
         
         # Botón "Consultar Falla de Equipo"
-        self.consultar_falla_button = ctk.CTkButton(self, text="Consultar Equipo", command=self.consultar_falla_equipo,width=120,
-        height=28,
+        self.consultar_falla_button = ctk.CTkButton(self, text="Consultar Equipo", command=self.consultar_falla_equipo,width=140,
+        height=36,
         fg_color="dodger blue",
         hover_color="deep sky blue",  # Color cuando pasas el mouse
         border_color="#ffffff",  # Color del borde
@@ -36,8 +36,8 @@ class Equipos(ctk.CTkFrame):
         self.consultar_falla_button.grid(row=1, column=0, padx=10, pady=(0, 30))
 
         # Botón "Agregar Equipo"
-        self.agregar_equipo_button = ctk.CTkButton(self, text="Agregar Equipo", command=self.agregar_equipo,width=120,
-        height=28,
+        self.agregar_equipo_button = ctk.CTkButton(self, text="Agregar Equipo", command=self.agregar_equipo,width=140,
+        height=36,
         fg_color="dodger blue",
         hover_color="deep sky blue",  # Color cuando pasas el mouse
         border_color="#ffffff",  # Color del borde
@@ -48,8 +48,8 @@ class Equipos(ctk.CTkFrame):
         self.agregar_equipo_button.grid(row=1, column=1, padx=10, pady=(0, 30))
 
         # Botón "Modificar Equipo"
-        self.modificar_equipo_button = ctk.CTkButton(self, text="Modificar Equipo", command=self.modificar_equipo,width=120,
-        height=28,
+        self.modificar_equipo_button = ctk.CTkButton(self, text="Modificar Equipo", command=self.modificar_equipo,width=140,
+        height=36,
         fg_color="dodger blue",
         hover_color="deep sky blue",  # Color cuando pasas el mouse
         border_color="#ffffff",  # Color del borde
@@ -60,8 +60,8 @@ class Equipos(ctk.CTkFrame):
         self.modificar_equipo_button.grid(row=1, column=2, padx=10, pady=(0, 30))
 
         # Botón "Relacionar Equipos"
-        self.relacionar_equipos_button = ctk.CTkButton(self, text="Relacionar Equipos", command=self.relacionar_equipos,width=120,
-        height=28,
+        self.relacionar_equipos_button = ctk.CTkButton(self, text="Relacionar Equipos", command=self.relacionar_equipos,width=140,
+        height=36,
         fg_color="dodger blue",
         hover_color="deep sky blue",  # Color cuando pasas el mouse
         border_color="#ffffff",  # Color del borde

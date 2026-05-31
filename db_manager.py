@@ -307,6 +307,12 @@ class DBManager:
             )
             """,
             """
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_sede_nombre ON Sede (Nombre);
+            """,
+            """
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_laboratorio_sede_nombre ON Laboratorio (Sede, Nombre);
+            """,
+            """
             CREATE TABLE IF NOT EXISTS "Equipo" (
                 "Nro_de_bien"	TEXT,
                 "Laboratorio"	INTEGER NOT NULL,
@@ -659,11 +665,130 @@ class DBManager:
     def agregar_sede(self, nombre):
         """
         Inserta una nueva sede en la tabla Sede.
+        Retorna el ID de la sede insertada si fue exitoso, None si hubo error o ya existe.
+        """
+        if not nombre:
+            return None
+
+        existe = self.execute_query("SELECT ID FROM Sede WHERE Nombre = ?", (nombre,), fetch_one=True)
+        if existe:
+            print(f"Sede ya existente: {nombre}")
+            return None
+
+        sql = "INSERT INTO Sede (Nombre) VALUES (?)"
+        conn = self.get_db_connection()
+        if conn is None:
+            print("Error: no hay conexión para agregar sede.")
+            return None
+
+        try:
+            cursor = conn.cursor()
+            cursor.execute(sql, (nombre,))
+            conn.commit()
+            conn.sync()
+            sede_id = cursor.lastrowid
+            print(f"DEBUG: db_manager.agregar_sede -> lastrowid={sede_id}")
+            return sede_id
+        except Exception as e:
+            print(f"Error al agregar sede '{nombre}': {e}")
+            if conn:
+                conn.rollback()
+            return None
+
+    def agregar_laboratorio(self, nombre, sede_id):
+        """
+        Inserta un nuevo laboratorio asociado a una sede.
+        Retorna True si fue exitoso, False si hubo error o ya existe.
+        """
+        if not nombre or sede_id is None:
+            return False
+
+        existe = self.execute_query(
+            "SELECT ID FROM Laboratorio WHERE Sede = ? AND Nombre = ?",
+            (sede_id, nombre),
+            fetch_one=True,
+        )
+        if existe:
+            print(f"Laboratorio ya existente en la sede {sede_id}: {nombre}")
+            return False
+
+        sql = "INSERT INTO Laboratorio (Sede, Nombre) VALUES (?, ?)"
+        result = self.execute_query(sql, (sede_id, nombre), commit=True)
+        return result is not None
+
+    def modificar_sede(self, sede_id, nuevo_nombre):
+        """
+        Actualiza el nombre de una sede existente.
+        Retorna True si fue exitoso, False si hubo error o el nombre ya existe.
+        """
+        if not nuevo_nombre:
+            return False
+
+        existe = self.execute_query(
+            "SELECT ID FROM Sede WHERE Nombre = ? AND ID != ?",
+            (nuevo_nombre, sede_id),
+            fetch_one=True,
+        )
+        if existe:
+            print(f"No se puede modificar: nombre de sede duplicado {nuevo_nombre}")
+            return False
+
+        sql = "UPDATE Sede SET Nombre = ? WHERE ID = ?"
+        result = self.execute_query(sql, (nuevo_nombre, sede_id), commit=True)
+        return result is not None
+
+    def eliminar_sede(self, sede_id):
+        """
+        Elimina una sede por su ID y todos los laboratorios asociados.
         Retorna True si fue exitoso, False si hubo error.
         """
-        sql = "INSERT INTO Sede (Nombre) VALUES (?)"
-        result = self.execute_query(sql, (nombre,), commit=True)
-        return result is not None
+        conn = self.get_db_connection()
+        if conn is None:
+            print("Error: no hay conexión para eliminar sede.")
+            return False
+
+        try:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM Laboratorio WHERE Sede = ?", (sede_id,))
+            cursor.execute("DELETE FROM Sede WHERE ID = ?", (sede_id,))
+            conn.commit()
+            conn.sync()
+            return cursor.rowcount > 0
+        except Exception as e:
+            print(f"Error al eliminar sede {sede_id}: {e}")
+            if conn:
+                conn.rollback()
+            return False
+
+    def eliminar_laboratorio(self, lab_id):
+        """
+        Elimina un laboratorio por su ID.
+        Retorna True si fue exitoso, False si hubo error.
+        """
+        conn = self.get_db_connection()
+        if conn is None:
+            print("Error: no hay conexión para eliminar laboratorio.")
+            return False
+
+        try:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM Laboratorio WHERE ID = ?", (lab_id,))
+            conn.commit()
+            conn.sync()
+            return cursor.rowcount > 0
+        except Exception as e:
+            print(f"Error al eliminar laboratorio {lab_id}: {e}")
+            if conn:
+                conn.rollback()
+            return False
+
+    def obtener_sede_por_nombre(self, nombre):
+        sql = "SELECT ID FROM Sede WHERE Nombre = ?"
+        return self.execute_query(sql, (nombre,), fetch_one=True)
+
+    def obtener_laboratorio_por_nombre_y_sede(self, nombre, sede_id):
+        sql = "SELECT ID FROM Laboratorio WHERE Nombre = ? AND Sede = ?"
+        return self.execute_query(sql, (nombre, sede_id), fetch_one=True)
 
     def obtener_sedes(self):
         """
@@ -689,13 +814,34 @@ class DBManager:
         return result
         
 
-    def agregar_laboratorio(self, nombre, sede_id):
+    def modificar_laboratorio(self, lab_id, nuevo_nombre):
         """
-        Inserta un nuevo laboratorio relacionado con una sede.
-        Retorna True si fue exitoso, False si hubo error.
+        Actualiza el nombre de un laboratorio existente.
+        Retorna True si fue exitoso, False si hubo error o si el nombre ya existe en la misma sede.
         """
-        sql = "INSERT INTO Laboratorio (Sede, Nombre) VALUES (?, ?)"
-        result = self.execute_query(sql, (sede_id, nombre), commit=True)
+        if not nuevo_nombre:
+            return False
+
+        sede_result = self.execute_query(
+            "SELECT Sede FROM Laboratorio WHERE ID = ?",
+            (lab_id,),
+            fetch_one=True,
+        )
+        if not sede_result:
+            return False
+
+        sede_id = sede_result[0]
+        existe = self.execute_query(
+            "SELECT ID FROM Laboratorio WHERE Sede = ? AND Nombre = ? AND ID != ?",
+            (sede_id, nuevo_nombre, lab_id),
+            fetch_one=True,
+        )
+        if existe:
+            print(f"No se puede modificar: nombre de laboratorio duplicado {nuevo_nombre} en la sede {sede_id}")
+            return False
+
+        sql = "UPDATE Laboratorio SET Nombre = ? WHERE ID = ?"
+        result = self.execute_query(sql, (nuevo_nombre, lab_id), commit=True)
         return result is not None
 
     def agregar_equipo(self, nro_bien, laboratorio_id, status, descripcion_equipo):

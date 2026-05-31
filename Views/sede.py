@@ -352,6 +352,7 @@ class ModificarForm(ctk.CTkFrame):
     def set_mode(self, mode):
         self.current_mode = mode
         
+        self.nuevo_nombre_entry.delete(0, "end")
         
         self.sede_label.grid_forget()
         self.sede_combobox.grid_forget()
@@ -407,11 +408,13 @@ class ModificarForm(ctk.CTkFrame):
             sede_id = self.sede_ids[self.sede_names.index(self.sede_combobox.get())]
             if self.db_manager.modificar_sede(sede_id, nuevo):
                 messagebox.showinfo("Éxito", "Sede modificada.")
+                self.nuevo_nombre_entry.delete(0, "end")
                 self.cargar_sedes()
         else:
             lab_id = self.lab_ids[self.lab_names.index(self.lab_combobox.get())]
             if self.db_manager.modificar_laboratorio(lab_id, nuevo):
                 messagebox.showinfo("Éxito", "Laboratorio modificado.")
+                self.nuevo_nombre_entry.delete(0, "end")
                 self.on_sede_change()
 
 

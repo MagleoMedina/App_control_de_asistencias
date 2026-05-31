@@ -12,6 +12,7 @@ from Views.modulo_estadistico import ModuloEstadistico
 from Views.equipos import Equipos
 from Views.gestion_de_usuarios import GestionUsuarios
 from Views.eliminar_datos import EliminarDatos
+from Views.sede import GestionSedeLaboratorios
 from db_manager import DBManager
 
 class VentanaMain:
@@ -57,20 +58,16 @@ class VentanaMain:
         self.bg_label.place(x=0, y=0, relwidth=1, relheight=1)
         self.ventana.bind("<Configure>", self.redimensionar_fondo)
 
-        # Definir colores del gradiente (azul claro a blanco)
         self.color1 = "#4B9CD3"  # Azul claro
         self.color2 = "#FFFFFF"  # Blanco
-        
-        # Configuración del contenedor principal, donde estan los logos
+
         self.header_frame = ctk.CTkFrame(self.ventana, height=50, fg_color="gray99")
         self.header_frame.grid(row=0, column=0, columnspan=2, sticky="ew")
 
-        # Configuración del grid principal
         self.ventana.grid_columnconfigure(0, weight=0)  # Columna 0 (nav_frame) - ancho fijo
         self.ventana.grid_columnconfigure(1, weight=1)  # Columna 1 (main_frame) - se expande
         self.ventana.grid_rowconfigure(1, weight=1)     # Fila 1 (nav_frame + main_frame) - se expande
         
-        # Frame superior (encabezado) 
         self.header_frame = ctk.CTkFrame(
             self.ventana, 
             height=50, 
@@ -79,15 +76,12 @@ class VentanaMain:
         self.header_frame.grid(row=0, column=0, columnspan=2, sticky="ew")
         self.header_frame.grid_propagate(False) 
         
-        # Configuración del grid del header_frame para que el logo derecho quede fijo
         self.header_frame.grid_columnconfigure(0, weight=0)  # Logo UNEG (ancho fijo)
         self.header_frame.grid_columnconfigure(1, weight=0)  # Label "UNEG" (ancho fijo)
         self.header_frame.grid_columnconfigure(2, weight=1)  
         self.header_frame.grid_columnconfigure(3, weight=0)  
         self.header_frame.grid_columnconfigure(4, weight=0)  # Logo CL 
 
-
-        # Cargar la imagen LOGO DE LA UNEG usando una ruta compatible con PyInstaller
         if hasattr(sys, '_MEIPASS'):
             img_path = os.path.join(sys._MEIPASS, 'assets', 'logo_uneg.png')
         else:
@@ -119,7 +113,6 @@ class VentanaMain:
         self.label_imagen.grid(row=0, column=0, padx=10, pady=5, sticky="w")  # Posición izquierda
 
 
-        # Label del encabezado - pady reducido para disminuir espacio vertical
         self.Uneg_label = ctk.CTkLabel(
             self.header_frame, 
             text="  UNEG", 
@@ -134,8 +127,6 @@ class VentanaMain:
         )
         self.nombre_sistema.grid(row=0, column=2)  
 
-
-         # Cargar la imagen LOGO CL usando una ruta compatible con PyInstaller
         if hasattr(sys, '_MEIPASS'):
             img_path2 = os.path.join(sys._MEIPASS, 'assets', 'CL.png')
         else:
@@ -166,14 +157,12 @@ class VentanaMain:
 
         self.label_imagen2.grid(row=0, column=4, padx=10, pady=5, sticky="e")
 
-        # Panel de Navegación
         self.nav_frame = ctk.CTkFrame(self.ventana, width=200, fg_color="gray99")
         self.nav_frame.grid(row=1, column=0, rowspan=2, sticky="nsw", padx=10, pady=10)
         
         self.nav_label = ctk.CTkLabel(self.nav_frame, text="SALIU", font=("Century Gothic", 20, "bold"), text_color="Blue2")
         self.nav_label.pack(pady=10)
 
-        # Botones del Panel de Navegación
         self.botones_nav = []
         botones_nav = [
             ("Carga de Asistencia", "📝", self.carga_asistencia),
@@ -197,38 +186,37 @@ class VentanaMain:
         self.nav_label_user = ctk.CTkLabel(self.nav_frame, text="Bienvenido "+ username, font=("Century Gothic", 20, "bold"), text_color="Blue2")
         self.nav_label_user.pack(pady=10)
 
-        # Botón de ayuda al final del sidebar
-        self.boton_about = ctk.CTkButton(self.nav_frame, text="?", width=50, height=40, fg_color="dodger blue",
+        self.boton_about = ctk.CTkButton(self.nav_frame, text="Acerca de", width=50, height=40, fg_color="dodger blue",
             hover_color="deep sky blue", border_color="#ffffff", border_width=2, text_color="#ffffff",
-            font=("Century Gothic", 18, "bold"), corner_radius=10, command=self.show_about_window)
+            font=("Century Gothic", 12, "bold"), corner_radius=10, command=self.show_about_window)
         self.boton_about.place(x=10, rely=1.0, anchor="sw")
 
-        # Frame principal para mostrar las vistas
+
         self.main_frame = ctk.CTkFrame(self.ventana, fg_color="gray99")
         self.main_frame.grid(row=1, column=1, sticky="nsew", padx=10, pady=10)
          
     def redimensionar_fondo(self, event=None):
-        # Evitar procesar eventos que no sean de la ventana principal
+
         if event and event.widget != self.ventana:
             return
 
-        # Obtener el nuevo tamaño de la ventana
+
         nuevo_ancho = self.ventana.winfo_width()
         nuevo_alto = self.ventana.winfo_height()
 
-        # Solo redimensionar si el tamaño es válido (mayor a 1x1)
+
         if nuevo_ancho > 1 and nuevo_alto > 1:
-            # Redimensionar la imagen original al nuevo tamaño
+  
             imagen_redimensionada = self.bg_image_original.resize((nuevo_ancho, nuevo_alto), Image.LANCZOS)
             
-            # Convertir a formato Tkinter
+
             self.bg_image_tk = ImageTk.PhotoImage(imagen_redimensionada)
             
-            # Actualizar el label
+
             self.bg_label.configure(image=self.bg_image_tk)
             
     def limpiar_frame(self):
-        # Limpiar el frame antes de mostrar el formulario de asistencia
+
         for widget in self.main_frame.winfo_children():
             widget.destroy()
 
@@ -261,20 +249,18 @@ class VentanaMain:
         self.ventana.mainloop()
 
     def cerrar(self):
-        # Deshabilitar botones para evitar más clics
+
         for boton in self.botones_nav:
             try:
                 boton.configure(state="disabled")
             except Exception:
                 pass
 
-        # Espera 100 ms antes de cerrar para que CTk termine sus after
         self.ventana.after(100, self._abrir_login)
 
     def _abrir_login(self):
         """Cierra la ventana principal y vuelve al login."""
         try:
-            # Cancelar afters pendientes
             for task in self.ventana.tk.call('after', 'info'):
                 try:
                     self.ventana.after_cancel(task)
@@ -283,139 +269,150 @@ class VentanaMain:
         except Exception:
             pass
 
-        # Quitar bindings que siguen vivos (como el <Configure>)
         try:
             self.ventana.unbind("<Configure>")
         except Exception:
             pass
 
-        # Destruir ventana principal
         if self.ventana.winfo_exists():
             try:
                 self.ventana.destroy()
             except Exception:
                 pass
 
-        # Importar login y mostrarlo
         from Views.ventana_login import VentanaLogin
         app = VentanaLogin()
         app.iniciar()
 
 
     def show_about_window(self):
-        # 1. Crear ventana toplevel robusta
         about_win = ctk.CTkToplevel(self.ventana)
-        about_win.overrideredirect(True)
-        about_win.attributes("-topmost", True)
-        about_win.configure(fg_color="dodger blue") 
+        about_win.title("Acerca de SALIU")
+        about_win.transient(self.ventana)
+        about_win.resizable(False, False)
+        
 
-        # 2. Contenedor principal cuadrado
-        main_container = ctk.CTkFrame(
-            about_win, 
-            fg_color="white", 
-            corner_radius=0
+        about_win.update_idletasks()
+        about_win.grab_set()
+
+        about_win.configure(fg_color="#f1f5f8")
+        about_win.grid_columnconfigure(0, weight=1)
+        about_win.grid_rowconfigure(0, weight=1)
+
+        content_frame = ctk.CTkFrame(about_win, fg_color="#ffffff", corner_radius=20)
+        content_frame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
+        
+        content_frame.grid_propagate(False)
+        content_frame.grid_columnconfigure(0, weight=1)
+
+        current_row = 0
+
+        if hasattr(sys, '_MEIPASS'):
+            logo_path = os.path.join(sys._MEIPASS, 'assets', 'LogoSALIU.png')
+        else:
+            logo_path = os.path.join('assets', 'LogoSALIU.png')
+
+        if os.path.exists(logo_path):
+            try:
+                logo_image = Image.open(logo_path)
+                logo_image = logo_image.resize((80, 80), Image.LANCZOS)
+                self.about_logo_image = ImageTk.PhotoImage(logo_image)
+                logo_label = ctk.CTkLabel(content_frame, image=self.about_logo_image, text="")
+                logo_label.grid(row=current_row, column=0, pady=(15, 10), sticky="n")
+                current_row += 1
+            except Exception:
+                pass
+
+        header_label = ctk.CTkLabel(
+            content_frame,
+            text="ACERCA DE SALIU",
+            font=("Century Gothic", 18, "bold"),
+            text_color="#1f4e79"
         )
-        main_container.pack(fill="both", expand=True, padx=2, pady=2)
+        header_label.grid(row=current_row, column=0, pady=(0, 10), sticky="n")
+        current_row += 1
 
-        # Título de la App
-        ctk.CTkLabel(
-            main_container, 
-            text="SALIU v1.0", 
-            font=("Century Gothic", 22, "bold"), 
-            text_color="navy"
-        ).pack(pady=(25, 10))
-
-        # ÁREA DE CONTENIDO
-        content_frame = ctk.CTkFrame(main_container, fg_color="transparent")
-        content_frame.pack(fill="both", expand=True, padx=30)
-
-        # Nombre completo del sistema
-        ctk.CTkLabel(
-            content_frame, 
-            text="Sistema de Administración de los Laboratorios\nde Informática UNEG", 
-            font=("Century Gothic", 15, "bold"),
-            text_color="dodger blue",
-            justify="center"
-        ).pack(pady=(0, 15))
-
-        # Descripción original
-        desc_text = (
-            "SALIU es una solución tecnológica integral diseñada para optimizar la gestión, "
-            "control y monitoreo de los Laboratorios de Informática de la UNEG. El sistema automatiza "
-            "el registro de usuarios, el control de inventario de equipos y la generación de métricas "
-            "estadísticas en tiempo real."
+        description_label = ctk.CTkLabel(
+            content_frame,
+            text="SALIU es un sistema de gestión de asistencia y laboratorios diseñado para registrar usos, administrar sedes y laboratorios, y generar reportes estadísticos.",
+            font=("Century Gothic", 12),
+            wraplength=440,
+            justify="center",
+            text_color="#2f4f6f"
         )
-        ctk.CTkLabel(
-            content_frame, text=desc_text, font=("Century Gothic", 12),
-            wraplength=400, justify="center", text_color="gray25"
-        ).pack(pady=(0, 15))
+        description_label.grid(row=current_row, column=0, pady=(0, 15), padx=20, sticky="ew")
+        current_row += 1
 
-        # Equipo de trabajo
-        equipo_text = (
-            "DESARROLLADO POR:\n\n"
-            "• Daniela Espinoza\n"
-            "• Franmari Garcia\n"
-            "• Magleo Medina\n"
-            "• Benjamín Travieso"
+        features_label = ctk.CTkLabel(
+            content_frame,
+            text="Funciones principales:\n• Registro de asistencias\n• Gestión de sedes y laboratorios\n• Generación de reportes estadísticos",
+            font=("Century Gothic", 11),
+            wraplength=440,
+            justify="left",
+            text_color="#3b536b"
         )
-        ctk.CTkLabel(
-            content_frame, text=equipo_text, font=("Century Gothic", 12, "bold"),
-            text_color="navy", justify="center"
-        ).pack(pady=(0, 15)) # Distancia hacia asesores
+        features_label.grid(row=current_row, column=0, pady=(0, 15), padx=40, sticky="w")
+        current_row += 1
 
-        # Asesores
-        asesores_text = (
-            "Asesor Académico: Kelvin Carima\n"
-            "Asesor Comunitario: Joel Uricare"
+        system_info = (
+            f"Versión: 1.0\n"
+            f"Plataforma: {platform.system()} {platform.release()}\n"
+            f"Python: {platform.python_version()}"
         )
-        # pady=(0, 25) le da "un poco más" de aire antes del footer
-        self.label_asesores = ctk.CTkLabel(
-            content_frame, text=asesores_text, font=("Century Gothic", 12, "bold"),
-            text_color="dodger blue", justify="center"
+        info_label = ctk.CTkLabel(
+            content_frame,
+            text=system_info,
+            font=("Century Gothic", 11),
+            wraplength=440,
+            justify="center",
+            text_color="#3b536b"
         )
-        self.label_asesores.pack(pady=(0, 25)) 
+        info_label.grid(row=current_row, column=0, pady=(0, 15), sticky="ew")
+        current_row += 1
 
-        # Footer Institucional
-        info_extra = (
-            "Universidad Nacional Experimental de Guayana (UNEG) - 2026\n"
-            "Tecnologías: Python, CustomTkinter & SQLite (Turso Cloud)"
+        desarrolladores_texto = (
+            "Desarrollado por:\n"
+            "Magleo Medina  •  Franmari Garcia\n"
+            "Daniela Espinoza  •  Benjamin Travieso\n\n"
+            "Universidad Nacional Experimental de Guayana (UNEG)"
         )
-        self.label_footer = ctk.CTkLabel(
-            content_frame, text=info_extra, font=("Century Gothic", 11),
-            text_color="gray50", justify="center"
+        credits_label = ctk.CTkLabel(
+            content_frame,
+            text=desarrolladores_texto,
+            font=("Century Gothic", 11, "bold"),
+            wraplength=440,
+            justify="center",
+            text_color="#1f4e79"
         )
-        # Reducimos a 0 el espacio inferior para que el botón suba
-        self.label_footer.pack(pady=(0, 0))
+        credits_label.grid(row=current_row, column=0, pady=(0, 15), sticky="ew")
+        current_row += 1
 
-        # 3. Botón de cierre redondeado
-        btn_cerrar = ctk.CTkButton(
-            main_container, 
-            text="Entendido", 
-            text_color="white",
+        close_button = ctk.CTkButton(
+            content_frame,
+            text="Cerrar",
+            width=120,
             command=about_win.destroy,
             fg_color="dodger blue",
             hover_color="deep sky blue",
-            font=("Century Gothic", 14, "bold"),
-            corner_radius=20,
-            width=140,
-            height=35
+            text_color="#ffffff",
+            font=("Century Gothic", 12, "bold"),
+            corner_radius=12
         )
-        # pady=(10, 20) lo separa 10px del footer y deja 20px al borde de la ventana
-        btn_cerrar.pack(pady=(10, 20))
+        close_button.grid(row=current_row, column=0, pady=(10, 0), sticky="n")
 
-        # --- Lógica de Centrado y Tamaño ---
-        about_win.update_idletasks()
-        ancho, alto = 480, 480 # Reduje el alto de 640 a 620 para compactar todo
+        about_width = 540
+        about_height = 560
+        about_win.minsize(about_width, about_height)
+
+        screen_width = self.ventana.winfo_screenwidth()
+        screen_height = self.ventana.winfo_screenheight()
+        x = (screen_width // 2) - (about_width // 2)
+        y = (screen_height // 2) - (about_height // 2)
+        about_win.geometry(f"{about_width}x{about_height}+{x}+{y}")
         
-        v_width = self.ventana.winfo_width()
-        v_height = self.ventana.winfo_height()
-        v_x = self.ventana.winfo_x()
-        v_y = self.ventana.winfo_y()
+        about_win.lift()
         
-        pos_x = v_x + (v_width // 2) - (ancho // 2)
-        pos_y = v_y + (v_height // 2) - (alto // 2)
-        
-        about_win.geometry(f"{ancho}x{alto}+{pos_x}+{pos_y}")
+
 
 class VentanaMainAdmin(VentanaMain):
     def __init__(self, user_data):
@@ -428,6 +425,14 @@ class VentanaMainAdmin(VentanaMain):
             text_color="#ffffff" ,font=("Century Gothic", 14,"bold"),corner_radius=10)
         boton_gestion_usuarios.pack(pady=5)
         self.botones_nav.append(boton_gestion_usuarios)
+
+        boton_sede = ctk.CTkButton(self.nav_frame, text="📊 Sedes", width=200,height=40, command=self.sede, fg_color="dodger blue",
+            hover_color="deep sky blue",  # Color cuando pasas el mouse
+            border_color="#ffffff",  # Color del borde
+            border_width=2,  # Grosor del borde
+            text_color="#ffffff" ,font=("Century Gothic", 14,"bold"),corner_radius=10)
+        boton_sede.pack(pady=5)
+        self.botones_nav.append(boton_sede)
         
         # Botón para limpiar la bd
         boton_eliminar_bd = ctk.CTkButton(self.nav_frame, text="🗑️ Limpiar datos", width=200,height=40, command=self.eliminar_datos, fg_color="red",
@@ -451,3 +456,8 @@ class VentanaMainAdmin(VentanaMain):
         )
         if confirm:
             EliminarDatos(self.ventana, self.user_data, db_manager=self.db)
+
+    def sede(self):
+        self.limpiar_frame()
+        app = GestionSedeLaboratorios(self.main_frame, db_manager=self.db)
+        app.pack(fill="both", expand=True)

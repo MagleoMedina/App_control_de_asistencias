@@ -72,7 +72,7 @@ class VentanaLogin:
             icon_png_path = os.path.join(sys._MEIPASS, 'assets', 'LogoSALIU.png')
             icon_ico_path = os.path.join(sys._MEIPASS, 'assets', 'LogoSALIU.ico')
             path_ver = os.path.join(sys._MEIPASS, 'assets', 'ojo-abierto.png')
-            path_ocultar = os.path.join(sys._MEIPASS, 'assets', 'ojo.cerrado.png')
+            path_ocultar = os.path.join(sys._MEIPASS, 'assets', 'ojo-cerrado.png')
         else:
             icon_png_path = os.path.join('assets', 'LogoSALIU.png')
             icon_ico_path = os.path.join('assets', 'LogoSALIU.ico')

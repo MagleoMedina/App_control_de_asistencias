@@ -38,15 +38,16 @@ datas_extra = (
         ('Pdf/consultar_asistencia.html', 'Pdf'),
         ('Pdf/consultar_falla_equipo.html', 'Pdf'),
         ('Pdf/estilos.css', 'Pdf'),  
-        ('db.zip', '.')
+        ('db.zip', '.'),
+        ('.env', '.')
     ]
 )
 
 block_cipher = None
 
 a = Analysis(
-    ['d:\\codes\\App_control_de_asistencias\\main.py'],#Solo sera compatible si esta en esta ruta
-    pathex=['d:\\codes\\App_control_de_asistencias'], #igual aqui
+    ['main.py'],#Solo sera compatible si esta en esta ruta
+    pathex=['.'], #igual aqui
     binaries=[],
     datas=datas_extra,  
     hiddenimports=[
@@ -78,6 +79,6 @@ exe = EXE(
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    console=False,
+    console=True,
     icon=['assets/LogoSALIU.ico']
 )

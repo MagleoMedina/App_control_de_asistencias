@@ -292,7 +292,6 @@ class VentanaMain:
         about_win.transient(self.ventana)
         about_win.resizable(False, False)
         
-
         about_win.update_idletasks()
         about_win.grab_set()
 
@@ -308,6 +307,34 @@ class VentanaMain:
 
         current_row = 0
 
+        # --- Establecer icono personalizado multiplataforma ---
+        if hasattr(sys, '_MEIPASS'):
+            icon_png_path = os.path.join(sys._MEIPASS, 'assets', 'LogoSALIU.png')
+            icon_ico_path = os.path.join(sys._MEIPASS, 'assets', 'LogoSALIU.ico')
+        else:
+            icon_png_path = os.path.join('assets', 'LogoSALIU.png')
+            icon_ico_path = os.path.join('assets', 'LogoSALIU.ico')
+            
+        system = platform.system()
+        if system == "Windows" and os.path.exists(icon_ico_path):
+            try:
+                # En Windows, a veces CTkToplevel requiere usar after para asegurar el icono
+                about_win.after(200, lambda: about_win.iconbitmap(icon_ico_path))
+            except Exception as e:
+                print(f"Advertencia: No se pudo establecer el icono .ico: {e}")
+        elif (system == "Linux" or system == "Darwin" or system == "Windows") and os.path.exists(icon_png_path):
+            try:
+                # Usar PhotoImage para icono
+                icon_img = tk.PhotoImage(file=icon_png_path)
+                about_win.iconphoto(False, icon_img)
+                # CLAVE: Mantener una referencia viva en memoria para evitar el Garbage Collector
+                about_win.icon_img = icon_img 
+            except Exception as e:
+                print(f"Advertencia: No se pudo establecer el icono .png: {e}")
+        else:
+            print(f"Advertencia: No se encontró el icono en la ruta: {icon_png_path} o {icon_ico_path}")
+
+        # --- Logo dentro de la ventana ---
         if hasattr(sys, '_MEIPASS'):
             logo_path = os.path.join(sys._MEIPASS, 'assets', 'LogoSALIU.png')
         else:
@@ -413,8 +440,6 @@ class VentanaMain:
         
         about_win.lift()
         
-
-
 class VentanaMainAdmin(VentanaMain):
     def __init__(self, user_data):
         super().__init__(user_data)

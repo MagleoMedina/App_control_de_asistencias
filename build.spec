@@ -37,6 +37,7 @@ datas_extra = (
         ('Pdf/modulo_estadistico.html', 'Pdf'),  
         ('Pdf/consultar_asistencia.html', 'Pdf'),
         ('Pdf/consultar_falla_equipo.html', 'Pdf'),
+        ('Pdf/reporte_fallas_historico.html', 'Pdf'),
         ('Pdf/estilos.css', 'Pdf'),  
         ('db.zip', '.'),
         ('.env', '.')

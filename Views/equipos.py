@@ -72,8 +72,8 @@ class Equipos(ctk.CTkFrame):
         self.relacionar_equipos_button.grid(row=1, column=3, padx=10, pady=(0, 30))
         
         # Botón "Reporte de Fallas por Fecha" (Fila 1, Columna 4)
-        self.reporte_fallas_button = ctk.CTkButton(self, text="Reporte de Fallas", command=self.reporte_fallas_rango, width=120,
-            height=28, fg_color="dodger blue", hover_color="deep sky blue", border_color="#ffffff", border_width=2,
+        self.reporte_fallas_button = ctk.CTkButton(self, text="Reporte de Fallas", command=self.reporte_fallas_rango, width=140,
+            height=36, fg_color="dodger blue", hover_color="deep sky blue", border_color="#ffffff", border_width=2,
             text_color="#ffffff", font=("Century Gothic", 14, "bold"), corner_radius=10)
         self.reporte_fallas_button.grid(row=1, column=4, padx=10, pady=(0, 30))
 
